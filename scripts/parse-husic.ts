@@ -17,7 +17,7 @@
  * tag-set filter logic applies via `findHusicForm`.
  */
 
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -25,12 +25,12 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
 const HUSIC_CACHE_DIR = join(REPO_ROOT, '.cache', 'husic');
 
-interface HusicForm {
+export interface HusicForm {
   form: string;
   tags: string[];
 }
 
-interface HusicEntry {
+export interface HusicEntry {
   /** Kebab-case verb id matching the corpus entry. */
   id: string;
   /** Lemma in Standard Albanian orthography. */
@@ -62,14 +62,91 @@ function parseHusicSource(
     console.error(`✗ source path does not exist: ${sourcePath}`);
     return [];
   }
+  if (sourcePath.endsWith('.md')) {
+    const raw = readFileSync(sourcePath, 'utf8');
+    const entries = parseMarkdownTables(raw);
+    return options.onlyVerb
+      ? entries.filter((e) => e.id === options.onlyVerb)
+      : entries;
+  }
   console.warn(
-    `⚠ parseHusicSource is a stub. Returning [] until a format-specific parser is implemented.\n` +
-      `  See packages/engine/docs/husic-format.md for guidance.`,
+    `⚠ parseHusicSource: only markdown (.md) format is implemented in v1.\n` +
+      `  PDF / TSV / image formats remain to be parsed; see packages/engine/docs/husic-format.md.`,
   );
   if (options.onlyVerb) {
     console.warn(`  (--only-verb=${options.onlyVerb} would filter once the parser is implemented)`);
   }
   return [];
+}
+
+/**
+ * Parse markdown-table-formatted Husić source. Format spec (see also
+ * packages/engine/docs/husic-format.md):
+ *
+ *   ## <verb-id>: <lemma>
+ *
+ *   ### <Albanian paradigm label> (e.g., "dëftore — e tashme")
+ *
+ *   |  | sg | pl |
+ *   |--|----|----|
+ *   | 1 | <1sg form> | <1pl form> |
+ *   | 2 | <2sg form> | <2pl form> |
+ *   | 3 | <3sg form> | <3pl form> |
+ *
+ *   ### <next paradigm>
+ *   ...
+ *
+ * Empty cells (—, -, blank) are skipped (no form recorded).
+ * The parser walks H2 sections (verbs), then H3 subsections (paradigms),
+ * then the immediately-following pipe-delimited table.
+ */
+export function parseMarkdownTables(source: string): HusicEntry[] {
+  const lines = source.split('\n');
+  const entries: HusicEntry[] = [];
+  let current: HusicEntry | null = null;
+  let currentParadigm: string | null = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]!.trim();
+    const h2 = line.match(/^##\s+([a-z0-9-]+)\s*:\s*(.+)$/i);
+    if (h2) {
+      current = { id: h2[1]!.trim(), lemma: h2[2]!.trim(), forms: [] };
+      entries.push(current);
+      currentParadigm = null;
+      continue;
+    }
+    const h3 = line.match(/^###\s+(.+)$/);
+    if (h3 && current) {
+      currentParadigm = h3[1]!.trim();
+      continue;
+    }
+    if (line.startsWith('|') && current && currentParadigm) {
+      // Skip header / separator rows
+      if (/^\|[-\s|]+\|\s*$/.test(line)) continue;
+      if (/^\|\s*\|\s*sg\s*\|\s*pl\s*\|/i.test(line)) continue;
+      const cells = line.split('|').slice(1, -1).map((c) => c.trim());
+      if (cells.length !== 3) continue;
+      const personLabel = cells[0]!;
+      const sgForm = cells[1]!;
+      const plForm = cells[2]!;
+      const personMatch = personLabel.match(/^([1-3])$/);
+      if (!personMatch) continue;
+      const person = parseInt(personMatch[1]!, 10) as 1 | 2 | 3;
+      if (sgForm && sgForm !== '—' && sgForm !== '-') {
+        current.forms.push({
+          form: sgForm,
+          tags: mapHusicLabelToTags(currentParadigm, { person, number: 'singular' }),
+        });
+      }
+      if (plForm && plForm !== '—' && plForm !== '-') {
+        current.forms.push({
+          form: plForm,
+          tags: mapHusicLabelToTags(currentParadigm, { person, number: 'plural' }),
+        });
+      }
+    }
+  }
+  return entries;
 }
 
 /**
@@ -181,4 +258,11 @@ function main(): void {
   console.log(`✓ Wrote ${written} verb files to ${HUSIC_CACHE_DIR}`);
 }
 
-main();
+// Run main() only when invoked directly, not when imported by tests.
+const isDirectInvocation =
+  typeof process !== 'undefined' &&
+  process.argv[1] &&
+  fileURLToPath(import.meta.url) === resolve(process.argv[1]);
+if (isDirectInvocation) {
+  main();
+}

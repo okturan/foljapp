@@ -6,10 +6,10 @@
 
 ## 2. Parser implementation
 
-- [ ] 2.1 In `scripts/parse-husic.ts`, replace the `parseHusicSource` stub with the format-specific parser. The function takes the source path, splits by verb sections, extracts per-tense rows, derives person/number from column position, and emits `HusicEntry[]`
-- [ ] 2.2 The parser SHALL call `mapHusicLabelToTags(huLabel, persNum)` (already implemented) for every cell to align tags with Kaikki's convention
-- [ ] 2.3 The parser SHALL filter Gheg / archaic / dialectal variants at parse time; emit Standard Albanian only
-- [ ] 2.4 Add unit tests for the parser using fabricated input fixtures (one fixture per representative table layout)
+- [x] 2.1 In `scripts/parse-husic.ts`, replace the `parseHusicSource` stub with a format-specific parser. v1 implementation: markdown-table format (`parseMarkdownTables`); PDF / TSV / image formats remain to be added when source format is finalized
+- [x] 2.2 The parser calls `mapHusicLabelToTags(huLabel, persNum)` for every cell to align tags with Kaikki's convention
+- [ ] 2.3 The parser SHALL filter Gheg / archaic / dialectal variants at parse time; emit Standard Albanian only — pending real source (current parser passes all forms through; filtering rules are source-specific)
+- [x] 2.4 Add unit tests for the parser using fabricated input fixtures (`packages/engine/test/parse-husic.test.ts`, 14 tests covering label-to-tag mapping + markdown table parsing)
 
 ## 3. Pilot run on 5 verbs
 

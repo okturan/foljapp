@@ -13,6 +13,49 @@ Roughly 1500 cells across our 50-verb corpus that currently report as
 `missing-kaikki` in `verify-engine.ts` should be verifiable against
 Husić.
 
+## Implemented format: hand-tabulated markdown tables
+
+The v1 parser supports a markdown-table format suitable for hand-tabulating
+Husić's paradigms verb-by-verb without requiring OCR. Specification:
+
+```markdown
+## <kebab-case verb id>: <lemma in Albanian orthography>
+
+### <Albanian paradigm label>
+
+|  | sg | pl |
+|--|----|----|
+| 1 | <1sg form> | <1pl form> |
+| 2 | <2sg form> | <2pl form> |
+| 3 | <3sg form> | <3pl form> |
+
+### <next paradigm label>
+
+…
+```
+
+The H2 heading marks a verb section. The H3 heading is the Albanian
+paradigm label (e.g., `dëftore — e tashme`, `habitore — e pakryer`,
+`dëftore — e ardhme — joveprore`). The table that follows lists six
+person/number cells.
+
+Cells with `—` or `-` are skipped (the cell is omitted from the JSONL
+output, signaling Husić doesn't tabulate that cell).
+
+The markdown parser is implemented in `scripts/parse-husic.ts` as
+`parseMarkdownTables(source)`. Tag mapping (Albanian-label → engine tag)
+is documented in the table below and implemented as `mapHusicLabelToTags`.
+
+Run with:
+
+```sh
+npx tsx scripts/parse-husic.ts --source <path-to-husic.md>
+```
+
+Once the entries land in `.cache/husic/<id>.jsonl`, `verify-engine.ts`
+consults them automatically as fallback for cells where Kaikki has no
+ground truth.
+
 ## Source acquisition (manual prerequisite)
 
 As of this writing Husić is print-only. Acquiring a digital copy is a
