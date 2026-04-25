@@ -1,0 +1,23 @@
+{
+  "id": "ekzistoj",
+  "lemma": "ekzistoj",
+  "translationEn": "to exist",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "ekzisto",
+    "aorist": "ekzistua",
+    "participle": "ekzistuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/ekzistoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "demtoj",
+  "lemma": "dëmtoj",
+  "translationEn": "to harm",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "dëmto",
+    "aorist": "dëmtua",
+    "participle": "dëmtuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/d%C3%ABmtoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

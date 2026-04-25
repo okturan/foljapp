@@ -1,0 +1,23 @@
+{
+  "id": "embelsoj",
+  "lemma": "ëmbëlsoj",
+  "translationEn": "to sweeten",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "ëmbëlso",
+    "aorist": "ëmbëlsua",
+    "participle": "ëmbëlsuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/%C3%ABmb%C3%ABlsoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

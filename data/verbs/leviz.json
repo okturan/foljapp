@@ -1,0 +1,23 @@
+{
+  "id": "leviz",
+  "lemma": "lëviz",
+  "translationEn": "to move",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "lëviz",
+    "aorist": "lëviz",
+    "participle": "lëvizur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/l%C3%ABviz#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

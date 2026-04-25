@@ -1,0 +1,23 @@
+{
+  "id": "gdhend",
+  "lemma": "gdhend",
+  "translationEn": "to carve",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "gdhend",
+    "aorist": "gdhend",
+    "participle": "gdhendur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/gdhend#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

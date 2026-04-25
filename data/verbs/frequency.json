@@ -203,54 +203,620 @@
     "tier": "common",
     "notes": "to conclude / finish — common formal verb."
   },
-  "organizoj": { "tier": "common", "notes": "to organize — common in formal/business contexts." },
-  "ndaloj":    { "tier": "common", "notes": "to forbid / halt — common in legal and traffic contexts." },
-  "sherbej":   { "tier": "common", "notes": "to serve — common service verb (irregular -ej)." },
-  "ofroj":     { "tier": "common", "notes": "to offer — common transactional verb." },
-  "krijoj":    { "tier": "common", "notes": "to create — common in formal/creative contexts." },
-  "lejoj":     { "tier": "common", "notes": "to permit — common in legal/permission contexts." },
-  "shpresoj":  { "tier": "common", "notes": "to hope — common emotional verb." },
-  "vendos":    { "tier": "core",   "notes": "to decide / to place — high-frequency Class 2 verb." },
-  "dorezoj":   { "tier": "uncommon", "notes": "to deliver / surrender — moderate frequency." },
-  "ndryshoj":  { "tier": "common", "notes": "to change — common change-of-state verb." },
-  "terheq":    { "tier": "common", "notes": "to pull / attract — common Class 2 with three-stem alternation." },
-  "ngrij":     { "tier": "common", "notes": "to freeze / rise — common across senses." },
-  "shkurtoj":  { "tier": "uncommon", "notes": "to shorten — moderate frequency." },
-  "tregtoj":   { "tier": "uncommon", "notes": "to trade — domain-specific (commerce)." },
-  "publikoj":  { "tier": "uncommon", "notes": "to publish — domain-specific." },
-  "respektoj": { "tier": "common", "notes": "to respect — common in social/formal contexts." },
-  "njoftoj":   { "tier": "common", "notes": "to inform — common formal communication verb." },
-  "studioj":   { "tier": "common", "notes": "to study — common education verb." },
-  "punesoj":   { "tier": "uncommon", "notes": "to employ / hire — moderate frequency." },
-  "zhvilloj":  { "tier": "common", "notes": "to develop — common in formal/business contexts." },
-  "informoj":  { "tier": "common", "notes": "to inform — common communication verb." },
-  "udhezoj":   { "tier": "uncommon", "notes": "to instruct — moderate frequency." },
-  "dyshoj":    { "tier": "uncommon", "notes": "to doubt — moderate frequency cognition verb." },
-  "qendroj":   { "tier": "common", "notes": "to stand / remain — common stative." },
-  "leshoj":    { "tier": "uncommon", "notes": "to release / issue — moderate frequency." },
-  "kontrolloj": { "tier": "common", "notes": "to control / check — common in formal contexts." },
-  "prish":     { "tier": "common", "notes": "to spoil / break — common change-of-state verb." },
-  "nis":       { "tier": "core",   "notes": "to start — high-frequency Class 2 inceptive." },
-  "vesh":      { "tier": "common", "notes": "to dress / wear — common daily verb." },
-  "ndal":      { "tier": "common", "notes": "to stop — common motion-cessation verb." },
-  "ndez":      { "tier": "common", "notes": "to light / ignite — common daily verb." },
-  "mbyll":     { "tier": "core",   "notes": "to close — high-frequency action verb." },
-  "qartesoj":  { "tier": "uncommon", "notes": "to clarify — moderate frequency." },
-  "vertetoj":  { "tier": "common", "notes": "to prove / confirm — common formal verb." },
-  "lidhoj":    { "tier": "uncommon", "notes": "to bind / connect — moderate frequency." },
-  "shqiperoj": { "tier": "uncommon", "notes": "to translate to Albanian — domain-specific." },
-  "shpalos":   { "tier": "uncommon", "notes": "to unfold / reveal — moderate frequency." },
-  "kercenoj":  { "tier": "uncommon", "notes": "to threaten — moderate frequency." },
-  "drejtoj":   { "tier": "common", "notes": "to direct / steer — common in formal contexts." },
-  "diskutoj":  { "tier": "common", "notes": "to discuss — common conversational verb." },
-  "akuzoj":    { "tier": "uncommon", "notes": "to accuse — domain-specific (legal)." },
-  "shoqeroj":  { "tier": "common", "notes": "to accompany — common social verb." },
-  "sulmoj":    { "tier": "uncommon", "notes": "to attack — domain-specific." },
-  "menaxhoj":  { "tier": "common", "notes": "to manage — common business verb." },
-  "regjistroj": { "tier": "common", "notes": "to register — common formal verb." },
-  "godit":     { "tier": "common", "notes": "to hit / strike — common Class 2 verb." },
-  "shqyrtoj":  { "tier": "common", "notes": "to examine / review — common formal verb." },
-  "themeloj":  { "tier": "uncommon", "notes": "to found / establish — formal register." },
-  "nxis":      { "tier": "common", "notes": "to encourage / incite — common Class 2 verb." },
-  "votoj":     { "tier": "common", "notes": "to vote — common civic verb." }
+  "organizoj": {
+    "tier": "common",
+    "notes": "to organize — common in formal/business contexts."
+  },
+  "ndaloj": {
+    "tier": "common",
+    "notes": "to forbid / halt — common in legal and traffic contexts."
+  },
+  "sherbej": {
+    "tier": "common",
+    "notes": "to serve — common service verb (irregular -ej)."
+  },
+  "ofroj": {
+    "tier": "common",
+    "notes": "to offer — common transactional verb."
+  },
+  "krijoj": {
+    "tier": "common",
+    "notes": "to create — common in formal/creative contexts."
+  },
+  "lejoj": {
+    "tier": "common",
+    "notes": "to permit — common in legal/permission contexts."
+  },
+  "shpresoj": {
+    "tier": "common",
+    "notes": "to hope — common emotional verb."
+  },
+  "vendos": {
+    "tier": "core",
+    "notes": "to decide / to place — high-frequency Class 2 verb."
+  },
+  "dorezoj": {
+    "tier": "uncommon",
+    "notes": "to deliver / surrender — moderate frequency."
+  },
+  "ndryshoj": {
+    "tier": "common",
+    "notes": "to change — common change-of-state verb."
+  },
+  "terheq": {
+    "tier": "common",
+    "notes": "to pull / attract — common Class 2 with three-stem alternation."
+  },
+  "ngrij": {
+    "tier": "common",
+    "notes": "to freeze / rise — common across senses."
+  },
+  "shkurtoj": {
+    "tier": "uncommon",
+    "notes": "to shorten — moderate frequency."
+  },
+  "tregtoj": {
+    "tier": "uncommon",
+    "notes": "to trade — domain-specific (commerce)."
+  },
+  "publikoj": {
+    "tier": "uncommon",
+    "notes": "to publish — domain-specific."
+  },
+  "respektoj": {
+    "tier": "common",
+    "notes": "to respect — common in social/formal contexts."
+  },
+  "njoftoj": {
+    "tier": "common",
+    "notes": "to inform — common formal communication verb."
+  },
+  "studioj": {
+    "tier": "common",
+    "notes": "to study — common education verb."
+  },
+  "punesoj": {
+    "tier": "uncommon",
+    "notes": "to employ / hire — moderate frequency."
+  },
+  "zhvilloj": {
+    "tier": "common",
+    "notes": "to develop — common in formal/business contexts."
+  },
+  "informoj": {
+    "tier": "common",
+    "notes": "to inform — common communication verb."
+  },
+  "udhezoj": {
+    "tier": "uncommon",
+    "notes": "to instruct — moderate frequency."
+  },
+  "dyshoj": {
+    "tier": "uncommon",
+    "notes": "to doubt — moderate frequency cognition verb."
+  },
+  "qendroj": {
+    "tier": "common",
+    "notes": "to stand / remain — common stative."
+  },
+  "leshoj": {
+    "tier": "uncommon",
+    "notes": "to release / issue — moderate frequency."
+  },
+  "kontrolloj": {
+    "tier": "common",
+    "notes": "to control / check — common in formal contexts."
+  },
+  "prish": {
+    "tier": "common",
+    "notes": "to spoil / break — common change-of-state verb."
+  },
+  "nis": {
+    "tier": "core",
+    "notes": "to start — high-frequency Class 2 inceptive."
+  },
+  "vesh": {
+    "tier": "common",
+    "notes": "to dress / wear — common daily verb."
+  },
+  "ndal": {
+    "tier": "common",
+    "notes": "to stop — common motion-cessation verb."
+  },
+  "ndez": {
+    "tier": "common",
+    "notes": "to light / ignite — common daily verb."
+  },
+  "mbyll": {
+    "tier": "core",
+    "notes": "to close — high-frequency action verb."
+  },
+  "qartesoj": {
+    "tier": "uncommon",
+    "notes": "to clarify — moderate frequency."
+  },
+  "vertetoj": {
+    "tier": "common",
+    "notes": "to prove / confirm — common formal verb."
+  },
+  "lidhoj": {
+    "tier": "uncommon",
+    "notes": "to bind / connect — moderate frequency."
+  },
+  "shqiperoj": {
+    "tier": "uncommon",
+    "notes": "to translate to Albanian — domain-specific."
+  },
+  "shpalos": {
+    "tier": "uncommon",
+    "notes": "to unfold / reveal — moderate frequency."
+  },
+  "kercenoj": {
+    "tier": "uncommon",
+    "notes": "to threaten — moderate frequency."
+  },
+  "drejtoj": {
+    "tier": "common",
+    "notes": "to direct / steer — common in formal contexts."
+  },
+  "diskutoj": {
+    "tier": "common",
+    "notes": "to discuss — common conversational verb."
+  },
+  "akuzoj": {
+    "tier": "uncommon",
+    "notes": "to accuse — domain-specific (legal)."
+  },
+  "shoqeroj": {
+    "tier": "common",
+    "notes": "to accompany — common social verb."
+  },
+  "sulmoj": {
+    "tier": "uncommon",
+    "notes": "to attack — domain-specific."
+  },
+  "menaxhoj": {
+    "tier": "common",
+    "notes": "to manage — common business verb."
+  },
+  "regjistroj": {
+    "tier": "common",
+    "notes": "to register — common formal verb."
+  },
+  "godit": {
+    "tier": "common",
+    "notes": "to hit / strike — common Class 2 verb."
+  },
+  "shqyrtoj": {
+    "tier": "common",
+    "notes": "to examine / review — common formal verb."
+  },
+  "themeloj": {
+    "tier": "uncommon",
+    "notes": "to found / establish — formal register."
+  },
+  "nxis": {
+    "tier": "common",
+    "notes": "to encourage / incite — common Class 2 verb."
+  },
+  "votoj": {
+    "tier": "common",
+    "notes": "to vote — common civic verb."
+  },
+  "abstenoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "abuzoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "adhuroj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "admiroj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "adoptoj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "adresoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "afroj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "ajros": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "banoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "barazoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "bastis": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "bekoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "bezdis": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "bitis": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "caktoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "caloj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "carmatos": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "cel": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "clodh": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "cmoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "coj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "copetoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "dalloj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "dashuroj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "demtoj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "dend": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "denoj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "depertoj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "depozitoj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "derdh": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "dergoj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "deshiroj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "deshmoj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "deshperoj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "detyroj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "dhemb": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "dhuroj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "edukoj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "eksportoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "ekspozoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "ekzistoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "embelsoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "end": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "enderroj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "fabrikoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "fal": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "falenderoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "falsifikoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "farketoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "farmakos": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "fejoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "ferkoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "festoj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "firmoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "fjalos": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "flak": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "formoj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "frikesoj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "frymezoj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "ftoj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "gaboj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "gajas": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "gdhend": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "germoj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "gervisht": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "gjakos": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "gjezdis": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "gjykoj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "gris": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "gudulis": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "guxoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "has": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "hekuros": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "helmoj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "hetoj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "holloj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "humb": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "hutoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "importoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "inatos": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "inkurajoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "interesoj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "interpretoj": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "kafshoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "kallezoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "kap": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "kooperoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "kopjoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "krahasoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "kremtoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "kujtoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "kulloj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "kundershtoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "kushtoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "kuvendoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "lag": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "lajmeroj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "lakmoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "largoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "lavderoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "ledhatoj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "leroj": {
+    "tier": "uncommon",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "leviz": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  },
+  "lind": {
+    "tier": "common",
+    "notes": "auto-curated tier-3 entry"
+  }
 }

@@ -1,0 +1,23 @@
+{
+  "id": "gaboj",
+  "lemma": "gaboj",
+  "translationEn": "to mistake",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "gabo",
+    "aorist": "gabua",
+    "participle": "gabuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/gaboj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

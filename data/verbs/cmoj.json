@@ -1,0 +1,23 @@
+{
+  "id": "cmoj",
+  "lemma": "çmoj",
+  "translationEn": "to value",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "çmo",
+    "aorist": "çmua",
+    "participle": "çmuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/%C3%A7moj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "frikesoj",
+  "lemma": "frikësoj",
+  "translationEn": "to intimidate",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "frikëso",
+    "aorist": "frikësua",
+    "participle": "frikësuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/frik%C3%ABsoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "copetoj",
+  "lemma": "copetoj",
+  "translationEn": "to tear",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "copeto",
+    "aorist": "copetua",
+    "participle": "copetuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/copetoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

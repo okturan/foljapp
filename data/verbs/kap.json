@@ -1,0 +1,23 @@
+{
+  "id": "kap",
+  "lemma": "kap",
+  "translationEn": "to catch",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "kap",
+    "aorist": "kap",
+    "participle": "kapur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/kap#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

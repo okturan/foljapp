@@ -1,0 +1,23 @@
+{
+  "id": "ekspozoj",
+  "lemma": "ekspozoj",
+  "translationEn": "to exhibit",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "ekspozo",
+    "aorist": "ekspozua",
+    "participle": "ekspozuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/ekspozoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

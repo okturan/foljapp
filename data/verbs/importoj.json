@@ -1,0 +1,23 @@
+{
+  "id": "importoj",
+  "lemma": "importoj",
+  "translationEn": "to import",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "importo",
+    "aorist": "importua",
+    "participle": "importuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/importoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

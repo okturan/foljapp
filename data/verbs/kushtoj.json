@@ -1,0 +1,23 @@
+{
+  "id": "kushtoj",
+  "lemma": "kushtoj",
+  "translationEn": "to dedicate",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "kushto",
+    "aorist": "kushtua",
+    "participle": "kushtuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/kushtoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

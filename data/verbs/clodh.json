@@ -1,0 +1,23 @@
+{
+  "id": "clodh",
+  "lemma": "çlodh",
+  "translationEn": "to refresh",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "çlodh",
+    "aorist": "çlodh",
+    "participle": "çlodhur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/%C3%A7lodh#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

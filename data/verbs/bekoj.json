@@ -1,0 +1,23 @@
+{
+  "id": "bekoj",
+  "lemma": "bekoj",
+  "translationEn": "to bless",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "beko",
+    "aorist": "bekua",
+    "participle": "bekuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/bekoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

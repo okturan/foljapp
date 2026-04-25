@@ -1,0 +1,23 @@
+{
+  "id": "banoj",
+  "lemma": "banoj",
+  "translationEn": "to reside",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "bano",
+    "aorist": "banua",
+    "participle": "banuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/banoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

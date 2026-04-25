@@ -1,0 +1,23 @@
+{
+  "id": "guxoj",
+  "lemma": "guxoj",
+  "translationEn": "to dare",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "guxo",
+    "aorist": "guxua",
+    "participle": "guxuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/guxoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

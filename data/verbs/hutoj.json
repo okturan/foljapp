@@ -1,0 +1,23 @@
+{
+  "id": "hutoj",
+  "lemma": "hutoj",
+  "translationEn": "to stun",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "huto",
+    "aorist": "hutua",
+    "participle": "hutuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/hutoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

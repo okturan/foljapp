@@ -1,0 +1,23 @@
+{
+  "id": "kundershtoj",
+  "lemma": "kundërshtoj",
+  "translationEn": "to protest",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "kundërshto",
+    "aorist": "kundërshtua",
+    "participle": "kundërshtuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/kund%C3%ABrshtoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "deshperoj",
+  "lemma": "dëshpëroj",
+  "translationEn": "to sadden",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "dëshpëro",
+    "aorist": "dëshpërua",
+    "participle": "dëshpëruar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/d%C3%ABshp%C3%ABroj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "admiroj",
+  "lemma": "admiroj",
+  "translationEn": "to admire",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "admiro",
+    "aorist": "admirua",
+    "participle": "admiruar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/admiroj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "inatos",
+  "lemma": "inatos",
+  "translationEn": "to anger",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "inatos",
+    "aorist": "inatos",
+    "participle": "inatosur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/inatos#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

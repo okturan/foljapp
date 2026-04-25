@@ -1,0 +1,23 @@
+{
+  "id": "gris",
+  "lemma": "gris",
+  "translationEn": "to tear",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "gris",
+    "aorist": "gris",
+    "participle": "grisur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/gris#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

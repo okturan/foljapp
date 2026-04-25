@@ -1,0 +1,23 @@
+{
+  "id": "lag",
+  "lemma": "lag",
+  "translationEn": "to water",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "lag",
+    "aorist": "lag",
+    "participle": "lagur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/lag#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

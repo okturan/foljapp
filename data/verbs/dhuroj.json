@@ -1,0 +1,23 @@
+{
+  "id": "dhuroj",
+  "lemma": "dhuroj",
+  "translationEn": "to present",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "dhuro",
+    "aorist": "dhurua",
+    "participle": "dhuruar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/dhuroj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "cel",
+  "lemma": "çel",
+  "translationEn": "to open; bloom",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "çel",
+    "aorist": "çel",
+    "participle": "çelur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/%C3%A7el#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

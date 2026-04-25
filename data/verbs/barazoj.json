@@ -1,0 +1,23 @@
+{
+  "id": "barazoj",
+  "lemma": "barazoj",
+  "translationEn": "to compare",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "barazo",
+    "aorist": "barazua",
+    "participle": "barazuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/barazoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

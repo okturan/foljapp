@@ -1,0 +1,23 @@
+{
+  "id": "deshmoj",
+  "lemma": "dëshmoj",
+  "translationEn": "to testify",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "dëshmo",
+    "aorist": "dëshmua",
+    "participle": "dëshmuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/d%C3%ABshmoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

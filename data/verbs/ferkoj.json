@@ -1,0 +1,23 @@
+{
+  "id": "ferkoj",
+  "lemma": "fërkoj",
+  "translationEn": "to rub",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "fërko",
+    "aorist": "fërkua",
+    "participle": "fërkuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/f%C3%ABrkoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "detyroj",
+  "lemma": "detyroj",
+  "translationEn": "to charge",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "detyro",
+    "aorist": "detyrua",
+    "participle": "detyruar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/detyroj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

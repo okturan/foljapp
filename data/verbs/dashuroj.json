@@ -1,0 +1,23 @@
+{
+  "id": "dashuroj",
+  "lemma": "dashuroj",
+  "translationEn": "to love",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "dashuro",
+    "aorist": "dashurua",
+    "participle": "dashuruar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/dashuroj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

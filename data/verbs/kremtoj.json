@@ -1,0 +1,23 @@
+{
+  "id": "kremtoj",
+  "lemma": "kremtoj",
+  "translationEn": "to celebrate",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "kremto",
+    "aorist": "kremtua",
+    "participle": "kremtuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/kremtoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

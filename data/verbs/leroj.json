@@ -1,0 +1,23 @@
+{
+  "id": "leroj",
+  "lemma": "lëroj",
+  "translationEn": "to plow",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "lëro",
+    "aorist": "lërua",
+    "participle": "lëruar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/l%C3%ABroj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

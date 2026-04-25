@@ -1,0 +1,23 @@
+{
+  "id": "krahasoj",
+  "lemma": "krahasoj",
+  "translationEn": "to compare",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "krahaso",
+    "aorist": "krahasua",
+    "participle": "krahasuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/krahasoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "gervisht",
+  "lemma": "gërvisht",
+  "translationEn": "to scratch",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "gërvisht",
+    "aorist": "gërvisht",
+    "participle": "gërvishtur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/g%C3%ABrvisht#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

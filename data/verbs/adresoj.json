@@ -1,0 +1,23 @@
+{
+  "id": "adresoj",
+  "lemma": "adresoj",
+  "translationEn": "to address",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "adreso",
+    "aorist": "adresua",
+    "participle": "adresuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/adresoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

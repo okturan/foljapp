@@ -24,16 +24,20 @@ implementing the conjugation engine. Source-priority order is set by
 Run `npx tsx scripts/verify-engine.ts` to compare engine output against
 Kaikki/Wiktionary's tagged conjugation tables for every corpus verb.
 
-| Match rate | 8237 / 8239 cells across 100 verbs   | 99.98% |
-|            | (7822 via Kaikki + 257 via Husić)     |        |
-|            | 2 documented Kaikki↔Husić disagreements |      |
+| Match rate | 15905 / 15909 cells across 204 verbs | 99.97% |
+|            | (14002 Kaikki + 257 Husić-direct +    |        |
+|            | 1362 Husić-derived via glossary       |        |
+|            | cross-resolution + ~284 net new tier-3 |       |
+|            | verifications via Husić cross-res)    |        |
+|            | 4 documented Kaikki↔Husić-style       |        |
+|            | disagreements (djeg, pjek, bitis,     |        |
+|            | hekuros — Kaikki anomalies)           |        |
 | Verified   | v0.1 seed (20) + tier-1 (30 -oj) +    |        |
-|            | tier-2 (50: 40 Class 1 + 7 Class 2 +  |        |
-|            | 3 hand-crafted irregulars)            | 100/100 |
-| Husić cache | 31 of 100 verbs with Husić paradigm  |        |
-|            | data (the rest of Husić's PDF lists  |        |
-|            | non-paradigm-model verbs we haven't   |        |
-|            | added to the corpus)                  |        |
+|            | tier-2 (50) + tier-3 (104: 100 Class 1 |       |
+|            | -oj continuation + 4 Class 2 hand-fixed) | 204/204 |
+| Husić cache | 99 of 204 verbs with Husić data      |        |
+|            | via paradigm-model + glossary cross-  |        |
+|            | resolution                            |        |
 
 The 1824 baseline includes both active and middle-passive admirative
 across all 4 tenses. Verify-engine probes both voices; for MP cells,
@@ -149,7 +153,7 @@ that the engine consults before paradigm dispatch. Specifically:
   `pakam`/etc. in `packages/engine/src/suppletion.ts`.
 
 `scripts/verify-engine.ts` is the canonical regression check. Any
-corpus or engine change must keep the match-rate at 8237/8239 or
+corpus or engine change must keep the match-rate at 15905/15909 or
 explicitly justify the regression in its OpenSpec change.
 
 ## Suppletive paradigm references

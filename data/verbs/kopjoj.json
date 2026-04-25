@@ -1,0 +1,23 @@
+{
+  "id": "kopjoj",
+  "lemma": "kopjoj",
+  "translationEn": "to copy",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "kopjo",
+    "aorist": "kopjua",
+    "participle": "kopjuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/kopjoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

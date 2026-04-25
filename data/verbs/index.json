@@ -1,8 +1,78 @@
 [
   {
+    "id": "abstenoj",
+    "lemma": "abstenoj",
+    "translationEn": "to abstain",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "abuzoj",
+    "lemma": "abuzoj",
+    "translationEn": "to abuse",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "adhuroj",
+    "lemma": "adhuroj",
+    "translationEn": "to adore",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "admiroj",
+    "lemma": "admiroj",
+    "translationEn": "to admire",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "adoptoj",
+    "lemma": "adoptoj",
+    "translationEn": "to adopt",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "adresoj",
+    "lemma": "adresoj",
+    "translationEn": "to address",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "afroj",
+    "lemma": "afroj",
+    "translationEn": "to approach",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "ajros",
+    "lemma": "ajros",
+    "translationEn": "to air",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
     "id": "akuzoj",
     "lemma": "akuzoj",
     "translationEn": "to accuse",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "banoj",
+    "lemma": "banoj",
+    "translationEn": "to reside",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "barazoj",
+    "lemma": "barazoj",
+    "translationEn": "to compare",
     "class": 1,
     "auxiliary": "kam"
   },
@@ -14,9 +84,23 @@
     "auxiliary": "kam"
   },
   {
+    "id": "bastis",
+    "lemma": "bastis",
+    "translationEn": "to raid",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
     "id": "bej",
     "lemma": "bëj",
     "translationEn": "to make / to do",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "bekoj",
+    "lemma": "bekoj",
+    "translationEn": "to bless",
     "class": 1,
     "auxiliary": "kam"
   },
@@ -28,10 +112,24 @@
     "auxiliary": "kam"
   },
   {
+    "id": "bezdis",
+    "lemma": "bezdis",
+    "translationEn": "to bother",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
     "id": "bisedoj",
     "lemma": "bisedoj",
     "translationEn": "to converse / talk",
     "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "bitis",
+    "lemma": "bitis",
+    "translationEn": "to complete",
+    "class": 2,
     "auxiliary": "kam"
   },
   {
@@ -42,9 +140,170 @@
     "auxiliary": "kam"
   },
   {
+    "id": "caktoj",
+    "lemma": "caktoj",
+    "translationEn": "to determine",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "caloj",
+    "lemma": "çaloj",
+    "translationEn": "to limp",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "carmatos",
+    "lemma": "çarmatos",
+    "translationEn": "to disarm",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "cel",
+    "lemma": "çel",
+    "translationEn": "to open; bloom",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "clodh",
+    "lemma": "çlodh",
+    "translationEn": "to refresh",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "cmoj",
+    "lemma": "çmoj",
+    "translationEn": "to value",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "coj",
+    "lemma": "çoj",
+    "translationEn": "to send",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "copetoj",
+    "lemma": "copetoj",
+    "translationEn": "to tear",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "dalloj",
+    "lemma": "dalloj",
+    "translationEn": "to distinguish",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "dashuroj",
+    "lemma": "dashuroj",
+    "translationEn": "to love",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
     "id": "degjoj",
     "lemma": "dëgjoj",
     "translationEn": "to listen / to hear",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "demtoj",
+    "lemma": "dëmtoj",
+    "translationEn": "to harm",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "dend",
+    "lemma": "dend",
+    "translationEn": "to compress",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "denoj",
+    "lemma": "dënoj",
+    "translationEn": "to punish",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "depertoj",
+    "lemma": "depërtoj",
+    "translationEn": "to penetrate",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "depozitoj",
+    "lemma": "depozitoj",
+    "translationEn": "to deposit",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "derdh",
+    "lemma": "derdh",
+    "translationEn": "to spill",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "dergoj",
+    "lemma": "dërgoj",
+    "translationEn": "to send",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "deshiroj",
+    "lemma": "dëshiroj",
+    "translationEn": "to desire",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "deshmoj",
+    "lemma": "dëshmoj",
+    "translationEn": "to testify",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "deshperoj",
+    "lemma": "dëshpëroj",
+    "translationEn": "to sadden",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "detyroj",
+    "lemma": "detyroj",
+    "translationEn": "to charge",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "dhemb",
+    "lemma": "dhemb",
+    "translationEn": "to hurt",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "dhuroj",
+    "lemma": "dhuroj",
+    "translationEn": "to present",
     "class": 1,
     "auxiliary": "kam"
   },
@@ -105,9 +364,128 @@
     "auxiliary": "kam"
   },
   {
+    "id": "edukoj",
+    "lemma": "edukoj",
+    "translationEn": "to educate",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "eksportoj",
+    "lemma": "eksportoj",
+    "translationEn": "to export",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "ekspozoj",
+    "lemma": "ekspozoj",
+    "translationEn": "to exhibit",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "ekzistoj",
+    "lemma": "ekzistoj",
+    "translationEn": "to exist",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "embelsoj",
+    "lemma": "ëmbëlsoj",
+    "translationEn": "to sweeten",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "end",
+    "lemma": "end",
+    "translationEn": "to weave",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "enderroj",
+    "lemma": "ëndërroj",
+    "translationEn": "to dream",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "fabrikoj",
+    "lemma": "fabrikoj",
+    "translationEn": "to manufacture",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "fal",
+    "lemma": "fal",
+    "translationEn": "to excuse",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "falenderoj",
+    "lemma": "falënderoj",
+    "translationEn": "to thank",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "falsifikoj",
+    "lemma": "falsifikoj",
+    "translationEn": "to falsify",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "farketoj",
+    "lemma": "farkëtoj",
+    "translationEn": "to forge",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "farmakos",
+    "lemma": "farmakos",
+    "translationEn": "to poison",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "fejoj",
+    "lemma": "fejoj",
+    "translationEn": "to annoy",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "ferkoj",
+    "lemma": "fërkoj",
+    "translationEn": "to rub",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "festoj",
+    "lemma": "festoj",
+    "translationEn": "to celebrate",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
     "id": "filloj",
     "lemma": "filloj",
     "translationEn": "to begin",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "firmoj",
+    "lemma": "firmoj",
+    "translationEn": "to sign",
     "class": 1,
     "auxiliary": "kam"
   },
@@ -119,6 +497,20 @@
     "auxiliary": "kam"
   },
   {
+    "id": "fjalos",
+    "lemma": "fjalos",
+    "translationEn": "to converse",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "flak",
+    "lemma": "flak",
+    "translationEn": "to throw",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
     "id": "flas",
     "lemma": "flas",
     "translationEn": "to speak",
@@ -126,10 +518,115 @@
     "auxiliary": "kam"
   },
   {
+    "id": "formoj",
+    "lemma": "formoj",
+    "translationEn": "to form",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "frikesoj",
+    "lemma": "frikësoj",
+    "translationEn": "to intimidate",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "frymezoj",
+    "lemma": "frymëzoj",
+    "translationEn": "to inspire",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "ftoj",
+    "lemma": "ftoj",
+    "translationEn": "to invite",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "gaboj",
+    "lemma": "gaboj",
+    "translationEn": "to mistake",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "gajas",
+    "lemma": "gajas",
+    "translationEn": "to tire",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "gdhend",
+    "lemma": "gdhend",
+    "translationEn": "to carve",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "germoj",
+    "lemma": "gërmoj",
+    "translationEn": "to dig",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "gervisht",
+    "lemma": "gërvisht",
+    "translationEn": "to scratch",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "gjakos",
+    "lemma": "gjakos",
+    "translationEn": "to make bleed",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "gjezdis",
+    "lemma": "gjezdis",
+    "translationEn": "to sightsee",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "gjykoj",
+    "lemma": "gjykoj",
+    "translationEn": "to judge",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
     "id": "godit",
     "lemma": "godit",
     "translationEn": "to hit / strike",
     "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "gris",
+    "lemma": "gris",
+    "translationEn": "to tear",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "gudulis",
+    "lemma": "gudulis",
+    "translationEn": "to tickle",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "guxoj",
+    "lemma": "guxoj",
+    "translationEn": "to dare",
+    "class": 1,
     "auxiliary": "kam"
   },
   {
@@ -154,6 +651,55 @@
     "auxiliary": "kam"
   },
   {
+    "id": "has",
+    "lemma": "has",
+    "translationEn": "to bump into",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "hekuros",
+    "lemma": "hekuros",
+    "translationEn": "to iron",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "helmoj",
+    "lemma": "helmoj",
+    "translationEn": "to poison",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "hetoj",
+    "lemma": "hetoj",
+    "translationEn": "to inquire",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "holloj",
+    "lemma": "holloj",
+    "translationEn": "to make thin",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "humb",
+    "lemma": "humb",
+    "translationEn": "to lose",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "hutoj",
+    "lemma": "hutoj",
+    "translationEn": "to stun",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
     "id": "iki",
     "lemma": "iki",
     "translationEn": "to leave / to go away",
@@ -161,9 +707,44 @@
     "auxiliary": "kam"
   },
   {
+    "id": "importoj",
+    "lemma": "importoj",
+    "translationEn": "to import",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "inatos",
+    "lemma": "inatos",
+    "translationEn": "to anger",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
     "id": "informoj",
     "lemma": "informoj",
     "translationEn": "to inform",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "inkurajoj",
+    "lemma": "inkurajoj",
+    "translationEn": "to encourage",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "interesoj",
+    "lemma": "interesoj",
+    "translationEn": "to interest",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "interpretoj",
+    "lemma": "interpretoj",
+    "translationEn": "to interpret",
     "class": 1,
     "auxiliary": "kam"
   },
@@ -178,6 +759,27 @@
     "id": "jap",
     "lemma": "jap",
     "translationEn": "to give",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "kafshoj",
+    "lemma": "kafshoj",
+    "translationEn": "to bite",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "kallezoj",
+    "lemma": "kallëzoj",
+    "translationEn": "to report",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "kap",
+    "lemma": "kap",
+    "translationEn": "to catch",
     "class": 2,
     "auxiliary": "kam"
   },
@@ -210,9 +812,58 @@
     "auxiliary": "kam"
   },
   {
+    "id": "kooperoj",
+    "lemma": "kooperoj",
+    "translationEn": "to cooperate",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "kopjoj",
+    "lemma": "kopjoj",
+    "translationEn": "to copy",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "krahasoj",
+    "lemma": "krahasoj",
+    "translationEn": "to compare",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "kremtoj",
+    "lemma": "kremtoj",
+    "translationEn": "to celebrate",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
     "id": "krijoj",
     "lemma": "krijoj",
     "translationEn": "to create",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "kujtoj",
+    "lemma": "kujtoj",
+    "translationEn": "to remember",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "kulloj",
+    "lemma": "kulloj",
+    "translationEn": "to strain",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "kundershtoj",
+    "lemma": "kundërshtoj",
+    "translationEn": "to protest",
     "class": 1,
     "auxiliary": "kam"
   },
@@ -224,9 +875,65 @@
     "auxiliary": "kam"
   },
   {
+    "id": "kushtoj",
+    "lemma": "kushtoj",
+    "translationEn": "to dedicate",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "kuvendoj",
+    "lemma": "kuvendoj",
+    "translationEn": "to speak",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "lag",
+    "lemma": "lag",
+    "translationEn": "to water",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
     "id": "laj",
     "lemma": "laj",
     "translationEn": "to wash",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "lajmeroj",
+    "lemma": "lajmëroj",
+    "translationEn": "to announce",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "lakmoj",
+    "lemma": "lakmoj",
+    "translationEn": "to crave",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "largoj",
+    "lemma": "largoj",
+    "translationEn": "to remove",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "lavderoj",
+    "lemma": "lavdëroj",
+    "translationEn": "to praise",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "ledhatoj",
+    "lemma": "ledhatoj",
+    "translationEn": "to caress",
     "class": 1,
     "auxiliary": "kam"
   },
@@ -238,10 +945,24 @@
     "auxiliary": "kam"
   },
   {
+    "id": "leroj",
+    "lemma": "lëroj",
+    "translationEn": "to plow",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
     "id": "leshoj",
     "lemma": "lëshoj",
     "translationEn": "to release / to issue",
     "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "leviz",
+    "lemma": "lëviz",
+    "translationEn": "to move",
+    "class": 2,
     "auxiliary": "kam"
   },
   {
@@ -256,6 +977,13 @@
     "lemma": "lidhoj",
     "translationEn": "to bind / connect",
     "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "lind",
+    "lemma": "lind",
+    "translationEn": "to born (be born)",
+    "class": 2,
     "auxiliary": "kam"
   },
   {

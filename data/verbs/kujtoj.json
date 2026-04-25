@@ -1,0 +1,23 @@
+{
+  "id": "kujtoj",
+  "lemma": "kujtoj",
+  "translationEn": "to remember",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "kujto",
+    "aorist": "kujtua",
+    "participle": "kujtuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/kujtoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

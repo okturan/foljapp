@@ -1,0 +1,23 @@
+{
+  "id": "inkurajoj",
+  "lemma": "inkurajoj",
+  "translationEn": "to encourage",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "inkurajo",
+    "aorist": "inkurajua",
+    "participle": "inkurajuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/inkurajoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

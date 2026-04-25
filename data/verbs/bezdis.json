@@ -1,0 +1,23 @@
+{
+  "id": "bezdis",
+  "lemma": "bezdis",
+  "translationEn": "to bother",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "bezdis",
+    "aorist": "bezdis",
+    "participle": "bezdisur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/bezdis#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

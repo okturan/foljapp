@@ -1,0 +1,28 @@
+{
+  "id": "bitis",
+  "lemma": "bitis",
+  "translationEn": "to complete",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "bitis",
+    "aorist": "bitis",
+    "participle": "bitisur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/bitis#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk",
+  "cellOverrides": {
+    "optative.present": {
+      "2pl": "bitisshit"
+    }
+  }
+}

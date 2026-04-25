@@ -1,0 +1,23 @@
+{
+  "id": "lakmoj",
+  "lemma": "lakmoj",
+  "translationEn": "to crave",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "lakmo",
+    "aorist": "lakmua",
+    "participle": "lakmuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/lakmoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

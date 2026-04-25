@@ -1,0 +1,23 @@
+{
+  "id": "gjezdis",
+  "lemma": "gjezdis",
+  "translationEn": "to sightsee",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "gjezdis",
+    "aorist": "gjezdis",
+    "participle": "gjezdisur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/gjezdis#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

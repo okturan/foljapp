@@ -1,0 +1,23 @@
+{
+  "id": "gajas",
+  "lemma": "gajas",
+  "translationEn": "to tire",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "gajas",
+    "aorist": "gajas",
+    "participle": "gajasur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/gajas#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

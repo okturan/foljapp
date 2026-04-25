@@ -1,0 +1,23 @@
+{
+  "id": "enderroj",
+  "lemma": "ëndërroj",
+  "translationEn": "to dream",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "ëndërro",
+    "aorist": "ëndërrua",
+    "participle": "ëndërruar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/%C3%ABnd%C3%ABrroj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

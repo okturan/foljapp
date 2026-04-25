@@ -1,0 +1,23 @@
+{
+  "id": "dalloj",
+  "lemma": "dalloj",
+  "translationEn": "to distinguish",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "dallo",
+    "aorist": "dallua",
+    "participle": "dalluar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/dalloj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "firmoj",
+  "lemma": "firmoj",
+  "translationEn": "to sign",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "firmo",
+    "aorist": "firmua",
+    "participle": "firmuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/firmoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

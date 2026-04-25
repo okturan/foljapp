@@ -1,0 +1,23 @@
+{
+  "id": "has",
+  "lemma": "has",
+  "translationEn": "to bump into",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "has",
+    "aorist": "has",
+    "participle": "hasur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/has#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

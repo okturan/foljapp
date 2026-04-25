@@ -1,0 +1,23 @@
+{
+  "id": "farketoj",
+  "lemma": "farkëtoj",
+  "translationEn": "to forge",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "farkëto",
+    "aorist": "farkëtua",
+    "participle": "farkëtuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/fark%C3%ABtoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

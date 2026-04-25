@@ -1,0 +1,28 @@
+{
+  "id": "gudulis",
+  "lemma": "gudulis",
+  "translationEn": "to tickle",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "gudulis",
+    "aorist": "gudulis",
+    "participle": "gudulisur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/gudulis#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk",
+  "cellOverrides": {
+    "optative.present": {
+      "2pl": "gudulisshit"
+    }
+  }
+}

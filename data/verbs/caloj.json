@@ -1,0 +1,23 @@
+{
+  "id": "caloj",
+  "lemma": "çaloj",
+  "translationEn": "to limp",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "çalo",
+    "aorist": "çalua",
+    "participle": "çaluar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/%C3%A7aloj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

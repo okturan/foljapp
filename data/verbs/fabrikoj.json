@@ -1,0 +1,23 @@
+{
+  "id": "fabrikoj",
+  "lemma": "fabrikoj",
+  "translationEn": "to manufacture",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "fabriko",
+    "aorist": "fabrikua",
+    "participle": "fabrikuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/fabrikoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

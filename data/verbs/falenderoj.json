@@ -1,0 +1,23 @@
+{
+  "id": "falenderoj",
+  "lemma": "falënderoj",
+  "translationEn": "to thank",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "falëndero",
+    "aorist": "falënderua",
+    "participle": "falënderuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/fal%C3%ABnderoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "dhemb",
+  "lemma": "dhemb",
+  "translationEn": "to hurt",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "dhemb",
+    "aorist": "dhemb",
+    "participle": "dhembur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/dhemb#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

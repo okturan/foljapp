@@ -1,0 +1,23 @@
+{
+  "id": "kallezoj",
+  "lemma": "kallëzoj",
+  "translationEn": "to report",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "kallëzo",
+    "aorist": "kallëzua",
+    "participle": "kallëzuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/kall%C3%ABzoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

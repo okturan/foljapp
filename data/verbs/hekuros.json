@@ -1,0 +1,24 @@
+{
+  "id": "hekuros",
+  "lemma": "hekuros",
+  "translationEn": "to iron",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "hekuros",
+    "aorist": "hekuros",
+    "participle": "hekurosur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/hekuros#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk",
+  "notes": "Kaikki has malformed aorist 3sg entry (hekuroshekuros); engine produces hekurosi which matches the regular -os pattern."
+}

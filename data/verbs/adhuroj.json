@@ -1,0 +1,23 @@
+{
+  "id": "adhuroj",
+  "lemma": "adhuroj",
+  "translationEn": "to adore",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "adhuro",
+    "aorist": "adhurua",
+    "participle": "adhuruar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/adhuroj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

@@ -1,0 +1,92 @@
+[
+  {
+    "lemma": "kooperoj",
+    "translationEn": "to cooperate",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "lemma": "kopjoj",
+    "translationEn": "to copy",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "lemma": "krahasoj",
+    "translationEn": "to compare",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "lemma": "kremtoj",
+    "translationEn": "to celebrate",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "lemma": "kujtoj",
+    "translationEn": "to remember",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "lemma": "kulloj",
+    "translationEn": "to strain",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "lemma": "kundërshtoj",
+    "translationEn": "to protest",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "lemma": "kushtoj",
+    "translationEn": "to dedicate",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "lemma": "kuvendoj",
+    "translationEn": "to speak",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "lemma": "lajmëroj",
+    "translationEn": "to announce",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "lemma": "lakmoj",
+    "translationEn": "to crave",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "lemma": "largoj",
+    "translationEn": "to remove",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "lemma": "lavdëroj",
+    "translationEn": "to praise",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "lemma": "ledhatoj",
+    "translationEn": "to caress",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "lemma": "lëroj",
+    "translationEn": "to plow",
+    "class": 1,
+    "auxiliary": "kam"
+  }
+]

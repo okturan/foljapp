@@ -1,0 +1,23 @@
+{
+  "id": "adoptoj",
+  "lemma": "adoptoj",
+  "translationEn": "to adopt",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "adopto",
+    "aorist": "adoptua",
+    "participle": "adoptuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/adoptoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

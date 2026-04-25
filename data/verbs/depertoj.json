@@ -1,0 +1,23 @@
+{
+  "id": "depertoj",
+  "lemma": "depërtoj",
+  "translationEn": "to penetrate",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "depërto",
+    "aorist": "depërtua",
+    "participle": "depërtuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/dep%C3%ABrtoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

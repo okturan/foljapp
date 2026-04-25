@@ -1,0 +1,23 @@
+{
+  "id": "fal",
+  "lemma": "fal",
+  "translationEn": "to excuse",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "fal",
+    "aorist": "fal",
+    "participle": "falur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/fal#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

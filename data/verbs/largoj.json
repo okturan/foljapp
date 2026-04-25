@@ -1,0 +1,23 @@
+{
+  "id": "largoj",
+  "lemma": "largoj",
+  "translationEn": "to remove",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "largo",
+    "aorist": "largua",
+    "participle": "larguar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/largoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "formoj",
+  "lemma": "formoj",
+  "translationEn": "to form",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "formo",
+    "aorist": "formua",
+    "participle": "formuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/formoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

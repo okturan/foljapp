@@ -1,0 +1,23 @@
+{
+  "id": "germoj",
+  "lemma": "gërmoj",
+  "translationEn": "to dig",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "gërmo",
+    "aorist": "gërmua",
+    "participle": "gërmuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/g%C3%ABrmoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

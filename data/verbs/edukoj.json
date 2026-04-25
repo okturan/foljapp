@@ -1,0 +1,23 @@
+{
+  "id": "edukoj",
+  "lemma": "edukoj",
+  "translationEn": "to educate",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "eduko",
+    "aorist": "edukua",
+    "participle": "edukuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/edukoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

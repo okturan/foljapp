@@ -1,0 +1,23 @@
+{
+  "id": "kooperoj",
+  "lemma": "kooperoj",
+  "translationEn": "to cooperate",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "koopero",
+    "aorist": "kooperua",
+    "participle": "kooperuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/kooperoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

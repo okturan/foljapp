@@ -1,0 +1,23 @@
+{
+  "id": "dend",
+  "lemma": "dend",
+  "translationEn": "to compress",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "dend",
+    "aorist": "dend",
+    "participle": "dendur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/dend#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

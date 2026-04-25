@@ -1,0 +1,23 @@
+{
+  "id": "bastis",
+  "lemma": "bastis",
+  "translationEn": "to raid",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "bastis",
+    "aorist": "bastis",
+    "participle": "bastisur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/bastis#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

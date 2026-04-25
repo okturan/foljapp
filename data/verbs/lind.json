@@ -1,0 +1,23 @@
+{
+  "id": "lind",
+  "lemma": "lind",
+  "translationEn": "to born (be born)",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "lind",
+    "aorist": "lind",
+    "participle": "lindur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/lind#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

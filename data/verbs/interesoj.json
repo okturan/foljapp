@@ -1,0 +1,23 @@
+{
+  "id": "interesoj",
+  "lemma": "interesoj",
+  "translationEn": "to interest",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "intereso",
+    "aorist": "interesua",
+    "participle": "interesuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/interesoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

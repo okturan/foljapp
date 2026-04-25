@@ -1,0 +1,23 @@
+{
+  "id": "abuzoj",
+  "lemma": "abuzoj",
+  "translationEn": "to abuse",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "abuzo",
+    "aorist": "abuzua",
+    "participle": "abuzuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/abuzoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

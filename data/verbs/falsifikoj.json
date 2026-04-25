@@ -1,0 +1,23 @@
+{
+  "id": "falsifikoj",
+  "lemma": "falsifikoj",
+  "translationEn": "to falsify",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "falsifiko",
+    "aorist": "falsifikua",
+    "participle": "falsifikuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/falsifikoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

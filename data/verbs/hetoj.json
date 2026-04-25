@@ -1,0 +1,23 @@
+{
+  "id": "hetoj",
+  "lemma": "hetoj",
+  "translationEn": "to inquire",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "heto",
+    "aorist": "hetua",
+    "participle": "hetuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/hetoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

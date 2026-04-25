@@ -1,0 +1,23 @@
+{
+  "id": "humb",
+  "lemma": "humb",
+  "translationEn": "to lose",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "humb",
+    "aorist": "humb",
+    "participle": "humbur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/humb#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

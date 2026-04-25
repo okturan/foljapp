@@ -1,0 +1,23 @@
+{
+  "id": "ledhatoj",
+  "lemma": "ledhatoj",
+  "translationEn": "to caress",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "ledhato",
+    "aorist": "ledhatua",
+    "participle": "ledhatuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/ledhatoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

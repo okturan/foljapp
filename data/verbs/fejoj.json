@@ -1,0 +1,23 @@
+{
+  "id": "fejoj",
+  "lemma": "fejoj",
+  "translationEn": "to annoy",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "fejo",
+    "aorist": "fejua",
+    "participle": "fejuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/fejoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

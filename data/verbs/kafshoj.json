@@ -1,0 +1,23 @@
+{
+  "id": "kafshoj",
+  "lemma": "kafshoj",
+  "translationEn": "to bite",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "kafsho",
+    "aorist": "kafshua",
+    "participle": "kafshuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/kafshoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

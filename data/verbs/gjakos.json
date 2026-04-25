@@ -1,0 +1,23 @@
+{
+  "id": "gjakos",
+  "lemma": "gjakos",
+  "translationEn": "to make bleed",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "gjakos",
+    "aorist": "gjakos",
+    "participle": "gjakosur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/gjakos#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

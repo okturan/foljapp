@@ -1,0 +1,23 @@
+{
+  "id": "coj",
+  "lemma": "çoj",
+  "translationEn": "to send",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "ço",
+    "aorist": "çua",
+    "participle": "çuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/%C3%A7oj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

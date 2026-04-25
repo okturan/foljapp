@@ -1,0 +1,23 @@
+{
+  "id": "kulloj",
+  "lemma": "kulloj",
+  "translationEn": "to strain",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "kullo",
+    "aorist": "kullua",
+    "participle": "kulluar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/kulloj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

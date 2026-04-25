@@ -135,10 +135,11 @@ function scaffoldVerb(entry: ManifestEntry): VerbEntryDraft {
 function verifyOne(verbId: string): { ok: boolean; output: string } {
   try {
     const output = execSync(
-      `npx tsx scripts/verify-engine.ts --only-verb ${verbId}`,
+      `npx tsx scripts/verify-engine.ts --verb=${verbId}`,
       { cwd: REPO_ROOT, encoding: 'utf8' },
     );
-    const ok = !/mismatch=\s*[1-9]/.test(output);
+    // The verbose-aware regex: mismatch count > 0 anywhere on a per-verb line.
+    const ok = !/mismatch=\s*[1-9][0-9]*/.test(output);
     return { ok, output };
   } catch (err) {
     return { ok: false, output: (err as Error).message };

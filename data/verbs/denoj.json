@@ -1,0 +1,23 @@
+{
+  "id": "denoj",
+  "lemma": "dënoj",
+  "translationEn": "to punish",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "dëno",
+    "aorist": "dënua",
+    "participle": "dënuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/d%C3%ABnoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

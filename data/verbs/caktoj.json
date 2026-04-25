@@ -1,0 +1,23 @@
+{
+  "id": "caktoj",
+  "lemma": "caktoj",
+  "translationEn": "to determine",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "cakto",
+    "aorist": "caktua",
+    "participle": "caktuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/caktoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

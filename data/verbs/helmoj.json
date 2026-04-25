@@ -1,0 +1,23 @@
+{
+  "id": "helmoj",
+  "lemma": "helmoj",
+  "translationEn": "to poison",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "helmo",
+    "aorist": "helmua",
+    "participle": "helmuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/helmoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}
