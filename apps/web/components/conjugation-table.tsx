@@ -5,6 +5,8 @@ import { DecomposedForm } from '@/components/decomposed-form';
 interface Props {
   /** Mood label in English + Albanian, e.g., "Indicative (Dëftore)". */
   title: string;
+  /** Mood key for cell anchor IDs, e.g., "indicative". */
+  moodKey: string;
   /** Map of tense names → tense cell objects from engine.table(). */
   tenses: Record<string, Record<string, ConjugationResult | undefined>>;
   /** Optional ordered list of tense keys to render */
@@ -31,7 +33,7 @@ function readableTense(tense: string): string {
   return tense.replace(/-/g, ' ');
 }
 
-export function ConjugationTable({ title, tenses, order, imperativeOnly = false }: Props) {
+export function ConjugationTable({ title, moodKey, tenses, order, imperativeOnly = false }: Props) {
   const cells = imperativeOnly ? IMPERATIVE_CELLS : FULL_CELLS;
   const tenseKeys = order ?? Object.keys(tenses);
 
@@ -74,9 +76,14 @@ export function ConjugationTable({ title, tenses, order, imperativeOnly = false 
                   </th>
                   {cells.map((c) => {
                     const result = row[`${c.key}.active`];
+                    const cellId = `${moodKey}-${tense}-${c.key}`;
                     if (result) {
                       return (
-                        <td key={c.key} className="py-3 px-3 align-top">
+                        <td
+                          key={c.key}
+                          id={cellId}
+                          className="py-3 px-3 align-top scroll-mt-20"
+                        >
                           <DecomposedForm segments={result.decomposition} />
                         </td>
                       );
@@ -84,7 +91,8 @@ export function ConjugationTable({ title, tenses, order, imperativeOnly = false 
                     return (
                       <td
                         key={c.key}
-                        className="py-3 px-3 align-top text-stone-300"
+                        id={cellId}
+                        className="py-3 px-3 align-top text-stone-300 scroll-mt-20"
                         aria-label="unsupported cell"
                       >
                         —

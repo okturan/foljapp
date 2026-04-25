@@ -98,31 +98,37 @@ export default async function VerbPage({
 
       <ConjugationTable
         title="Indicative (Dëftore)"
+        moodKey="indicative"
         tenses={t.indicative as never}
         order={INDICATIVE_TENSES}
       />
       <ConjugationTable
         title="Subjunctive (Lidhore)"
+        moodKey="subjunctive"
         tenses={t.subjunctive as never}
         order={SUBJUNCTIVE_TENSES}
       />
       <ConjugationTable
         title="Conditional (Kushtore)"
+        moodKey="conditional"
         tenses={t.conditional as never}
         order={CONDITIONAL_TENSES}
       />
       <ConjugationTable
         title="Admirative (Habitore)"
+        moodKey="admirative"
         tenses={t.admirative as never}
         order={ADMIRATIVE_TENSES}
       />
       <ConjugationTable
         title="Optative (Dëshirore)"
+        moodKey="optative"
         tenses={t.optative as never}
         order={OPTATIVE_TENSES}
       />
       <ConjugationTable
         title="Imperative (Urdhërore)"
+        moodKey="imperative"
         tenses={t.imperative as never}
         order={['present']}
         imperativeOnly

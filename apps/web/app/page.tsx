@@ -1,13 +1,25 @@
+import Link from 'next/link';
+
+import { SearchInput } from '@/components/search-input';
+import { corpusIndex } from '@/lib/corpus-index';
+
 export default function Home() {
   return (
-    <main className="mx-auto max-w-2xl px-6 py-24 text-center">
-      <h1 className="text-5xl font-bold tracking-tight">foljapp</h1>
-      <p className="mt-4 text-lg text-stone-600">
+    <main className="mx-auto max-w-2xl px-6 py-16">
+      <h1 className="font-mono text-5xl font-bold tracking-tight">foljapp</h1>
+      <p className="mt-2 text-lg text-stone-600">
         Albanian verbal system reference
       </p>
-      <p className="mt-12 text-sm text-stone-500">
-        no verbs loaded yet — this page exists only to prove the
-        dev/build/test cycle works end-to-end
+
+      <div className="mt-10">
+        <SearchInput />
+      </div>
+
+      <p className="mt-6 text-sm text-stone-500">
+        →{' '}
+        <Link href="/browse" className="underline underline-offset-2 hover:text-stone-700">
+          Browse all {corpusIndex.length} verbs
+        </Link>
       </p>
     </main>
   );

@@ -30,7 +30,8 @@ export function NonFiniteForms({ forms }: Props) {
           return (
             <div
               key={key}
-              className="grid grid-cols-1 gap-2 py-3 sm:grid-cols-[200px_1fr]"
+              id={`non-finite-${key}`}
+              className="grid scroll-mt-20 grid-cols-1 gap-2 py-3 sm:grid-cols-[200px_1fr]"
             >
               <dt className="text-sm text-stone-500">
                 {label.en}{' '}
