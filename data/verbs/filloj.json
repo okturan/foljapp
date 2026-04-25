@@ -1,0 +1,23 @@
+{
+  "id": "filloj",
+  "lemma": "filloj",
+  "translationEn": "to begin",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "fillo",
+    "aorist": "fillua",
+    "participle": "filluar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/filloj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+    }
+  ],
+  "dialect": "tosk"
+}

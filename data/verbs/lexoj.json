@@ -1,0 +1,23 @@
+{
+  "id": "lexoj",
+  "lemma": "lexoj",
+  "translationEn": "to read",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "lexo",
+    "aorist": "lexua",
+    "participle": "lexuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/lexoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+    }
+  ],
+  "dialect": "tosk"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "fitoj",
+  "lemma": "fitoj",
+  "translationEn": "to win",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "fito",
+    "aorist": "fitua",
+    "participle": "fituar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/fitoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+    }
+  ],
+  "dialect": "tosk"
+}

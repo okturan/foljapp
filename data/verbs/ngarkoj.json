@@ -1,0 +1,23 @@
+{
+  "id": "ngarkoj",
+  "lemma": "ngarkoj",
+  "translationEn": "to load",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "ngarko",
+    "aorist": "ngarkua",
+    "participle": "ngarkuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/ngarkoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+    }
+  ],
+  "dialect": "tosk"
+}

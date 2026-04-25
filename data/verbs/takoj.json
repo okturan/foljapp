@@ -1,0 +1,23 @@
+{
+  "id": "takoj",
+  "lemma": "takoj",
+  "translationEn": "to meet",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "tako",
+    "aorist": "takua",
+    "participle": "takuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/takoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+    }
+  ],
+  "dialect": "tosk"
+}

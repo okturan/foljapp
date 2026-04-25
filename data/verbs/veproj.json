@@ -1,0 +1,23 @@
+{
+  "id": "veproj",
+  "lemma": "veproj",
+  "translationEn": "to act",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "vepro",
+    "aorist": "veprua",
+    "participle": "vepruar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/veproj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+    }
+  ],
+  "dialect": "tosk"
+}

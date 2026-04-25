@@ -1,0 +1,23 @@
+{
+  "id": "shtoj",
+  "lemma": "shtoj",
+  "translationEn": "to add",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "shto",
+    "aorist": "shtua",
+    "participle": "shtuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/shtoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+    }
+  ],
+  "dialect": "tosk"
+}

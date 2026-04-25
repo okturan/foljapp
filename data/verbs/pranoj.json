@@ -1,0 +1,23 @@
+{
+  "id": "pranoj",
+  "lemma": "pranoj",
+  "translationEn": "to accept",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "prano",
+    "aorist": "pranua",
+    "participle": "pranuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/pranoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+    }
+  ],
+  "dialect": "tosk"
+}

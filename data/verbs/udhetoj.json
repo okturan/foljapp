@@ -1,0 +1,23 @@
+{
+  "id": "udhetoj",
+  "lemma": "udhëtoj",
+  "translationEn": "to travel",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "udhëto",
+    "aorist": "udhëtua",
+    "participle": "udhëtuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/udh%C3%ABtoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+    }
+  ],
+  "dialect": "tosk"
+}

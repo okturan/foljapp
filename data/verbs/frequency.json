@@ -82,5 +82,125 @@
   "djeg": {
     "tier": "rare",
     "notes": "to burn — domain-specific, low frequency in general text."
+  },
+  "shkoj": {
+    "tier": "core",
+    "notes": "to go — top-5 motion verb, ubiquitous."
+  },
+  "mesoj": {
+    "tier": "core",
+    "notes": "to learn / to teach — high frequency in education contexts."
+  },
+  "lexoj": {
+    "tier": "common",
+    "notes": "to read — common in textbooks and instructions."
+  },
+  "mendoj": {
+    "tier": "core",
+    "notes": "to think — high-frequency cognition verb."
+  },
+  "kerkoj": {
+    "tier": "common",
+    "notes": "to look for / to ask — frequent in service / search contexts."
+  },
+  "fitoj": {
+    "tier": "common",
+    "notes": "to win — common in sport, gain contexts."
+  },
+  "degjoj": {
+    "tier": "common",
+    "notes": "to listen / to hear — perception verb, common."
+  },
+  "takoj": {
+    "tier": "common",
+    "notes": "to meet — common social verb."
+  },
+  "ndihmoj": {
+    "tier": "common",
+    "notes": "to help — common assistance verb."
+  },
+  "harroj": {
+    "tier": "common",
+    "notes": "to forget — common cognition verb."
+  },
+  "filloj": {
+    "tier": "common",
+    "notes": "to begin — common in narrative / instructional."
+  },
+  "duroj": {
+    "tier": "uncommon",
+    "notes": "to endure — moderate frequency."
+  },
+  "veproj": {
+    "tier": "uncommon",
+    "notes": "to act — formal register."
+  },
+  "shtoj": {
+    "tier": "common",
+    "notes": "to add — common in instructions, math, descriptions."
+  },
+  "kendoj": {
+    "tier": "common",
+    "notes": "to sing — common cultural / musical verb."
+  },
+  "kuptoj": {
+    "tier": "core",
+    "notes": "to understand — top cognition verb."
+  },
+  "tregoj": {
+    "tier": "core",
+    "notes": "to tell / to show — high-frequency communication verb."
+  },
+  "besoj": {
+    "tier": "common",
+    "notes": "to believe — common in opinion / faith contexts."
+  },
+  "vazhdoj": {
+    "tier": "common",
+    "notes": "to continue — common temporal connective."
+  },
+  "siguroj": {
+    "tier": "common",
+    "notes": "to ensure / to secure — common in formal / promise contexts."
+  },
+  "botoj": {
+    "tier": "uncommon",
+    "notes": "to publish — domain-specific (media)."
+  },
+  "mbroj": {
+    "tier": "common",
+    "notes": "to defend / to protect — common in legal, sport, military contexts."
+  },
+  "bashkoj": {
+    "tier": "uncommon",
+    "notes": "to unite — moderate frequency."
+  },
+  "shpejtoj": {
+    "tier": "uncommon",
+    "notes": "to hurry / to speed up — moderate frequency."
+  },
+  "udhetoj": {
+    "tier": "common",
+    "notes": "to travel — common motion verb."
+  },
+  "ngarkoj": {
+    "tier": "uncommon",
+    "notes": "to load — moderate frequency."
+  },
+  "pranoj": {
+    "tier": "common",
+    "notes": "to accept — common in formal / agreement contexts."
+  },
+  "mbaroj": {
+    "tier": "common",
+    "notes": "to finish — common temporal verb."
+  },
+  "bisedoj": {
+    "tier": "common",
+    "notes": "to converse / talk — common social verb."
+  },
+  "perfundoj": {
+    "tier": "common",
+    "notes": "to conclude / finish — common formal verb."
   }
 }

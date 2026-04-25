@@ -1,0 +1,23 @@
+{
+  "id": "duroj",
+  "lemma": "duroj",
+  "translationEn": "to endure",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "duro",
+    "aorist": "durua",
+    "participle": "duruar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/duroj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+    }
+  ],
+  "dialect": "tosk"
+}

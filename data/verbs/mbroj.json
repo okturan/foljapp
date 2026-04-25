@@ -1,0 +1,23 @@
+{
+  "id": "mbroj",
+  "lemma": "mbroj",
+  "translationEn": "to defend / to protect",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "mbro",
+    "aorist": "mbrua",
+    "participle": "mbruar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/mbroj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+    }
+  ],
+  "dialect": "tosk"
+}

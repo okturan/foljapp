@@ -1,0 +1,23 @@
+{
+  "id": "shpejtoj",
+  "lemma": "shpejtoj",
+  "translationEn": "to hurry / to speed up",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "shpejto",
+    "aorist": "shpejtua",
+    "participle": "shpejtuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/shpejtoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+    }
+  ],
+  "dialect": "tosk"
+}

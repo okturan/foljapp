@@ -1,0 +1,23 @@
+{
+  "id": "kuptoj",
+  "lemma": "kuptoj",
+  "translationEn": "to understand",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "kupto",
+    "aorist": "kuptua",
+    "participle": "kuptuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/kuptoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+    }
+  ],
+  "dialect": "tosk"
+}

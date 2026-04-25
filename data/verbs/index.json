@@ -1,8 +1,43 @@
 [
   {
+    "id": "bashkoj",
+    "lemma": "bashkoj",
+    "translationEn": "to unite",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
     "id": "bej",
     "lemma": "bëj",
     "translationEn": "to make / to do",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "besoj",
+    "lemma": "besoj",
+    "translationEn": "to believe",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "bisedoj",
+    "lemma": "bisedoj",
+    "translationEn": "to converse / talk",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "botoj",
+    "lemma": "botoj",
+    "translationEn": "to publish",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "degjoj",
+    "lemma": "dëgjoj",
+    "translationEn": "to listen / to hear",
     "class": 1,
     "auxiliary": "kam"
   },
@@ -28,6 +63,27 @@
     "auxiliary": "kam"
   },
   {
+    "id": "duroj",
+    "lemma": "duroj",
+    "translationEn": "to endure",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "filloj",
+    "lemma": "filloj",
+    "translationEn": "to begin",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "fitoj",
+    "lemma": "fitoj",
+    "translationEn": "to win",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
     "id": "flas",
     "lemma": "flas",
     "translationEn": "to speak",
@@ -46,6 +102,13 @@
     "lemma": "hap",
     "translationEn": "to open",
     "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "harroj",
+    "lemma": "harroj",
+    "translationEn": "to forget",
+    "class": 1,
     "auxiliary": "kam"
   },
   {
@@ -70,9 +133,37 @@
     "auxiliary": "kam"
   },
   {
+    "id": "kendoj",
+    "lemma": "këndoj",
+    "translationEn": "to sing",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "kerkoj",
+    "lemma": "kërkoj",
+    "translationEn": "to look for / to ask",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "kuptoj",
+    "lemma": "kuptoj",
+    "translationEn": "to understand",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
     "id": "laj",
     "lemma": "laj",
     "translationEn": "to wash",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "lexoj",
+    "lemma": "lexoj",
+    "translationEn": "to read",
     "class": 1,
     "auxiliary": "kam"
   },
@@ -84,10 +175,59 @@
     "auxiliary": "kam"
   },
   {
+    "id": "mbaroj",
+    "lemma": "mbaroj",
+    "translationEn": "to finish",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "mbroj",
+    "lemma": "mbroj",
+    "translationEn": "to defend / to protect",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "mendoj",
+    "lemma": "mendoj",
+    "translationEn": "to think",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "mesoj",
+    "lemma": "mësoj",
+    "translationEn": "to learn / to teach",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
     "id": "mund",
     "lemma": "mund",
     "translationEn": "to be able / can",
     "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "ndihmoj",
+    "lemma": "ndihmoj",
+    "translationEn": "to help",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "ngarkoj",
+    "lemma": "ngarkoj",
+    "translationEn": "to load",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "perfundoj",
+    "lemma": "përfundoj",
+    "translationEn": "to conclude / finish",
+    "class": 1,
     "auxiliary": "kam"
   },
   {
@@ -105,6 +245,13 @@
     "auxiliary": "kam"
   },
   {
+    "id": "pranoj",
+    "lemma": "pranoj",
+    "translationEn": "to accept",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
     "id": "punoj",
     "lemma": "punoj",
     "translationEn": "to work",
@@ -119,6 +266,13 @@
     "auxiliary": "kam"
   },
   {
+    "id": "shkoj",
+    "lemma": "shkoj",
+    "translationEn": "to go",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
     "id": "shoh",
     "lemma": "shoh",
     "translationEn": "to see",
@@ -126,10 +280,66 @@
     "auxiliary": "kam"
   },
   {
+    "id": "shpejtoj",
+    "lemma": "shpejtoj",
+    "translationEn": "to hurry / to speed up",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "shtoj",
+    "lemma": "shtoj",
+    "translationEn": "to add",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "siguroj",
+    "lemma": "siguroj",
+    "translationEn": "to ensure / secure",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "takoj",
+    "lemma": "takoj",
+    "translationEn": "to meet",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
     "id": "them",
     "lemma": "them",
     "translationEn": "to say",
     "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "tregoj",
+    "lemma": "tregoj",
+    "translationEn": "to tell / to show",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "udhetoj",
+    "lemma": "udhëtoj",
+    "translationEn": "to travel",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "vazhdoj",
+    "lemma": "vazhdoj",
+    "translationEn": "to continue",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "veproj",
+    "lemma": "veproj",
+    "translationEn": "to act",
+    "class": 1,
     "auxiliary": "kam"
   },
   {

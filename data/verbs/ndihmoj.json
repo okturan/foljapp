@@ -1,0 +1,23 @@
+{
+  "id": "ndihmoj",
+  "lemma": "ndihmoj",
+  "translationEn": "to help",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "ndihmo",
+    "aorist": "ndihmua",
+    "participle": "ndihmuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/ndihmoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+    }
+  ],
+  "dialect": "tosk"
+}

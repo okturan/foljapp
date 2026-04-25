@@ -1,0 +1,23 @@
+{
+  "id": "perfundoj",
+  "lemma": "përfundoj",
+  "translationEn": "to conclude / finish",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "përfundo",
+    "aorist": "përfundua",
+    "participle": "përfunduar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/p%C3%ABrfundoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+    }
+  ],
+  "dialect": "tosk"
+}

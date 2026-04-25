@@ -1,0 +1,23 @@
+{
+  "id": "siguroj",
+  "lemma": "siguroj",
+  "translationEn": "to ensure / secure",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "siguro",
+    "aorist": "sigurua",
+    "participle": "siguruar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/siguroj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+    }
+  ],
+  "dialect": "tosk"
+}

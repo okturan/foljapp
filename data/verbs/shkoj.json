@@ -1,0 +1,23 @@
+{
+  "id": "shkoj",
+  "lemma": "shkoj",
+  "translationEn": "to go",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "shko",
+    "aorist": "shkua",
+    "participle": "shkuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/shkoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+    }
+  ],
+  "dialect": "tosk"
+}

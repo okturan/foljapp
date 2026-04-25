@@ -1,0 +1,23 @@
+{
+  "id": "botoj",
+  "lemma": "botoj",
+  "translationEn": "to publish",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "boto",
+    "aorist": "botua",
+    "participle": "botuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/botoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+    }
+  ],
+  "dialect": "tosk"
+}

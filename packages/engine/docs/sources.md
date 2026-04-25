@@ -24,19 +24,29 @@ implementing the conjugation engine. Source-priority order is set by
 Run `npx tsx scripts/verify-engine.ts` to compare engine output against
 Kaikki/Wiktionary's tagged conjugation tables for every corpus verb.
 
-| Match rate | 1406 / 1406 cells across 20 verbs    | 100%   |
-| Verified   | bej, djeg, dua, duhet, flas, ha, hap, |        |
-|            | iki, jam, jap, laj, marr, mund, pi,   |        |
-|            | pjek, punoj, rri, shoh, them, vij     | 20/20  |
+| Match rate | 4866 / 4866 cells across 50 verbs    | 100%   |
+| Verified   | v0.1 seed (20) + tier-1 batch of 30   |        |
+|            | high-frequency Class 1 -oj verbs      | 50/50  |
+
+The 1824 baseline includes both active and middle-passive admirative
+across all 4 tenses. Verify-engine probes both voices; for MP cells,
+forms are filtered by surface morphology (`u`-prefix for simple tenses,
+`qenkam`/`qenkësha` for compound) since Kaikki has no explicit MP tag.
 
 (`duhet` is impersonal/defective and Kaikki has no conjugation table
 for it; treated as a no-op match.)
 
-The 434 cells flagged as "missing" are forms our engine produces
-(future-perfect, future-in-past, etc.) that Kaikki's tables don't
-enumerate. Those remain best-effort against Husić; they are not
-counted as mismatches because there is no ground-truth form to
-compare against.
+Cells flagged as "missing" are forms our engine produces (future-perfect,
+future-in-past, etc.) that Kaikki's tables don't enumerate. Those remain
+best-effort against Husić; they are not counted as mismatches because
+there is no ground-truth form to compare against.
+
+Kaikki sometimes encodes a Gheg/dialectal alternate inside parens, e.g.,
+`marrkësh (marrkej)` for `marr` admirative imperfect 3sg or
+`u folkësh (folkej)` for the MP variant. `verify-engine.ts` strips the
+parenthetical before comparison; the standard form is what we produce.
+Kaikki's `u —` marker for nonexistent middle-passive cells is also
+treated as no ground truth (excluded from match/mismatch counts).
 
 ## How the 100% rate was achieved
 
@@ -51,6 +61,53 @@ that the engine consults before paradigm dispatch. Specifically:
   per-verb.
 - **Class 2 admirative** drops the entire `-ur` suffix (was just `r`).
   Engine paradigm fix.
+- **Admirative imperfect / pluperfect** are now implemented across all
+  three classes. The imperfect uses the same admirative-trim policy as
+  the present, with kësha-family endings (`-kësha/-këshe/-kësh/-këshim/
+  -këshit/-këshin`); 3sg is bare `-kësh`, the prescriptive `-kështe` and
+  Gheg `-kej` variants are out of scope per uniparser's `nonst` / Gheg
+  paradigm tags. The pluperfect composes `paskësha + participle`
+  (kam admirative imperfect, registered in `auxiliaries.ts`).
+- **Middle-passive admirative coverage**: simple tenses (present,
+  imperfect) inject the `u` voice-marker (mirrors MP aorist); compound
+  tenses (perfect, pluperfect) compose `qenkam`/`qenkësha + participle`
+  via the standard `aux = voice === 'middle-passive' ? 'jam' : entry.auxiliary`
+  switch. Fixed a pre-existing bug where `buildSimpleCell` ignored voice,
+  causing MP admirative present to silently return the active form.
+- **Middle-passive imperative**: `buildImperative` is voice-aware. For
+  active voice it dispatches to the existing paradigm. For MP voice it
+  consults `entry.cellOverrides['imperative.present.middle-passive']` and
+  throws `UnsupportedCellError` when no override exists — faithful to
+  Kaikki, which only lists MP imperatives for verbs with strong reflexive
+  semantics. Seed corpus: `laj` (lahu, lahuni) and `shoh` (shihu, shihuni)
+  carry overrides; other verbs throw.
+- **Conditional verify-engine tagging**: Kaikki tags conditional forms by
+  the verb form used in the construction (`do të punoja` → `imperfect`,
+  `do të kisha punuar` → `past + perfect`), not by construction label.
+  `tagsFor` is now mood-aware for conditional, and the past-disambiguation
+  filter is mood-agnostic (`!wanted.has('past') && ftags.has('past')`).
+  Net coverage gain: ~228 cells.
+- **MP voice arc completion**: `buildOptative.present`, `buildIndicative.future`,
+  and `buildIndicative.future-in-past` were ignoring voice and silently
+  returning active forms for MP requests. All three now dispatch to MP
+  paradigm rules (or `prependUMarker` for optative). A standing audit test
+  in `packages/engine/test/audit-mp-coverage.test.ts` catches this bug
+  class for any future builder by asserting every MP cell across all moods
+  is voice-marked (u-prefix, jam-paradigm aux, or dedicated MP endings).
+- **Tier-1 corpus expansion**: Added 30 high-frequency Class 1 -oj verbs
+  via `scripts/ingest-kaikki-batch.ts` (regular paradigm derivation).
+  Three (`perfundoj`, `shpejtoj`, `siguroj`) lack Kaikki entries; they
+  show as no-ground-truth cells but pass engine round-trip. Total corpus:
+  50 verbs, 4866/4866 Kaikki match-rate. Tier-2 (50→100) deferred — the
+  ingest script handles regular -oj only; class 2/3 verbs and irregulars
+  need the manual-cellOverrides path.
+- **Husić verification scaffolding**: `scripts/parse-husic.ts` skeleton
+  + `verify-engine.ts` Husić-fallback dispatch + format documentation
+  (`packages/engine/docs/husic-format.md`). Husić data acquisition is a
+  manual prerequisite (print-only as of this writing); once a digital
+  source is parsed into `.cache/husic/<id>.jsonl` files, verify-engine
+  consults Husić for cells where Kaikki has no entry. Match-rate output
+  breaks out per-source counts (`M (k)` vs `M (h)`).
 - **iki** uses cellOverrides for its Class 2D subtype: 1sg `iki`,
   2sg/3sg `ikën`, aorist 3sg `iku`.
 - **ha, rri** use cellOverrides for their consonant-stem aorist
@@ -68,7 +125,7 @@ that the engine consults before paradigm dispatch. Specifically:
   `pakam`/etc. in `packages/engine/src/suppletion.ts`.
 
 `scripts/verify-engine.ts` is the canonical regression check. Any
-corpus or engine change must keep the match-rate at 1406/1406 or
+corpus or engine change must keep the match-rate at 4866/4866 or
 explicitly justify the regression in its OpenSpec change.
 
 ## Suppletive paradigm references

@@ -1,0 +1,23 @@
+{
+  "id": "tregoj",
+  "lemma": "tregoj",
+  "translationEn": "to tell / to show",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "trego",
+    "aorist": "tregua",
+    "participle": "treguar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/tregoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+    }
+  ],
+  "dialect": "tosk"
+}

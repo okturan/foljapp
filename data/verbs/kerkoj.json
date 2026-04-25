@@ -1,0 +1,23 @@
+{
+  "id": "kerkoj",
+  "lemma": "kërkoj",
+  "translationEn": "to look for / to ask",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "kërko",
+    "aorist": "kërkua",
+    "participle": "kërkuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/k%C3%ABrkoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+    }
+  ],
+  "dialect": "tosk"
+}

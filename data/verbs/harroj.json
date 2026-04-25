@@ -1,0 +1,23 @@
+{
+  "id": "harroj",
+  "lemma": "harroj",
+  "translationEn": "to forget",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "harro",
+    "aorist": "harrua",
+    "participle": "harruar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/harroj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+    }
+  ],
+  "dialect": "tosk"
+}
