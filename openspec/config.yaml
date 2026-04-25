@@ -29,8 +29,10 @@ context: |
   Albanian is fusional Indo-European (NOT agglutinative). Cannot be
   derived purely from rules — requires a principal-parts dictionary
   (present stem, aorist stem, participle) per verb, plus a rules engine.
-  Tosk is the supported standard. Geg is out of scope (see "Scope
-  decisions" below).
+  Standard Albanian (gjuha standarde, codified 1972 on a Tosk
+  foundation) is the supported variety — what learners encounter in
+  Albanian schools, modern media, and every authoritative source we
+  cite. Geg is out of scope (see "Scope decisions" below).
 
   - 6 moods: Indicative, Subjunctive, Conditional, Admirative,
     Optative, Imperative
@@ -74,8 +76,10 @@ context: |
 
   ## Scope decisions (intentionally out of scope)
 
-  - Geg dialect support. The standard-Albanian (Tosk) corpus is the
-    deliverable; Geg paradigms differ enough that a credible parallel
+  - Geg dialect support. Standard Albanian (Tosk-based, codified 1972)
+    is the deliverable; Geg differs in rhotacism, infinitive
+    construction (`me + participle` vs the standard's `për të +
+    participle`), nasal vowels, and lexicon. A credible parallel
     treatment requires Geg-fluent contributors and a separate Kaikki-
     style verification pass. Dropped from the roadmap rather than left
     as a perpetual "future work" item.
