@@ -1,8 +1,5 @@
-# pronunciation Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change add-pronunciation. Update Purpose after archive.
-## Requirements
 ### Requirement: toIpa(text) maps Albanian text to its IPA transcription
 
 `apps/web/lib/ipa.ts` SHALL export a pure function `toIpa(text: string, options?: ToIpaOptions): string` that returns the IPA transcription of the input. The function SHALL recognize Albanian digraphs (`dh`, `gj`, `ll`, `nj`, `rr`, `sh`, `th`, `xh`, `zh`) and the special character `ç` as units, mapping each to its phonemic IPA value. Single letters SHALL map per the standard Albanian phonemic inventory. The output SHALL include a primary-stress marker `ˈ` placed immediately before the onset of the stressed syllable in each word. Stress placement SHALL follow the rules in the "Default stress placement" requirement and the per-form override mechanism.
@@ -42,25 +39,7 @@ Note: when stress falls on the first syllable of a polysyllabic word, the stress
 - **WHEN** `toIpa("kafé", { overrides: [{ form: "kafé", stressedSyllableIndex: 1 }] })` is invoked (hypothetical Latin-borrowing example)
 - **THEN** the resulting IPA SHALL place `ˈ` before the second syllable's onset, not the default penultimate
 
-### Requirement: Verb page surfaces IPA in the header
-
-The `VerbHeader` component SHALL render the lemma's IPA transcription in slashes (`/.../`) directly beneath the lemma. It SHALL also render the IPA next to each principal part (present, aorist, participle).
-
-#### Scenario: punoj page shows /punɔj/ under the lemma
-
-- **WHEN** the user visits `/verb/punoj`
-- **THEN** the rendered HTML SHALL contain the text `/punɔj/`
-- **AND** the principal-parts row SHALL show IPA for each of `puno`, `punua`, `punuar`
-
-### Requirement: API exposes IPA in the JSON detail response
-
-`GET /api/verbs/[lemma]` (default JSON format) SHALL include an `ipa` field on the response containing the lemma's IPA and each principal part's IPA. Backwards-compatible additive change.
-
-#### Scenario: API JSON includes ipa field
-
-- **WHEN** the user requests `GET /api/verbs/punoj`
-- **THEN** the JSON response SHALL contain `ipa.lemma === "punɔj"`
-- **AND** SHALL contain IPA values for `principalParts.present`, `principalParts.aorist`, `principalParts.participle`
+## ADDED Requirements
 
 ### Requirement: syllabify(word) splits an Albanian word into syllables
 
@@ -155,4 +134,3 @@ The `VerbHeader` component (already specified by `add-pronunciation`) SHALL rend
 
 - **WHEN** the user visits `/verb/jam` (whose principal part includes `kam` if it appears as auxiliary; or whose lemma `jam` IPA is `/ˈjam/`)
 - **THEN** the rendered IPA SHALL include the `ˈ` mark before the relevant syllable
-

@@ -10,12 +10,10 @@ import {
   type Tense,
   type TraceStep,
 } from '@foljapp/engine';
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
-import { DecomposedForm } from '@/components/decomposed-form';
-import { DerivationPanel } from '@/components/derivation-panel';
+import { PlaygroundResult } from '@/components/playground-result';
 import { VerbPicker } from '@/components/verb-picker';
 import '@/lib/corpus-client';
 import { findIndexByLemma } from '@/lib/corpus-index';
@@ -120,7 +118,6 @@ function configToParams(config: Config): URLSearchParams {
 export function Playground() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [copied, setCopied] = useState(false);
 
   const config = useMemo<Config>(() => readParams(searchParams ?? new URLSearchParams()), [searchParams]);
 
@@ -197,153 +194,128 @@ export function Playground() {
 
   const indexEntry = findIndexByLemma(config.verb);
 
-  async function copyLink() {
-    if (typeof window === 'undefined') return;
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      // ignore
-    }
-  }
-
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
-      <h1 className="text-3xl font-bold tracking-tight">Playground</h1>
-      <p className="mt-2 text-stone-600">
-        Pick a verb and any combination of grammatical parameters. The engine
-        recomputes live.
-      </p>
+    <main className="mx-auto max-w-6xl px-6 py-6 lg:py-10 lg:grid lg:grid-cols-[3fr_2fr] lg:gap-12 lg:items-start">
+      <aside
+        aria-label="Conjugated form"
+        className="
+          sticky top-0 z-10 -mx-6 mb-6 px-6 py-4
+          bg-stone-50/95 backdrop-blur border-b border-stone-200
 
-      <div className="mt-8">
-        <label className="text-sm text-stone-500">Verb</label>
-        <div className="mt-1">
-          <VerbPicker value={config.verb} onSelect={(lemma) => update({ verb: lemma })} />
+          lg:order-2 lg:top-8 lg:self-start lg:z-0
+          lg:mx-0 lg:mb-0 lg:px-6 lg:py-6
+          lg:bg-white lg:border lg:border-stone-200 lg:rounded-lg lg:backdrop-blur-none
+        "
+      >
+        <PlaygroundResult
+          result={result}
+          traceSteps={traceSteps}
+          unsupported={unsupported}
+          errorMsg={errorMsg}
+          verb={config.verb}
+        />
+      </aside>
+
+      <div className="lg:order-1">
+        <h1 className="text-3xl font-bold tracking-tight">Playground</h1>
+        <p className="mt-2 text-stone-600">
+          Pick a verb and any combination of grammatical parameters. The engine
+          recomputes live.
+        </p>
+
+        <div className="mt-8">
+          <label className="text-sm text-stone-500">Verb</label>
+          <div className="mt-1">
+            <VerbPicker value={config.verb} onSelect={(lemma) => update({ verb: lemma })} />
+          </div>
+          {indexEntry ? (
+            <p className="mt-2 text-xs text-stone-400">
+              {indexEntry.translationEn} · Zgjedhimi {indexEntry.class} · auxiliary {indexEntry.auxiliary}
+            </p>
+          ) : null}
         </div>
-        {indexEntry ? (
-          <p className="mt-2 text-xs text-stone-400">
-            {indexEntry.translationEn} · Zgjedhimi {indexEntry.class} · auxiliary {indexEntry.auxiliary}
-          </p>
+
+        <RadioGroup
+          label="Mood"
+          name="mood"
+          options={MOODS.map((m) => ({ value: m, label: m }))}
+          value={config.mood}
+          onChange={(v) => update({ mood: v as Mood })}
+        />
+
+        {tenseOptions ? (
+          <RadioGroup
+            label="Tense"
+            name="tense"
+            options={tenseOptions.map((t) => ({ value: t, label: t.replace(/-/g, ' ') }))}
+            value={config.tense ?? tenseOptions[0]!}
+            onChange={(v) => update({ tense: v as Tense })}
+          />
+        ) : null}
+
+        {config.mood === 'non-finite' ? (
+          <RadioGroup
+            label="Form"
+            name="form"
+            options={NON_FINITE_FORMS.map((f) => ({ value: f, label: f }))}
+            value={config.form ?? 'participle'}
+            onChange={(v) => update({ form: v as NonFiniteForm })}
+          />
+        ) : null}
+
+        {config.mood !== 'non-finite' ? (
+          <>
+            <RadioGroup
+              label="Voice"
+              name="voice"
+              options={[
+                { value: 'active', label: 'active' },
+                { value: 'middle-passive', label: 'middle-passive' },
+              ]}
+              value={config.voice}
+              onChange={(v) => update({ voice: v as 'active' | 'middle-passive' })}
+            />
+            <RadioGroup
+              label="Polarity"
+              name="polarity"
+              options={[
+                { value: 'affirmative', label: 'affirmative' },
+                { value: 'negative', label: 'negative' },
+              ]}
+              value={config.polarity}
+              onChange={(v) =>
+                update({ polarity: v as 'affirmative' | 'negative' })
+              }
+            />
+            <RadioGroup
+              label="Modality"
+              name="modality"
+              options={[
+                { value: 'declarative', label: 'declarative' },
+                { value: 'interrogative', label: 'interrogative' },
+              ]}
+              value={config.modality}
+              onChange={(v) =>
+                update({ modality: v as 'declarative' | 'interrogative' })
+              }
+            />
+            <RadioGroup
+              label="Person"
+              name="person"
+              options={PERSONS.map((p) => ({ value: String(p), label: String(p) }))}
+              value={String(config.person)}
+              onChange={(v) => update({ person: Number(v) as 1 | 2 | 3 })}
+            />
+            <RadioGroup
+              label="Number"
+              name="number"
+              options={NUMBERS.map((n) => ({ value: n, label: n === 'singular' ? 'sg' : 'pl' }))}
+              value={config.number}
+              onChange={(v) => update({ number: v as 'singular' | 'plural' })}
+            />
+          </>
         ) : null}
       </div>
-
-      <RadioGroup
-        label="Mood"
-        name="mood"
-        options={MOODS.map((m) => ({ value: m, label: m }))}
-        value={config.mood}
-        onChange={(v) => update({ mood: v as Mood })}
-      />
-
-      {tenseOptions ? (
-        <RadioGroup
-          label="Tense"
-          name="tense"
-          options={tenseOptions.map((t) => ({ value: t, label: t.replace(/-/g, ' ') }))}
-          value={config.tense ?? tenseOptions[0]!}
-          onChange={(v) => update({ tense: v as Tense })}
-        />
-      ) : null}
-
-      {config.mood === 'non-finite' ? (
-        <RadioGroup
-          label="Form"
-          name="form"
-          options={NON_FINITE_FORMS.map((f) => ({ value: f, label: f }))}
-          value={config.form ?? 'participle'}
-          onChange={(v) => update({ form: v as NonFiniteForm })}
-        />
-      ) : null}
-
-      {config.mood !== 'non-finite' ? (
-        <>
-          <RadioGroup
-            label="Voice"
-            name="voice"
-            options={[
-              { value: 'active', label: 'active' },
-              { value: 'middle-passive', label: 'middle-passive' },
-            ]}
-            value={config.voice}
-            onChange={(v) => update({ voice: v as 'active' | 'middle-passive' })}
-          />
-          <RadioGroup
-            label="Polarity"
-            name="polarity"
-            options={[
-              { value: 'affirmative', label: 'affirmative' },
-              { value: 'negative', label: 'negative' },
-            ]}
-            value={config.polarity}
-            onChange={(v) =>
-              update({ polarity: v as 'affirmative' | 'negative' })
-            }
-          />
-          <RadioGroup
-            label="Modality"
-            name="modality"
-            options={[
-              { value: 'declarative', label: 'declarative' },
-              { value: 'interrogative', label: 'interrogative' },
-            ]}
-            value={config.modality}
-            onChange={(v) =>
-              update({ modality: v as 'declarative' | 'interrogative' })
-            }
-          />
-          <RadioGroup
-            label="Person"
-            name="person"
-            options={PERSONS.map((p) => ({ value: String(p), label: String(p) }))}
-            value={String(config.person)}
-            onChange={(v) => update({ person: Number(v) as 1 | 2 | 3 })}
-          />
-          <RadioGroup
-            label="Number"
-            name="number"
-            options={NUMBERS.map((n) => ({ value: n, label: n === 'singular' ? 'sg' : 'pl' }))}
-            value={config.number}
-            onChange={(v) => update({ number: v as 'singular' | 'plural' })}
-          />
-        </>
-      ) : null}
-
-      <section className="mt-10 border-t border-stone-200 pt-8">
-        <p className="text-xs uppercase tracking-wider text-stone-400">Form</p>
-        {result ? (
-          <>
-            <div className="mt-2 text-3xl">
-              <DecomposedForm segments={result.decomposition} />
-            </div>
-            <DerivationPanel steps={traceSteps} />
-          </>
-        ) : unsupported ? (
-          <p className="mt-2 text-stone-400 italic">
-            unsupported cell — engine reports this combination is not part of
-            standard Albanian
-          </p>
-        ) : errorMsg ? (
-          <p className="mt-2 text-red-600">{errorMsg}</p>
-        ) : null}
-
-        <div className="mt-6 flex items-center gap-4 text-sm">
-          <button
-            type="button"
-            onClick={copyLink}
-            aria-label="Copy link"
-            className="rounded-md border border-stone-200 bg-white px-3 py-1.5 hover:bg-stone-50"
-          >
-            {copied ? 'Copied' : 'Copy link'}
-          </button>
-          <Link
-            href={`/verb/${encodeURIComponent(config.verb)}`}
-            className="text-stone-600 underline underline-offset-2 hover:text-stone-900"
-          >
-            See full table → /verb/{config.verb}
-          </Link>
-        </div>
-      </section>
     </main>
   );
 }

@@ -2,95 +2,130 @@ import { describe, expect, it } from 'vitest';
 
 import { toIpa, toIpaBracketed } from './ipa';
 
-describe('toIpa — single-letter mapping', () => {
-  it('punoj → punɔj', () => {
-    expect(toIpa('punoj')).toBe('punɔj');
+describe('toIpa — single-letter mapping with stress', () => {
+  it('punoj → puˈnɔj (Class 1 -j lemma → final stress)', () => {
+    expect(toIpa('punoj')).toBe('puˈnɔj');
   });
 
-  it('hap → hap', () => {
-    expect(toIpa('hap')).toBe('hap');
+  it('hap → ˈhap (monosyllable)', () => {
+    expect(toIpa('hap')).toBe('ˈhap');
   });
 
-  it('pi → pi', () => {
-    expect(toIpa('pi')).toBe('pi');
+  it('pi → ˈpi (monosyllable)', () => {
+    expect(toIpa('pi')).toBe('ˈpi');
   });
 
-  it('jam → jam', () => {
-    expect(toIpa('jam')).toBe('jam');
+  it('jam → ˈjam (monosyllable)', () => {
+    expect(toIpa('jam')).toBe('ˈjam');
   });
 
-  it('bëj → bəj (ë → ə)', () => {
-    expect(toIpa('bëj')).toBe('bəj');
+  it('bëj → ˈbəj (ë → ə, monosyllable)', () => {
+    expect(toIpa('bëj')).toBe('ˈbəj');
   });
 
-  it('mund → mund', () => {
-    expect(toIpa('mund')).toBe('mund');
+  it('mund → ˈmund (monosyllable)', () => {
+    expect(toIpa('mund')).toBe('ˈmund');
   });
 });
 
-describe('toIpa — digraphs', () => {
-  it('shoh → ʃɔh (sh digraph)', () => {
-    expect(toIpa('shoh')).toBe('ʃɔh');
+describe('toIpa — digraphs with stress', () => {
+  it('shoh → ˈʃɔh (sh digraph, monosyllable)', () => {
+    expect(toIpa('shoh')).toBe('ˈʃɔh');
   });
 
-  it('thashë → θaʃə (th + sh)', () => {
-    expect(toIpa('thashë')).toBe('θaʃə');
+  it('thashë → ˈθaʃə (penult stress on first syllable)', () => {
+    expect(toIpa('thashë')).toBe('ˈθaʃə');
   });
 
-  it('djeg → djɛɡ (no digraph collision)', () => {
-    expect(toIpa('djeg')).toBe('djɛɡ');
+  it('djeg → ˈdjɛɡ (no digraph collision; monosyllable)', () => {
+    expect(toIpa('djeg')).toBe('ˈdjɛɡ');
   });
 
-  it('dogja → dɔɟa (gj digraph)', () => {
-    expect(toIpa('dogja')).toBe('dɔɟa');
+  it('dogja → ˈdɔɟa (gj digraph, penult on first syllable)', () => {
+    expect(toIpa('dogja')).toBe('ˈdɔɟa');
   });
 
-  it('marrë → marə (rr ≠ r)', () => {
-    // rr → r (trill), single r → ɾ (tap)
-    expect(toIpa('marrë')).toBe('marə');
+  it('marrë → ˈmarə (rr ≠ r, penult)', () => {
+    expect(toIpa('marrë')).toBe('ˈmarə');
   });
 
-  it('rri → ri (rr at start)', () => {
-    expect(toIpa('rri')).toBe('ri');
+  it('rri → ˈri (rr at start, monosyllable)', () => {
+    expect(toIpa('rri')).toBe('ˈri');
   });
 
-  it('q → c (palatal stop)', () => {
-    expect(toIpa('poq')).toBe('pɔc');
+  it('q → c (palatal stop): poq → ˈpɔc', () => {
+    expect(toIpa('poq')).toBe('ˈpɔc');
   });
 });
 
 describe('toIpa — special characters', () => {
-  it('ç → tʃ', () => {
+  it('ç → tʃ (single grapheme; toIpa treats as 0-syllable string)', () => {
+    // `ç` alone has no vowel, so it's a degenerate case — emit as plain IPA
     expect(toIpa('ç')).toBe('tʃ');
   });
 
-  it('ll → ɫ (velarized)', () => {
-    expect(toIpa('mall')).toBe('maɫ');
+  it('ll → ɫ (velarized): mall → ˈmaɫ', () => {
+    expect(toIpa('mall')).toBe('ˈmaɫ');
   });
 });
 
 describe('toIpa — multi-word forms', () => {
-  it('preserves word boundaries: kam punuar → kam punuaɾ', () => {
-    expect(toIpa('kam punuar')).toBe('kam punuaɾ');
+  it('kam punuar → ˈkam puˈnuaɾ (each word independently stressed)', () => {
+    expect(toIpa('kam punuar')).toBe('ˈkam puˈnuaɾ');
   });
 
-  it('do të punoja preserves three words', () => {
-    expect(toIpa('do të punoja')).toBe('dɔ tə punɔja');
+  it('do të punoja → ˈdɔ ˈtə puˈnɔja (three words, three stresses)', () => {
+    expect(toIpa('do të punoja')).toBe('ˈdɔ ˈtə puˈnɔja');
   });
 
-  it('jam larë', () => {
-    expect(toIpa('jam larë')).toBe('jam laɾə');
+  it('jam larë → ˈjam ˈlaɾə', () => {
+    expect(toIpa('jam larë')).toBe('ˈjam ˈlaɾə');
+  });
+});
+
+describe('toIpa — admirative + MP voice forms', () => {
+  it('folkësha → fɔlˈkəʃa (admirative imperfect 1sg)', () => {
+    expect(toIpa('folkësha')).toBe('fɔlˈkəʃa');
+  });
+
+  it('paskësha folur → paˈskəʃa ˈfɔluɾ (admirative pluperfect 1sg)', () => {
+    expect(toIpa('paskësha folur')).toBe('paˈskəʃa ˈfɔluɾ');
+  });
+
+  it('u folkësha → ˈu fɔlˈkəʃa (MP admirative imperfect 1sg)', () => {
+    expect(toIpa('u folkësha')).toBe('ˈu fɔlˈkəʃa');
+  });
+
+  it('punohem → puˈnɔhɛm (MP indicative present 1sg)', () => {
+    expect(toIpa('punohem')).toBe('puˈnɔhɛm');
+  });
+
+  it('punohesha → punɔˈhɛʃa (MP indicative imperfect 1sg)', () => {
+    expect(toIpa('punohesha')).toBe('punɔˈhɛʃa');
+  });
+});
+
+describe('toIpa — stress overrides', () => {
+  it('është → əˈʃtə (registry override: 3sg of jam, final stress)', () => {
+    expect(toIpa('është')).toBe('əˈʃtə');
+  });
+
+  it('per-call overrides win over the default', () => {
+    // Hypothetical: force stress on the first syllable of `punoj`.
+    expect(
+      toIpa('punoj', { overrides: [{ form: 'punoj', stressedSyllableIndex: 0, source: 'test' }] }),
+    ).toBe('ˈpunɔj');
   });
 });
 
 describe('toIpa — case insensitivity', () => {
-  it('Punoj → punɔj (lowercased input)', () => {
-    expect(toIpa('Punoj')).toBe('punɔj');
+  it('Punoj → puˈnɔj (lowercased input)', () => {
+    expect(toIpa('Punoj')).toBe('puˈnɔj');
   });
 });
 
 describe('toIpaBracketed', () => {
-  it('wraps the result in slashes', () => {
-    expect(toIpaBracketed('punoj')).toBe('/punɔj/');
+  it('wraps the result in slashes with stress', () => {
+    expect(toIpaBracketed('punoj')).toBe('/puˈnɔj/');
   });
 });
