@@ -29,7 +29,8 @@ context: |
   Albanian is fusional Indo-European (NOT agglutinative). Cannot be
   derived purely from rules — requires a principal-parts dictionary
   (present stem, aorist stem, participle) per verb, plus a rules engine.
-  Standard = Tosk dialect; Geg noted but secondary in v1.
+  Tosk is the supported standard. Geg is out of scope (see "Scope
+  decisions" below).
 
   - 6 moods: Indicative, Subjunctive, Conditional, Admirative,
     Optative, Imperative
@@ -65,9 +66,27 @@ context: |
 
   Phase 1 — Foundation       : conjugation-engine, verb-corpus, reference-pages
   Phase 2 — Core UX          : search-and-browse, conjugation-tables-ui, decomposition
-  Phase 3 — Education        : grammar-articles, interactive-playground, practice-mode
-  Phase 4 — Academic         : igt-export, public-api, frequency-data, citations
-  Phase 5 — Polish           : dialect-support, pronunciation
+  Phase 3 — Education        : grammar-articles, interactive-playground, practice-mode,
+                               engine-trace
+  Phase 4 — Academic         : igt-export, public-api, corpus-frequency,
+                               bibliographic-citations
+  Phase 5 — Polish           : pronunciation
+
+  ## Scope decisions (intentionally out of scope)
+
+  - Geg dialect support. The standard-Albanian (Tosk) corpus is the
+    deliverable; Geg paradigms differ enough that a credible parallel
+    treatment requires Geg-fluent contributors and a separate Kaikki-
+    style verification pass. Dropped from the roadmap rather than left
+    as a perpetual "future work" item.
+  - Internationalization / localization (l10n). English is the only
+    UI language. A Albanian-language UI was considered and dropped
+    because the audience is overwhelmingly English-reading learners
+    of Albanian; native speakers don't need an Albanian UI to
+    navigate Albanian morphology.
+
+  These are intentional scope decisions, not deferred work. Re-opening
+  either requires a fresh proposal arguing the case.
 
 rules:
   proposal:
@@ -79,7 +98,7 @@ rules:
   design:
     - Include data shape diagrams when a JSON schema is involved
     - Call out phonological / morphological edge cases explicitly
-    - Note dialectal scope (Tosk only vs. Tosk + Geg) per feature
+    - Note when a feature's behavior is Tosk-only (the only supported dialect)
     - For UI changes, include an ASCII wireframe
     - Call out tradeoffs in a dedicated "Tradeoffs" section
 
