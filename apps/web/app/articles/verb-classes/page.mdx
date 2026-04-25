@@ -1,0 +1,53 @@
+export const metadata = {
+  title: 'Albanian Verb Classes',
+  slug: 'verb-classes',
+  summary:
+    'The three conjugation classes of standard Albanian (Zgjedhimet) and how to spot which class a verb belongs to from its 1st-person singular present form.',
+  category: 'classes',
+  published: true,
+  updatedAt: '2026-04-25',
+};
+
+# Albanian Verb Classes
+
+Standard Albanian organizes verbs into three conjugation classes — *zgjedhimet*. Whether a verb is Class 1, 2, or 3 determines its endings across every mood and tense, so identifying the class is the very first step in conjugating any verb you encounter.
+
+The diagnostic is mechanical: look at the 1st-person singular present form (the dictionary form) and check what it ends in.
+
+## Class 1 — verbs ending in `-j`
+
+Class 1 verbs have a 1sg present that ends in `-j` after a vowel. The vowel before the `-j` is the **present stem**.
+
+<Example verbId="punoj" mood="indicative" tense="present" person={1} number="singular" />
+
+The verb <VerbLink lemma="punoj" /> has stem `puno-` and class-1 endings `-j / -n / -n / -jmë / -ni / -jnë` for the present.
+
+Other Class 1 verbs in the corpus: <VerbLink lemma="laj" />, <VerbLink lemma="bëj" />, <VerbLink lemma="vij" />.
+
+## Class 2 — verbs ending in a consonant
+
+Class 2 verbs have a 1sg present that ends in a consonant. The whole word is typically the **present stem**.
+
+<Example verbId="hap" mood="indicative" tense="present" person={1} number="singular" />
+
+<VerbLink lemma="hap" /> has stem `hap` and class-2 endings — the singular cells use the bare stem, plural takes `-im / -ni / -in`.
+
+Many Class 2 verbs alternate stems across cells: <VerbLink lemma="marr" /> shows `marr` in 1sg/1pl/3pl but `merr` in 2sg/3sg/2pl. Mutating verbs like <VerbLink lemma="pjek" /> palatalize before consonant clusters: stem `pjek` → `piq` in `piqni`, `piqja`. The corpus encodes these alternations as cell-level overrides.
+
+## Class 3 — verbs ending in a vowel
+
+Class 3 verbs have a 1sg present that ends in a vowel — usually `-i`, `-a`, or `-e`. The whole word is the present stem.
+
+<Example verbId="pi" mood="indicative" tense="present" person={1} number="plural" />
+
+<VerbLink lemma="pi" /> in 1pl present uses the class-3 ending `-më` to give `pimë`. Class 3 verbs are typically monosyllabic and tend toward irregularity in the aorist (<VerbLink lemma="dua" /> → aorist stem `desh`; <VerbLink lemma="ha" /> → aorist stem `hëngr`).
+
+## How the engine uses class
+
+The engine's paradigm files (`packages/engine/src/paradigms/class-{1,2,3}.ts`) implement the regular forms for each class. Per-verb deviations are encoded as `cellOverrides` on the corpus entry. The full Kaikki/Wiktionary verification (1406 / 1406 cells matched) lives in `packages/engine/docs/sources.md`.
+
+## References
+
+- Husić, *Albanian Verb Dictionary and Manual*, §§1A, 2A, 3A.
+- Kadriu, *Computational Modeling of Morphology in Albanian* (ICT4LL 2015).
+- [Wikipedia: Albanian morphology](https://en.wikipedia.org/wiki/Albanian_morphology).

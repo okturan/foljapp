@@ -21,6 +21,12 @@ export default function Home() {
           Browse all {corpusIndex.length} verbs
         </Link>
       </p>
+      <p className="mt-2 text-sm text-stone-500">
+        →{' '}
+        <Link href="/articles" className="underline underline-offset-2 hover:text-stone-700">
+          Read articles on Albanian morphology
+        </Link>
+      </p>
     </main>
   );
 }

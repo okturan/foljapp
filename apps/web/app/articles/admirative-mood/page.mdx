@@ -1,0 +1,64 @@
+export const metadata = {
+  title: 'The Admirative Mood',
+  slug: 'admirative-mood',
+  summary:
+    'Albanian has a dedicated mood — habitore — for surprise, irony, and reported speech. It is one of the features that distinguishes Albanian from any romance, germanic, or slavic language a learner has met before.',
+  category: 'mood',
+  published: true,
+  updatedAt: '2026-04-25',
+};
+
+# The Admirative Mood (Habitore)
+
+<MoodBadge name="admirative" /> is one of the more striking features of Albanian morphology. Most Indo-European languages express surprise, irony, or reported speech through prosody, particles, or auxiliary constructions. Albanian conjugates it.
+
+A speaker says <Example verbId="punoj" mood="admirative" tense="present" person={3} number="singular" /> when they have just discovered, with some emotional charge, that someone works. The neutral indicative <Example verbId="punoj" mood="indicative" tense="present" person={3} number="singular" /> simply states the fact.
+
+## Where it sits in the system
+
+The admirative is one of six finite moods in standard Albanian:
+
+- <MoodBadge name="indicative" /> — neutral statement
+- <MoodBadge name="subjunctive" /> — possibility, intent, dependence
+- <MoodBadge name="conditional" /> — hypotheticals
+- <MoodBadge name="admirative" /> — surprise, irony, evidentiality
+- <MoodBadge name="optative" /> — wish, blessing, curse
+- <MoodBadge name="imperative" /> — command (2nd person only)
+
+Among these, only the admirative and the optative lack direct equivalents in English. The admirative is sometimes called *evidential* by linguists who emphasize its reported-speech use; *habitore* (literally "amazement") emphasizes its expressive use. Both are correct.
+
+## How it's built
+
+The admirative present is the participle stem (with the participle suffix dropped) plus the admirative endings: `-kam / -ke / -ka / -kemi / -keni / -kan`. These are derived from `kam` ("to have") fused onto the participle root — a contracted compound that has grammaticalized over the centuries.
+
+For <VerbLink lemma="punoj" />, participle `punuar` → drop `-r` → `punua` → add `-kam` → <Example verbId="punoj" mood="admirative" tense="present" person={1} number="singular" />.
+
+For <VerbLink lemma="hap" />, participle `hapur` → drop `-ur` → `hap` → add `-kam` → <Example verbId="hap" mood="admirative" tense="present" person={1} number="singular" />.
+
+The trim depends on the participle's surface ending — `-rrë` keeps the `rr` (so <VerbLink lemma="marr" /> → <Example verbId="marr" mood="admirative" tense="present" person={1} number="singular" />), but `-rë` drops both letters (so <VerbLink lemma="laj" /> → <Example verbId="laj" mood="admirative" tense="present" person={1} number="singular" />). The foljapp engine handles this dynamically.
+
+## Suppletive forms
+
+Three of the corpus suppletives have surprising admirative stems:
+
+- <VerbLink lemma="jam" /> — <Example verbId="jam" mood="admirative" tense="present" person={1} number="singular" /> (built on the participle `qenë`)
+- <VerbLink lemma="shoh" /> — <Example verbId="shoh" mood="admirative" tense="present" person={1} number="singular" /> (built on `parë`)
+- <VerbLink lemma="them" /> — <Example verbId="them" mood="admirative" tense="present" person={1} number="singular" />
+
+## The perfect admirative
+
+Compound admirative tenses combine `kam`'s admirative present with the lexical verb's participle:
+
+<Example verbId="punoj" mood="admirative" tense="perfect" person={1} number="singular" />
+
+Read this as: "I have apparently worked" — surprised retrospection.
+
+## Where you'll see it
+
+In conversation, the admirative tags the speaker's astonishment or doubt. In journalism and folklore, it marks reported speech where the speaker is not asserting the truth of the statement — equivalent to English's "supposedly" or "allegedly," but baked into the verb's morphology.
+
+## References
+
+- Husić, *Albanian Verb Dictionary and Manual*, the chapter on *habitore*.
+- Newmark, Hubbard, Prifti, *Standard Albanian: A Reference Grammar for Students*, §§ on mood and evidentiality.
+- [Wikipedia: Admirative mood](https://en.wikipedia.org/wiki/Admirative_mood).
