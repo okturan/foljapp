@@ -3,5 +3,18 @@
     "form": "është",
     "stressedSyllableIndex": 1,
     "source": "Newmark 1982 §2.4 (3sg of jam — final stress on -shtë)"
+  },
+  {
+    "form": "vendos",
+    "stressedSyllableIndex": 1,
+    "source": "Newmark 1982 §2.4; Buchholz & Fiedler 1987 §1.2.3 (Class 2 polysyllabic lemma with final stress)",
+    "notes": "ven.dos — penult-default would give idx 0 (vendos); standard final-stress is venˈdos."
+  },
+  {
+    "form": "tërheq",
+    "stressedSyllableIndex": 1,
+    "source": "Newmark 1982 §2.4; Husić 2002 paradigm-model entry (Class 2 final-stressed lemma with three-stem alternation)",
+    "notes": "tër.heq — penult-default gives idx 0; standard final-stress is tərˈhɛc."
   }
 ]
+
