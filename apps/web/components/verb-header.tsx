@@ -1,5 +1,7 @@
 import type { VerbEntry } from '@foljapp/engine';
 
+import { toIpa, toIpaBracketed } from '@/lib/ipa';
+
 interface Props {
   entry: VerbEntry;
 }
@@ -13,6 +15,9 @@ export function VerbHeader({ entry }: Props) {
         </h1>
         <p className="text-lg text-stone-600">{entry.translationEn}</p>
       </div>
+      <p className="mt-1 font-mono text-sm italic text-stone-500">
+        {toIpaBracketed(entry.lemma)}
+      </p>
       <p className="mt-1 text-sm text-stone-500">
         1sg present indicative
       </p>
@@ -36,22 +41,31 @@ export function VerbHeader({ entry }: Props) {
         ) : null}
       </div>
       <dl className="mt-6 grid grid-cols-1 gap-x-8 gap-y-2 text-sm sm:grid-cols-3">
-        <div className="flex items-baseline gap-2">
-          <dt className="text-stone-500">present stem:</dt>
+        <div className="flex flex-col">
+          <dt className="text-stone-500">present stem</dt>
           <dd className="font-mono text-stone-900">
-            {entry.principalParts.present}
+            {entry.principalParts.present}{' '}
+            <span className="text-xs italic text-stone-400">
+              /{toIpa(entry.principalParts.present)}/
+            </span>
           </dd>
         </div>
-        <div className="flex items-baseline gap-2">
-          <dt className="text-stone-500">aorist stem:</dt>
+        <div className="flex flex-col">
+          <dt className="text-stone-500">aorist stem</dt>
           <dd className="font-mono text-stone-900">
-            {entry.principalParts.aorist}
+            {entry.principalParts.aorist}{' '}
+            <span className="text-xs italic text-stone-400">
+              /{toIpa(entry.principalParts.aorist)}/
+            </span>
           </dd>
         </div>
-        <div className="flex items-baseline gap-2">
-          <dt className="text-stone-500">participle:</dt>
+        <div className="flex flex-col">
+          <dt className="text-stone-500">participle</dt>
           <dd className="font-mono text-stone-900">
-            {entry.principalParts.participle}
+            {entry.principalParts.participle}{' '}
+            <span className="text-xs italic text-stone-400">
+              /{toIpa(entry.principalParts.participle)}/
+            </span>
           </dd>
         </div>
       </dl>

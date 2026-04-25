@@ -10,6 +10,7 @@ import {
 import { corpusVersion, findEntryByLemma } from '@/lib/corpus';
 import { allLemmas } from '@/lib/corpus';
 import { formatConllu, formatIgtTable } from '@/lib/igt';
+import { toIpa } from '@/lib/ipa';
 
 // Not force-static: the route honors ?format=... which varies per request.
 // Static prerendering for the JSON default still happens via generateStaticParams.
@@ -52,6 +53,14 @@ export async function GET(
     cite: citationFor(`/api/verbs/${entry.lemma}`),
     entry,
     table: table(entry.id),
+    ipa: {
+      lemma: toIpa(entry.lemma),
+      principalParts: {
+        present: toIpa(entry.principalParts.present),
+        aorist: toIpa(entry.principalParts.aorist),
+        participle: toIpa(entry.principalParts.participle),
+      },
+    },
   };
   return NextResponse.json(body);
 }

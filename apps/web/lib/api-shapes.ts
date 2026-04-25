@@ -19,6 +19,14 @@ export interface ApiVerbDetailResponse {
   cite: string;
   entry: VerbEntry;
   table: VerbTable;
+  ipa: {
+    lemma: string;
+    principalParts: {
+      present: string;
+      aorist: string;
+      participle: string;
+    };
+  };
 }
 
 export interface ApiErrorResponse {

@@ -199,3 +199,13 @@ Every `/verb/[lemma]` page SHALL render a Cite control adjacent to the existing 
 - **WHEN** the user clicks the Cite control on `/verb/punoj`
 - **THEN** the page SHALL surface citation strings including the verb's lemma, translation, and the foljapp URL pattern `/verb/punoj`
 
+### Requirement: Verb header shows lemma IPA
+
+The `/verb/[lemma]` page header SHALL render the lemma's IPA transcription in slashes beneath the lemma title, and SHALL render IPA inline next to each principal part.
+
+#### Scenario: pjek page shows /pjɛk/ for the lemma and /pɔc/ for the aorist stem
+
+- **WHEN** the user visits `/verb/pjek`
+- **THEN** the rendered HTML SHALL contain `/pjɛk/` (the lemma IPA)
+- **AND** SHALL contain `/pɔc/` (the aorist-stem `poq` mapped to IPA — note `q` → `c`)
+
