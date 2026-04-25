@@ -1,0 +1,23 @@
+{
+  "id": "zhvilloj",
+  "lemma": "zhvilloj",
+  "translationEn": "to develop",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "zhvillo",
+    "aorist": "zhvillua",
+    "participle": "zhvilluar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/zhvilloj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

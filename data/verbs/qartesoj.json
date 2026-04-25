@@ -1,0 +1,23 @@
+{
+  "id": "qartesoj",
+  "lemma": "qartësoj",
+  "translationEn": "to clarify",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "qartëso",
+    "aorist": "qartësua",
+    "participle": "qartësuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/qart%C3%ABsoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

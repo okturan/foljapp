@@ -24,9 +24,10 @@ implementing the conjugation engine. Source-priority order is set by
 Run `npx tsx scripts/verify-engine.ts` to compare engine output against
 Kaikki/Wiktionary's tagged conjugation tables for every corpus verb.
 
-| Match rate | 4866 / 4866 cells across 50 verbs    | 100%   |
-| Verified   | v0.1 seed (20) + tier-1 batch of 30   |        |
-|            | high-frequency Class 1 -oj verbs      | 50/50  |
+| Match rate | 7980 / 7980 cells across 100 verbs   | 100%   |
+| Verified   | v0.1 seed (20) + tier-1 (30 -oj) +    |        |
+|            | tier-2 (50: 40 Class 1 + 7 Class 2 +  |        |
+|            | 3 hand-crafted irregulars)            | 100/100 |
 
 The 1824 baseline includes both active and middle-passive admirative
 across all 4 tenses. Verify-engine probes both voices; for MP cells,
@@ -108,6 +109,13 @@ that the engine consults before paradigm dispatch. Specifically:
   source is parsed into `.cache/husic/<id>.jsonl` files, verify-engine
   consults Husić for cells where Kaikki has no entry. Match-rate output
   breaks out per-source counts (`M (k)` vs `M (h)`).
+- **Tier-2 corpus expansion**: 50→100 verbs. Extended
+  `scripts/ingest-kaikki-batch.ts` with Class 1 -uaj, Class 2 consonant-
+  stem, and Class 3 vowel-stem derivation rules. Class 1 -aj/-ej throw
+  by design (mostly irregular; manifest authors must flag and hand-craft).
+  Tier-2 batch: 47 auto-scaffolded regulars + 3 hand-crafted irregulars
+  (`ngrij`, `sherbej`, `terheq`) with cellOverrides for stem alternations
+  and aorist patterns. 100% Kaikki match-rate maintained at 7980/7980.
 - **iki** uses cellOverrides for its Class 2D subtype: 1sg `iki`,
   2sg/3sg `ikën`, aorist 3sg `iku`.
 - **ha, rri** use cellOverrides for their consonant-stem aorist
@@ -125,7 +133,7 @@ that the engine consults before paradigm dispatch. Specifically:
   `pakam`/etc. in `packages/engine/src/suppletion.ts`.
 
 `scripts/verify-engine.ts` is the canonical regression check. Any
-corpus or engine change must keep the match-rate at 4866/4866 or
+corpus or engine change must keep the match-rate at 7980/7980 or
 explicitly justify the regression in its OpenSpec change.
 
 ## Suppletive paradigm references

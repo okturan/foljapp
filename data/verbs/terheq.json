@@ -1,0 +1,38 @@
+{
+  "id": "terheq",
+  "lemma": "tërheq",
+  "translationEn": "to pull / to attract",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "tërheq",
+    "aorist": "tërhoq",
+    "participle": "tërhequr"
+  },
+  "sources": [
+    { "source": "kaikki", "reference": "https://en.wiktionary.org/wiki/t%C3%ABrheq#Albanian" }
+  ],
+  "flags": { "irregularAorist": true },
+  "dialect": "tosk",
+  "notes": "Three-stem alternation: tërheq (1sg/1pl/3pl), tërhiq (2pl + all imperfect), tërhoq (aorist).",
+  "cellOverrides": {
+    "indicative.present": {
+      "2pl": "tërhiqni"
+    },
+    "indicative.imperfect": {
+      "1sg": "tërhiqja",
+      "2sg": "tërhiqje",
+      "3sg": "tërhiqte",
+      "1pl": "tërhiqnim",
+      "2pl": "tërhiqnit",
+      "3pl": "tërhiqnin"
+    },
+    "subjunctive.present": {
+      "2pl": "të tërhiqni"
+    },
+    "imperative.present": {
+      "2sg": "tërhiq",
+      "2pl": "tërhiqni"
+    }
+  }
+}

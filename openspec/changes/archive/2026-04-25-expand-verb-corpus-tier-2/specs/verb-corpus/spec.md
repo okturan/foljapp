@@ -73,11 +73,11 @@ For each verb the entry SHALL include the same fields as v0.1 (`id`, `lemma`, `t
 - **THEN** the script SHALL exit non-zero
 - **AND** the script SHALL log the failing lemma's name and the fetch URL it tried
 
-### Requirement: Frequency tier annotations for tier-2 verbs
+### Requirement: Frequency tier annotations for tier-1 verbs
 
-Every newly-added tier-2 verb SHALL appear in `data/verbs/frequency.json` with a `tier` field of one of `core | common | uncommon | rare`. The annotation SHALL be hand-curated against Kote & Biba 2019 ranks; design D3 documents the criteria.
+Every newly-added tier-1 AND tier-2 verb SHALL appear in `data/verbs/frequency.json` with a `tier` field of one of `core | common | uncommon | rare`. The annotation SHALL be hand-curated (not auto-derived); design D3 of the originating change documents the criteria.
 
-#### Scenario: Every tier-2 verb has a frequency tier
+#### Scenario: Every tier-1 verb has a frequency tier
 
 - **WHEN** the consumer reads `data/verbs/frequency.json`
 - **THEN** every lemma in `data/verbs/index.json` SHALL have a corresponding entry in frequency.json with a non-empty `tier` field

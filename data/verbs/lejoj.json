@@ -1,0 +1,23 @@
+{
+  "id": "lejoj",
+  "lemma": "lejoj",
+  "translationEn": "to permit",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "lejo",
+    "aorist": "lejua",
+    "participle": "lejuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/lejoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

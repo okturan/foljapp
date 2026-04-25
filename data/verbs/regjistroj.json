@@ -1,0 +1,23 @@
+{
+  "id": "regjistroj",
+  "lemma": "regjistroj",
+  "translationEn": "to register",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "regjistro",
+    "aorist": "regjistrua",
+    "participle": "regjistruar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/regjistroj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

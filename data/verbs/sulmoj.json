@@ -1,0 +1,23 @@
+{
+  "id": "sulmoj",
+  "lemma": "sulmoj",
+  "translationEn": "to attack",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "sulmo",
+    "aorist": "sulmua",
+    "participle": "sulmuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/sulmoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

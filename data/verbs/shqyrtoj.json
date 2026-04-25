@@ -1,0 +1,23 @@
+{
+  "id": "shqyrtoj",
+  "lemma": "shqyrtoj",
+  "translationEn": "to examine / review",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "shqyrto",
+    "aorist": "shqyrtua",
+    "participle": "shqyrtuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/shqyrtoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

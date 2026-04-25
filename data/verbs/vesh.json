@@ -1,0 +1,23 @@
+{
+  "id": "vesh",
+  "lemma": "vesh",
+  "translationEn": "to dress / to wear",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "vesh",
+    "aorist": "vesh",
+    "participle": "veshur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/vesh#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

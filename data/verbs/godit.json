@@ -1,0 +1,23 @@
+{
+  "id": "godit",
+  "lemma": "godit",
+  "translationEn": "to hit / strike",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "godit",
+    "aorist": "godit",
+    "participle": "goditur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/godit#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

@@ -47,24 +47,54 @@ interface VerbEntryDraft {
 }
 
 /**
- * For -oj verbs the canonical pattern is:
- *   lemma:      X + oj   (e.g., kërkoj)
- *   present stem: X + o  (kërko)         used by present, imperfect, subjunctive, optative, imperative
- *   aorist stem:  X + ua (kërkua)        used by aorist plurals + participle
- *   participle:   X + uar (kërkuar)      explicit
- * The aorist stem is derived as `<present-stem>a` (i.e., kërko + a + ua = kërk + ua = kërkua)?
- * Cleaner: aorist stem = <present-stem-without-final-o> + ua, since the -o gets absorbed.
+ * Derive principal parts from a lemma using class-specific morphological
+ * rules. Coverage:
+ *
+ *   Class 1 -oj:   X + oj   → present X+o, aorist X+ua, participle X+uar
+ *                  (kërkoj → kërko, kërkua, kërkuar)
+ *
+ *   Class 1 -uaj:  X + uaj  → present X+ua, aorist X+ua, participle X+uar
+ *                  (gatuaj → gatua, gatua, gatuar) — regular -uaj only;
+ *                  irregulars like shkruaj need cellOverrides.
+ *
+ *   Class 2:       X        → present X, aorist X, participle X+ur
+ *                  (prish → prish, prish, prishur)
+ *
+ *   Class 1 -aj / -ej:  throw — these are mostly irregular; manifest authors
+ *                       must label `irregular: true` to hand-craft.
+ *
+ *   Class 3:       X        → present X, aorist X, participle X+rë
+ *                  (di → di, di, dirë) — most Class 3 are irregular; the
+ *                  default emits the most-common shape, expecting
+ *                  verify-engine to flag mismatches.
  */
-function derivePrincipalParts(lemma: string): VerbEntryDraft['principalParts'] {
-  if (!lemma.endsWith('oj')) {
-    throw new Error(`derivePrincipalParts: only -oj lemmas supported in v1; got "${lemma}"`);
+function derivePrincipalParts(
+  lemma: string,
+  cls: 1 | 2 | 3,
+): VerbEntryDraft['principalParts'] {
+  if (cls === 1) {
+    if (lemma.endsWith('oj')) {
+      const root = lemma.slice(0, -2);
+      return { present: root + 'o', aorist: root + 'ua', participle: root + 'uar' };
+    }
+    if (lemma.endsWith('uaj')) {
+      const root = lemma.slice(0, -3);
+      return { present: root + 'ua', aorist: root + 'ua', participle: root + 'uar' };
+    }
+    if (lemma.endsWith('aj') || lemma.endsWith('ej')) {
+      throw new Error(
+        `derivePrincipalParts: Class 1 ${lemma.slice(-2)} verbs are usually irregular; flag as irregular: true in manifest and hand-craft the entry`,
+      );
+    }
+    throw new Error(`derivePrincipalParts: unrecognized Class 1 lemma ending: "${lemma}"`);
   }
-  const root = lemma.slice(0, -2); // drop 'oj' → e.g., "kërk"
-  return {
-    present: root + 'o',     // "kërko"
-    aorist: root + 'ua',     // "kërkua"
-    participle: root + 'uar', // "kërkuar"
-  };
+  if (cls === 2) {
+    return { present: lemma, aorist: lemma, participle: lemma + 'ur' };
+  }
+  if (cls === 3) {
+    return { present: lemma, aorist: lemma, participle: lemma + 'rë' };
+  }
+  throw new Error(`derivePrincipalParts: unsupported class ${cls}`);
 }
 
 /** Map Albanian special letters to ASCII equivalents for the id field
@@ -82,15 +112,13 @@ function scaffoldVerb(entry: ManifestEntry): VerbEntryDraft {
   if (entry.irregular) {
     throw new Error(`scaffoldVerb: ${entry.lemma} is flagged irregular; hand-craft this entry`);
   }
-  if ((entry.class ?? 1) !== 1) {
-    throw new Error(`scaffoldVerb: only Class 1 -oj verbs supported in v1`);
-  }
-  const principalParts = derivePrincipalParts(entry.lemma);
+  const cls = (entry.class ?? 1) as 1 | 2 | 3;
+  const principalParts = derivePrincipalParts(entry.lemma, cls);
   return {
     id: asciiId(entry.lemma),
     lemma: entry.lemma,
     translationEn: entry.translationEn,
-    class: 1,
+    class: cls,
     auxiliary: entry.auxiliary ?? 'kam',
     principalParts,
     sources: [
@@ -98,7 +126,7 @@ function scaffoldVerb(entry: ManifestEntry): VerbEntryDraft {
         source: 'kaikki',
         reference: `https://en.wiktionary.org/wiki/${encodeURIComponent(entry.lemma)}#Albanian`,
       },
-      { source: 'manual', reference: 'scaffolded by ingest-kaikki-batch (v1: -oj only)' },
+      { source: 'manual', reference: 'scaffolded by ingest-kaikki-batch' },
     ],
     dialect: 'tosk',
   };

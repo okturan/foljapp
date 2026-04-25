@@ -1,0 +1,23 @@
+{
+  "id": "udhezoj",
+  "lemma": "udhëzoj",
+  "translationEn": "to instruct / to direct",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "udhëzo",
+    "aorist": "udhëzua",
+    "participle": "udhëzuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/udh%C3%ABzoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

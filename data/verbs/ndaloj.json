@@ -1,0 +1,23 @@
+{
+  "id": "ndaloj",
+  "lemma": "ndaloj",
+  "translationEn": "to forbid / to halt",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "ndalo",
+    "aorist": "ndalua",
+    "participle": "ndaluar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/ndaloj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

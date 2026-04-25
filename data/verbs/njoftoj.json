@@ -1,0 +1,23 @@
+{
+  "id": "njoftoj",
+  "lemma": "njoftoj",
+  "translationEn": "to inform",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "njofto",
+    "aorist": "njoftua",
+    "participle": "njoftuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/njoftoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

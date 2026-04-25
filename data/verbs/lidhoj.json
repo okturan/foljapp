@@ -1,0 +1,23 @@
+{
+  "id": "lidhoj",
+  "lemma": "lidhoj",
+  "translationEn": "to bind / connect",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "lidho",
+    "aorist": "lidhua",
+    "participle": "lidhuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/lidhoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "shkurtoj",
+  "lemma": "shkurtoj",
+  "translationEn": "to shorten",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "shkurto",
+    "aorist": "shkurtua",
+    "participle": "shkurtuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/shkurtoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

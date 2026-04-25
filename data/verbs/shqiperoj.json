@@ -1,0 +1,23 @@
+{
+  "id": "shqiperoj",
+  "lemma": "shqipëroj",
+  "translationEn": "to translate to Albanian",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "shqipëro",
+    "aorist": "shqipërua",
+    "participle": "shqipëruar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/shqip%C3%ABroj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

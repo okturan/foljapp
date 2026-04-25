@@ -1,0 +1,23 @@
+{
+  "id": "dorezoj",
+  "lemma": "dorëzoj",
+  "translationEn": "to deliver / to surrender",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "dorëzo",
+    "aorist": "dorëzua",
+    "participle": "dorëzuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/dor%C3%ABzoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

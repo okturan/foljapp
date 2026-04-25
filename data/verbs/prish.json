@@ -1,0 +1,23 @@
+{
+  "id": "prish",
+  "lemma": "prish",
+  "translationEn": "to spoil / to break",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "prish",
+    "aorist": "prish",
+    "participle": "prishur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/prish#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

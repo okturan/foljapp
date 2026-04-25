@@ -1,0 +1,23 @@
+{
+  "id": "qendroj",
+  "lemma": "qëndroj",
+  "translationEn": "to stand / to remain",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "qëndro",
+    "aorist": "qëndrua",
+    "participle": "qëndruar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/q%C3%ABndroj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

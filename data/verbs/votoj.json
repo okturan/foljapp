@@ -1,0 +1,23 @@
+{
+  "id": "votoj",
+  "lemma": "votoj",
+  "translationEn": "to vote",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "voto",
+    "aorist": "votua",
+    "participle": "votuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/votoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "menaxhoj",
+  "lemma": "menaxhoj",
+  "translationEn": "to manage",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "menaxho",
+    "aorist": "menaxhua",
+    "participle": "menaxhuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/menaxhoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

@@ -1,0 +1,26 @@
+{
+  "id": "ngrij",
+  "lemma": "ngrij",
+  "translationEn": "to freeze / to rise",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "ngri",
+    "aorist": "ngri",
+    "participle": "ngrirë"
+  },
+  "sources": [
+    { "source": "kaikki", "reference": "https://en.wiktionary.org/wiki/ngrij#Albanian" }
+  ],
+  "flags": { "irregularAorist": true },
+  "dialect": "tosk",
+  "notes": "Class 1 -ij verb. Aorist 3sg uses -u (ngriu); aorist plurals retain -ë (ngrimë/ngritë/ngrinë). Participle ngrirë.",
+  "cellOverrides": {
+    "indicative.aorist": {
+      "3sg": "ngriu",
+      "1pl": "ngrimë",
+      "2pl": "ngritë",
+      "3pl": "ngrinë"
+    }
+  }
+}

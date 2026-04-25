@@ -1,0 +1,23 @@
+{
+  "id": "punesoj",
+  "lemma": "punësoj",
+  "translationEn": "to employ / to hire",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "punëso",
+    "aorist": "punësua",
+    "participle": "punësuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/pun%C3%ABsoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

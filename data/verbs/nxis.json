@@ -1,0 +1,23 @@
+{
+  "id": "nxis",
+  "lemma": "nxis",
+  "translationEn": "to encourage / incite",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "nxis",
+    "aorist": "nxis",
+    "participle": "nxisur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/nxis#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

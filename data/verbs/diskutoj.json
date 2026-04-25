@@ -1,0 +1,23 @@
+{
+  "id": "diskutoj",
+  "lemma": "diskutoj",
+  "translationEn": "to discuss",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "diskuto",
+    "aorist": "diskutua",
+    "participle": "diskutuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/diskutoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

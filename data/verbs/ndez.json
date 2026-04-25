@@ -1,0 +1,23 @@
+{
+  "id": "ndez",
+  "lemma": "ndez",
+  "translationEn": "to light / to ignite",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "ndez",
+    "aorist": "ndez",
+    "participle": "ndezur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/ndez#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "nis",
+  "lemma": "nis",
+  "translationEn": "to start",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "nis",
+    "aorist": "nis",
+    "participle": "nisur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/nis#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "sherbej",
+  "lemma": "shërbej",
+  "translationEn": "to serve",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "shërbe",
+    "aorist": "shërbye",
+    "participle": "shërbyer"
+  },
+  "sources": [
+    { "source": "kaikki", "reference": "https://en.wiktionary.org/wiki/sh%C3%ABrbej#Albanian" }
+  ],
+  "flags": { "irregularAorist": true },
+  "dialect": "tosk",
+  "notes": "Class 1 -ej irregular. Present stem shërbe; aorist stem shërbye (e → ye); participle shërbyer.",
+  "cellOverrides": {
+    "indicative.aorist": {
+      "3sg": "shërbeu"
+    }
+  }
+}

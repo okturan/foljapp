@@ -1,0 +1,23 @@
+{
+  "id": "shoqeroj",
+  "lemma": "shoqëroj",
+  "translationEn": "to accompany",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "shoqëro",
+    "aorist": "shoqërua",
+    "participle": "shoqëruar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/shoq%C3%ABroj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

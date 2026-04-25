@@ -1,0 +1,23 @@
+{
+  "id": "organizoj",
+  "lemma": "organizoj",
+  "translationEn": "to organize",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "organizo",
+    "aorist": "organizua",
+    "participle": "organizuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/organizoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

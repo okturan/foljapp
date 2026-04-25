@@ -1,0 +1,23 @@
+{
+  "id": "tregtoj",
+  "lemma": "tregtoj",
+  "translationEn": "to trade",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "tregto",
+    "aorist": "tregtua",
+    "participle": "tregtuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/tregtoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

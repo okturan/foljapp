@@ -1,0 +1,23 @@
+{
+  "id": "respektoj",
+  "lemma": "respektoj",
+  "translationEn": "to respect",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "respekto",
+    "aorist": "respektua",
+    "participle": "respektuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/respektoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "vertetoj",
+  "lemma": "vërtetoj",
+  "translationEn": "to prove / confirm",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "vërteto",
+    "aorist": "vërtetua",
+    "participle": "vërtetuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/v%C3%ABrtetoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

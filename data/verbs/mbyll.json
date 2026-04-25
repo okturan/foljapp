@@ -1,0 +1,23 @@
+{
+  "id": "mbyll",
+  "lemma": "mbyll",
+  "translationEn": "to close",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "mbyll",
+    "aorist": "mbyll",
+    "participle": "mbyllur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/mbyll#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

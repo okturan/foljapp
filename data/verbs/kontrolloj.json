@@ -1,0 +1,23 @@
+{
+  "id": "kontrolloj",
+  "lemma": "kontrolloj",
+  "translationEn": "to control / to check",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "kontrollo",
+    "aorist": "kontrollua",
+    "participle": "kontrolluar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/kontrolloj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

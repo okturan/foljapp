@@ -1,0 +1,23 @@
+{
+  "id": "shpalos",
+  "lemma": "shpalos",
+  "translationEn": "to unfold / reveal",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "shpalos",
+    "aorist": "shpalos",
+    "participle": "shpalosur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/shpalos#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

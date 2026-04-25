@@ -1,0 +1,23 @@
+{
+  "id": "informoj",
+  "lemma": "informoj",
+  "translationEn": "to inform",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "informo",
+    "aorist": "informua",
+    "participle": "informuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/informoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

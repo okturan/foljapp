@@ -1,0 +1,23 @@
+{
+  "id": "dyshoj",
+  "lemma": "dyshoj",
+  "translationEn": "to doubt",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "dysho",
+    "aorist": "dyshua",
+    "participle": "dyshuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/dyshoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "ndryshoj",
+  "lemma": "ndryshoj",
+  "translationEn": "to change",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "ndrysho",
+    "aorist": "ndryshua",
+    "participle": "ndryshuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/ndryshoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

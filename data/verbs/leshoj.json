@@ -1,0 +1,23 @@
+{
+  "id": "leshoj",
+  "lemma": "lëshoj",
+  "translationEn": "to release / to issue",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "lësho",
+    "aorist": "lëshua",
+    "participle": "lëshuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/l%C3%ABshoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

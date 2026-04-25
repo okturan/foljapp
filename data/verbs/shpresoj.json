@@ -1,0 +1,23 @@
+{
+  "id": "shpresoj",
+  "lemma": "shpresoj",
+  "translationEn": "to hope",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "shpreso",
+    "aorist": "shpresua",
+    "participle": "shpresuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/shpresoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

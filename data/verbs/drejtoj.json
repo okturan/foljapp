@@ -1,0 +1,23 @@
+{
+  "id": "drejtoj",
+  "lemma": "drejtoj",
+  "translationEn": "to direct / steer",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "drejto",
+    "aorist": "drejtua",
+    "participle": "drejtuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/drejtoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

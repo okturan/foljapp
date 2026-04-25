@@ -1,0 +1,23 @@
+{
+  "id": "themeloj",
+  "lemma": "themeloj",
+  "translationEn": "to found / establish",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "themelo",
+    "aorist": "themelua",
+    "participle": "themeluar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/themeloj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

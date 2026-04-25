@@ -1,0 +1,23 @@
+{
+  "id": "studioj",
+  "lemma": "studioj",
+  "translationEn": "to study",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "studio",
+    "aorist": "studiua",
+    "participle": "studiuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/studioj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

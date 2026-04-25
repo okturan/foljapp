@@ -1,0 +1,23 @@
+{
+  "id": "krijoj",
+  "lemma": "krijoj",
+  "translationEn": "to create",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "krijo",
+    "aorist": "krijua",
+    "participle": "krijuar"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/krijoj#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}

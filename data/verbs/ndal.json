@@ -1,0 +1,23 @@
+{
+  "id": "ndal",
+  "lemma": "ndal",
+  "translationEn": "to stop",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "ndal",
+    "aorist": "ndal",
+    "participle": "ndalur"
+  },
+  "sources": [
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/ndal#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "scaffolded by ingest-kaikki-batch"
+    }
+  ],
+  "dialect": "tosk"
+}
