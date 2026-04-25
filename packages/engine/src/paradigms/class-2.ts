@@ -54,14 +54,14 @@ export const class2: ClassParadigm = {
     '3pl': { stem: 'present', ending: 'in' },
   },
 
-  /** Participle for class 2 ends in -ur; admirative drops final 'r'. */
+  /** Participle for class 2 ends in -ur; admirative drops the entire -ur suffix. */
   admirativePresentActive: {
-    '1sg': { stem: 'participle', trim: 1, ending: 'kam' },
-    '2sg': { stem: 'participle', trim: 1, ending: 'ke' },
-    '3sg': { stem: 'participle', trim: 1, ending: 'ka' },
-    '1pl': { stem: 'participle', trim: 1, ending: 'kemi' },
-    '2pl': { stem: 'participle', trim: 1, ending: 'keni' },
-    '3pl': { stem: 'participle', trim: 1, ending: 'kan' },
+    '1sg': { stem: 'participle', trim: 2, ending: 'kam' },
+    '2sg': { stem: 'participle', trim: 2, ending: 'ke' },
+    '3sg': { stem: 'participle', trim: 2, ending: 'ka' },
+    '1pl': { stem: 'participle', trim: 2, ending: 'kemi' },
+    '2pl': { stem: 'participle', trim: 2, ending: 'keni' },
+    '3pl': { stem: 'participle', trim: 2, ending: 'kan' },
   },
 
   optativePresentActive: {

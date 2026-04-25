@@ -58,3 +58,4 @@ Icon
 
 # TypeScript cache
 *.tsbuildinfo
+.cache/

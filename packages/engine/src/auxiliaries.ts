@@ -146,7 +146,7 @@ export const jam: AuxiliaryTable = {
     '2sg': 'qofsh',
     '3sg': 'qoftë',
     '1pl': 'qofshim',
-    '2pl': 'qofshi',
+    '2pl': 'qofshit',
     '3pl': 'qofshin',
   },
   'imperative.present': {

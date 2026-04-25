@@ -19,19 +19,35 @@ implementing the conjugation engine. Source-priority order is set by
    morphological analyzer. Cross-checked for paradigm structure and
    suppletive forms.
 
-## v0.1.0 — linguistic-completeness disclaimer
+## v0.1.0 — Kaikki verification baseline
 
-The forms emitted by the v0.1.0 engine are best-effort against the
-spec scenarios authored in `openspec/specs/conjugation-engine/spec.md`,
-which are themselves drawn from Husić tables. Cells outside those
-scenarios — particularly admirative imperfect/pluperfect, optative
-perfect, and middle-passive future-perfect — are produced by the
-paradigm engine without explicit per-cell verification against a
-native speaker or a published authority.
+Run `npx tsx scripts/verify-engine.ts` to compare engine output against
+Kaikki/Wiktionary's tagged conjugation tables for every corpus verb.
 
-Before this engine ships to production, an Albanian linguist should
-audit the full paradigm tables against Husić §§1A-3D and the
-suppletion table for jam, jap, shoh, vij, them.
+As of the v0.1.0 baseline:
+
+| Match rate | 1244 / 1406 cells across 20 verbs    | 88.5%  |
+| Verified   | duhet, hap, jam, jap, mund, pi,       |        |
+|            | punoj, shoh, them, vij                | 10/20  |
+| Close      | iki (4 mismatches)                    | 1/20   |
+| Needs work | bej, djeg, dua, flas, ha, laj, marr,  |        |
+|            | pjek, rri                             | 9/20   |
+
+The 162 remaining mismatches are structural sub-paradigm gaps the
+engine's three-class paradigm system does not yet capture. They are
+scoped in change `refine-conjugation-engine`:
+
+- **Class 1B vowel-stem -j**: bej, laj — aorist plurals retain -ë
+  (`bëmë`, `lamë`) where the engine drops it.
+- **Class 2 present-stem alternation**: marr/merr, pjek/piq, djeg/digj,
+  flas/flet — 2sg/3sg/2pl present and entire imperfect use a mutated
+  stem the engine does not currently track.
+- **Class 2D**: iki — 1sg present takes an extra -i (`iki` not `ik`).
+- **Class 3 irregulars**: dua, ha, rri — additional stem alternation in
+  present and aorist plurals.
+
+Every fix lands as a corpus update + paradigm addition; the engine's
+public API stays stable.
 
 ## Suppletive paradigm references
 

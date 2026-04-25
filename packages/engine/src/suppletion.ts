@@ -172,12 +172,12 @@ const shohSuppletive: SuppletiveTable = {
       '3pl': 'shihnin',
     },
     'admirative.present': {
-      '1sg': 'parkam',
-      '2sg': 'parke',
-      '3sg': 'parka',
-      '1pl': 'parkemi',
-      '2pl': 'parkeni',
-      '3pl': 'parkan',
+      '1sg': 'pakam',
+      '2sg': 'pake',
+      '3sg': 'paka',
+      '1pl': 'pakemi',
+      '2pl': 'pakeni',
+      '3pl': 'pakan',
     },
     'optative.present': {
       '1sg': 'pafsha',

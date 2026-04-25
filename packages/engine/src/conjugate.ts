@@ -21,7 +21,7 @@ import {
   UnknownVerbError,
   UnsupportedCellError,
 } from './errors.js';
-import { applyCellRule, paradigmFor } from './paradigms/index.js';
+import { paradigmFor } from './paradigms/index.js';
 import { normalize } from './phonology/normalize.js';
 import {
   isSuppletive,
@@ -117,8 +117,14 @@ function buildSimpleCell(
 
   const rule = paradigm[tenseKey][cell];
   const stem = entry.principalParts[rule.stem];
-  const trimmed = rule.trim ? stem.slice(0, stem.length - rule.trim) : stem;
-  const surface = applyCellRule(entry, rule);
+  const effectiveTrim =
+    tenseKey === 'admirativePresentActive' && rule.stem === 'participle'
+      ? admirativeTrim(stem)
+      : rule.trim ?? 0;
+  const trimmed = effectiveTrim
+    ? stem.slice(0, stem.length - effectiveTrim)
+    : stem;
+  const surface = trimmed + rule.ending;
 
   const segments: DecompositionSegment[] = [];
   if (trimmed) {
@@ -132,6 +138,27 @@ function buildSimpleCell(
     );
   }
   return { surface, segments };
+}
+
+/**
+ * The admirative stem is the participle minus its participle-ending suffix.
+ * Albanian participles fall into a small inventory of endings; pick the
+ * trim that maps each to its lexical root.
+ *
+ *   -rrë           → trim 1   (preserve double-r; marrë → marr)
+ *   -rë            → trim 2   (drop the rë suffix; larë → la, bërë → bë, parë → pa)
+ *   -ur            → trim 2   (drop "ur"; hapur → hap, mundur → mund)
+ *   -uar / -ar     → trim 1   (drop the final "r"; punuar → punua)
+ *   -ë             → trim 1   (drop "ë"; thënë → thën, qenë → qen)
+ *   else           → trim 1   (defensive default)
+ */
+function admirativeTrim(participle: string): number {
+  if (participle.endsWith('rrë')) return 1;
+  if (participle.endsWith('rë')) return 2;
+  if (participle.endsWith('ur')) return 2;
+  if (participle.endsWith('uar') || participle.endsWith('ar')) return 1;
+  if (participle.endsWith('ë')) return 1;
+  return 1;
 }
 
 function suppletiveTenseKeyFor(
