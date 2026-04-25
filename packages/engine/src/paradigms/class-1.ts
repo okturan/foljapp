@@ -60,6 +60,16 @@ export const class1: ClassParadigm = {
     '3pl': { stem: 'participle', trim: 1, ending: 'kan' },
   },
 
+  /** Same admirative stem; kësha-family endings (1406-baseline-verified). */
+  admirativeImperfectActive: {
+    '1sg': { stem: 'participle', trim: 1, ending: 'kësha' },
+    '2sg': { stem: 'participle', trim: 1, ending: 'këshe' },
+    '3sg': { stem: 'participle', trim: 1, ending: 'kësh' },
+    '1pl': { stem: 'participle', trim: 1, ending: 'këshim' },
+    '2pl': { stem: 'participle', trim: 1, ending: 'këshit' },
+    '3pl': { stem: 'participle', trim: 1, ending: 'këshin' },
+  },
+
   optativePresentActive: {
     '1sg': { stem: 'present', ending: 'fsha' },
     '2sg': { stem: 'present', ending: 'fsh' },

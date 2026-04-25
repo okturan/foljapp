@@ -64,6 +64,15 @@ export const class2: ClassParadigm = {
     '3pl': { stem: 'participle', trim: 2, ending: 'kan' },
   },
 
+  admirativeImperfectActive: {
+    '1sg': { stem: 'participle', trim: 2, ending: 'kësha' },
+    '2sg': { stem: 'participle', trim: 2, ending: 'këshe' },
+    '3sg': { stem: 'participle', trim: 2, ending: 'kësh' },
+    '1pl': { stem: 'participle', trim: 2, ending: 'këshim' },
+    '2pl': { stem: 'participle', trim: 2, ending: 'këshit' },
+    '3pl': { stem: 'participle', trim: 2, ending: 'këshin' },
+  },
+
   optativePresentActive: {
     '1sg': { stem: 'present', ending: 'sha' },
     '2sg': { stem: 'present', ending: 'sh' },

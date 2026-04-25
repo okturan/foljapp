@@ -13,5 +13,11 @@
     { "source": "husic", "reference": "Irregular — shoh" }
   ],
   "flags": { "isSuppletive": true, "irregularAorist": true },
-  "dialect": "tosk"
+  "dialect": "tosk",
+  "cellOverrides": {
+    "imperative.present.middle-passive": {
+      "2sg": "shihu",
+      "2pl": "shihuni"
+    }
+  }
 }

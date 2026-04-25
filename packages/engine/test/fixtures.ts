@@ -110,6 +110,21 @@ export const laj: VerbEntry = {
   dialect: 'tosk',
 };
 
+/** flas — three-stem-alternation Class 2C verb. Only the cells used by
+ * admirative imperfect/pluperfect tests need correct forms; other tenses
+ * still rely on cellOverrides in production but are not exercised here. */
+export const flas: VerbEntry = {
+  id: 'flas',
+  lemma: 'flas',
+  translationEn: 'to speak',
+  class: 2,
+  auxiliary: 'kam',
+  principalParts: { present: 'flas', aorist: 'fol', participle: 'folur' },
+  sources: [{ source: 'husic', reference: '2C' }],
+  flags: { irregularAorist: true },
+  dialect: 'tosk',
+};
+
 export const fixtures: VerbEntry[] = [
   punoj,
   hap,
@@ -120,4 +135,5 @@ export const fixtures: VerbEntry[] = [
   pjek,
   djeg,
   laj,
+  flas,
 ];

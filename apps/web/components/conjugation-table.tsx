@@ -64,10 +64,13 @@ export function ConjugationTable({ title, moodKey, tenses, order, imperativeOnly
             </tr>
           </thead>
           <tbody>
-            {tenseKeys.map((tense) => {
+            {tenseKeys.flatMap((tense) => {
               const row = tenses[tense] ?? {};
-              return (
-                <tr key={tense} className="border-b border-stone-100">
+              const hasMp = cells.some(
+                (c) => row[`${c.key}.middle-passive`] !== undefined,
+              );
+              const activeRow = (
+                <tr key={`${tense}-active`} className="border-b border-stone-100">
                   <th
                     scope="row"
                     className="py-3 pr-4 text-left text-xs uppercase text-stone-500"
@@ -101,6 +104,49 @@ export function ConjugationTable({ title, moodKey, tenses, order, imperativeOnly
                   })}
                 </tr>
               );
+              if (!hasMp) return [activeRow];
+              const mpRow = (
+                <tr key={`${tense}-mp`} className="border-b border-stone-100 bg-stone-50/50">
+                  <th
+                    scope="row"
+                    className="py-3 pr-4 text-left text-xs uppercase text-stone-500"
+                  >
+                    {readableTense(tense)}
+                    <span
+                      aria-label="middle-passive voice"
+                      className="ml-2 rounded bg-stone-200 px-1 py-0.5 text-[10px] uppercase tracking-wider text-stone-600"
+                    >
+                      MP
+                    </span>
+                  </th>
+                  {cells.map((c) => {
+                    const result = row[`${c.key}.middle-passive`];
+                    const cellId = `${moodKey}-${tense}-${c.key}-mp`;
+                    if (result) {
+                      return (
+                        <td
+                          key={c.key}
+                          id={cellId}
+                          className="py-3 px-3 align-top scroll-mt-20"
+                        >
+                          <DecomposedForm segments={result.decomposition} />
+                        </td>
+                      );
+                    }
+                    return (
+                      <td
+                        key={c.key}
+                        id={cellId}
+                        className="py-3 px-3 align-top text-stone-300 scroll-mt-20"
+                        aria-label="unsupported cell"
+                      >
+                        —
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+              return [activeRow, mpRow];
             })}
           </tbody>
         </table>

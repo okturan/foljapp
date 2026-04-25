@@ -27,6 +27,10 @@
     },
     "imperative.present": {
       "2sg": "laj"
+    },
+    "imperative.present.middle-passive": {
+      "2sg": "lahu",
+      "2pl": "lahuni"
     }
   }
 }

@@ -20,6 +20,17 @@ test('selecting jam + aorist shows qeshë', async ({ page }) => {
   await expect(page.locator('main')).toContainText('qeshë');
 });
 
+test('MP admirative imperfect: flas voice=middle-passive shows "u folkësha"', async ({ page }) => {
+  await page.goto('/playground?verb=flas&mood=admirative&tense=imperfect&voice=middle-passive&person=1&number=singular&polarity=affirmative&modality=declarative');
+  await expect(page.locator('main')).toContainText('u folkësha');
+});
+
+test('MP admirative pluperfect: flas voice=middle-passive shows "qenkësha folur"', async ({ page }) => {
+  await page.goto('/playground?verb=flas&mood=admirative&tense=pluperfect&voice=middle-passive&person=1&number=singular&polarity=affirmative&modality=declarative');
+  await expect(page.locator('main')).toContainText('qenkësha');
+  await expect(page.locator('main')).toContainText('folur');
+});
+
 test('imperative + 1sg shows unsupported message', async ({ page }) => {
   await page.goto('/playground?verb=punoj&mood=imperative&voice=active&person=1&number=singular&polarity=affirmative&modality=declarative');
   await expect(page.locator('main')).toContainText('unsupported');

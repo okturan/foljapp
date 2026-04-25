@@ -37,6 +37,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
 const VERBS_DIR = join(REPO_ROOT, 'data', 'verbs');
 const CACHE_DIR = join(REPO_ROOT, '.cache', 'kaikki');
+const HUSIC_CACHE_DIR = join(REPO_ROOT, '.cache', 'husic');
 
 interface CliOptions {
   verbose: boolean;
@@ -124,6 +125,7 @@ interface CellSpec {
   tense?: Tense;
   person?: 1 | 2 | 3;
   number?: 'singular' | 'plural';
+  voice?: 'active' | 'middle-passive';
 }
 
 function tagsFor(spec: CellSpec): Set<string> {
@@ -136,14 +138,30 @@ function tagsFor(spec: CellSpec): Set<string> {
   else if (spec.mood === 'optative') tags.add('optative');
   else if (spec.mood === 'imperative') tags.add('imperative');
 
-  // Tense — Kaikki tags vary slightly from ours
-  if (spec.tense === 'present' && spec.mood !== 'imperative') tags.add('present');
-  if (spec.tense === 'imperfect') tags.add('imperfect');
-  if (spec.tense === 'aorist') tags.add('aorist');
-  if (spec.tense === 'perfect') tags.add('perfect');
-  if (spec.tense === 'pluperfect') tags.add('pluperfect');
-  if (spec.tense === 'future') tags.add('future');
-  if (spec.tense === 'present' && spec.mood === 'imperative') tags.add('present');
+  // Tense — Kaikki tags by *verb form*, not by construction label, so
+  // conditional re-uses the imperfect-form tag (do të punoja → tagged
+  // imperfect because the verb form is the imperfect indicative) and
+  // pluperfect-shape tenses get past+perfect.
+  if (spec.mood === 'conditional') {
+    if (spec.tense === 'present') tags.add('imperfect');
+    if (spec.tense === 'perfect') {
+      tags.add('past');
+      tags.add('perfect');
+    }
+  } else {
+    if (spec.tense === 'present' && spec.mood !== 'imperative') tags.add('present');
+    if (spec.tense === 'imperfect') tags.add('imperfect');
+    if (spec.tense === 'aorist') tags.add('aorist');
+    if (spec.tense === 'perfect') tags.add('perfect');
+    // Kaikki tags pluperfect as `past + perfect` (no `pluperfect` tag);
+    // we add both so the loop matches pluperfect cells.
+    if (spec.tense === 'pluperfect') {
+      tags.add('past');
+      tags.add('perfect');
+    }
+    if (spec.tense === 'future') tags.add('future');
+    if (spec.tense === 'present' && spec.mood === 'imperative') tags.add('present');
+  }
 
   // Person
   if (spec.person === 1) tags.add('first-person');
@@ -157,11 +175,45 @@ function tagsFor(spec: CellSpec): Set<string> {
   return tags;
 }
 
+/**
+ * Voice-aware form filter. Kaikki uses no explicit middle-passive tag —
+ * active and MP forms share tags and are differentiated by surface
+ * morphology. We filter by surface prefix to disambiguate.
+ *
+ *   Active simple/compound:  default (skip MP-shaped forms)
+ *   MP simple tenses:        surface starts with "u "
+ *   MP compound tenses:      surface starts with jam-aux ("qenkam" or
+ *                            "qenkësha"); for indicative compound MP
+ *                            tenses the prefix is jam-paradigm forms
+ *                            (jam, je, është, jemi, jeni, janë / isha,
+ *                            ishe, ...).
+ */
+function formMatchesVoice(form: string, voice: 'active' | 'middle-passive', spec: CellSpec): boolean {
+  const isUPrefixed = form.startsWith('u ');
+  const isJamAdmir = /^qenk(am|e|a|emi|eni|an|ësha|ëshe|ësh|ëshim|ëshit|ëshin)\b/.test(form);
+  const isJamIndicCompound = /^(jam|je|është|jemi|jeni|janë|isha|ishe|ishte|ishim|ishit|ishin|qe(shë)?|qemë|qetë|qenë)\b/.test(form);
+
+  if (voice === 'middle-passive') {
+    if (spec.mood === 'admirative') {
+      if (spec.tense === 'present' || spec.tense === 'imperfect') return isUPrefixed;
+      if (spec.tense === 'perfect' || spec.tense === 'pluperfect') return isJamAdmir;
+    }
+    if (spec.mood === 'indicative') {
+      if (spec.tense === 'aorist') return isUPrefixed;
+      if (spec.tense === 'perfect' || spec.tense === 'pluperfect') return isJamIndicCompound;
+    }
+    return isUPrefixed || isJamAdmir || isJamIndicCompound;
+  }
+  // Active: reject MP-shaped forms.
+  return !(isUPrefixed || isJamAdmir);
+}
+
 function findKaikkiForm(
   forms: KaikkiForm[],
   spec: CellSpec,
 ): string | null {
   const wanted = tagsFor(spec);
+  const voice = spec.voice ?? 'active';
   for (const f of forms) {
     const ftags = new Set(f.tags);
     let matches = true;
@@ -180,7 +232,21 @@ function findKaikkiForm(
       if (wantMood && fMood && wantMood !== fMood) continue;
       // Filter: if we asked for indicative and the form is also tagged future, skip (we want plain indicative)
       if (spec.mood === 'indicative' && spec.tense === 'present' && ftags.has('future')) continue;
-      return f.form === '-' ? null : f.form;
+      // Mood-agnostic past-disambiguation: if the spec didn't request 'past'
+      // but the Kaikki form has it, skip. This auto-handles indicative perfect
+      // vs pluperfect (perfect doesn't want past, pluperfect does), and is
+      // correct for conditional perfect (which wants past, so it's not skipped).
+      if (!wanted.has('past') && ftags.has('past')) continue;
+      const raw = f.form;
+      if (raw === '-' || raw === 'u —') return null;
+      // Voice filter — Kaikki has no explicit MP tag, so we differentiate
+      // by surface morphology. Skip forms that don't match the requested voice.
+      if (!formMatchesVoice(raw, voice, spec)) continue;
+      // Strip Kaikki's "(variant)" parenthetical — those are dialectal/older
+      // alternates (often Gheg, e.g., "marrkësh (marrkej)") that we don't
+      // produce. The standard form before the parens is what we compare.
+      const stripped = raw.replace(/\s*\([^)]*\)\s*$/, '').trim();
+      return stripped;
     }
   }
   return null;
@@ -209,23 +275,61 @@ const FINITE_TENSE_KEYS: Array<{ mood: Mood; tense: Tense }> = [
   { mood: 'conditional', tense: 'present' },
   { mood: 'conditional', tense: 'perfect' },
   { mood: 'admirative', tense: 'present' },
+  { mood: 'admirative', tense: 'imperfect' },
   { mood: 'admirative', tense: 'perfect' },
+  { mood: 'admirative', tense: 'pluperfect' },
   { mood: 'optative', tense: 'present' },
+  { mood: 'optative', tense: 'present', voice: 'middle-passive' },
+  // MP voice — admirative across all 4 tenses
+  { mood: 'admirative', tense: 'present', voice: 'middle-passive' },
+  { mood: 'admirative', tense: 'imperfect', voice: 'middle-passive' },
+  { mood: 'admirative', tense: 'perfect', voice: 'middle-passive' },
+  { mood: 'admirative', tense: 'pluperfect', voice: 'middle-passive' },
 ];
 
 interface CellOutcome {
   spec: CellSpec;
   engineForm: string | null;
   kaikkiForm: string | null;
+  husicForm?: string | null;
+  /** Which source produced the matching form, if status === 'match'. */
+  matchSource?: 'k' | 'h';
   status: 'match' | 'mismatch' | 'missing-kaikki' | 'engine-error';
   engineError?: string;
 }
 
-function probeCell(verbId: string, spec: CellSpec, kaikki: KaikkiForm[]): CellOutcome {
+function loadHusicForms(verbId: string): KaikkiForm[] | null {
+  const path = join(HUSIC_CACHE_DIR, `${verbId}.jsonl`);
+  if (!existsSync(path)) return null;
+  const raw = readFileSync(path, 'utf8');
+  const forms: KaikkiForm[] = [];
+  for (const line of raw.split('\n')) {
+    if (!line.trim()) continue;
+    try {
+      const obj = JSON.parse(line) as KaikkiForm;
+      if (obj.form && Array.isArray(obj.tags)) forms.push(obj);
+    } catch {
+      // skip malformed line
+    }
+  }
+  return forms;
+}
+
+function findHusicForm(forms: KaikkiForm[], spec: CellSpec): string | null {
+  // Husić cache shares Kaikki shape, so reuse the filter.
+  return findKaikkiForm(forms, spec);
+}
+
+function probeCell(
+  verbId: string,
+  spec: CellSpec,
+  kaikki: KaikkiForm[],
+  husic: KaikkiForm[] | null,
+): CellOutcome {
   const opts: ConjugateOptions = {
     mood: spec.mood,
     tense: spec.tense,
-    voice: 'active',
+    voice: spec.voice ?? 'active',
     polarity: 'affirmative',
     modality: 'declarative',
   };
@@ -245,19 +349,26 @@ function probeCell(verbId: string, spec: CellSpec, kaikki: KaikkiForm[]): CellOu
   }
 
   const kaikkiForm = findKaikkiForm(kaikki, spec);
+  // Consult Husić as fallback when Kaikki has no entry.
+  const husicForm = kaikkiForm === null && husic !== null
+    ? findHusicForm(husic, spec)
+    : null;
 
   let status: CellOutcome['status'];
+  let matchSource: 'k' | 'h' | undefined;
   if (engineError === 'unsupported') {
-    if (kaikkiForm === null) status = 'match';
+    if (kaikkiForm === null && husicForm === null) status = 'match';
     else status = 'mismatch';
   } else if (engineError) {
     status = 'engine-error';
-  } else if (kaikkiForm === null) {
-    status = 'missing-kaikki';
-  } else if (engineForm === kaikkiForm) {
-    status = 'match';
+  } else if (kaikkiForm !== null) {
+    status = engineForm === kaikkiForm ? 'match' : 'mismatch';
+    if (status === 'match') matchSource = 'k';
+  } else if (husicForm !== null) {
+    status = engineForm === husicForm ? 'match' : 'mismatch';
+    if (status === 'match') matchSource = 'h';
   } else {
-    status = 'mismatch';
+    status = 'missing-kaikki';
   }
 
   const outcome: CellOutcome = {
@@ -266,6 +377,8 @@ function probeCell(verbId: string, spec: CellSpec, kaikki: KaikkiForm[]): CellOu
     kaikkiForm,
     status,
   };
+  if (husicForm !== null) outcome.husicForm = husicForm;
+  if (matchSource !== undefined) outcome.matchSource = matchSource;
   if (engineError !== undefined) outcome.engineError = engineError;
   return outcome;
 }
@@ -287,17 +400,20 @@ async function verifyVerb(
   }
 
   const kaikki = parseKaikkiForms(jsonl);
+  const husic = loadHusicForms(entry.id);
   const outcomes: CellOutcome[] = [];
 
   for (const tense of FINITE_TENSE_KEYS) {
     for (const pn of PERSON_NUMBERS) {
-      outcomes.push(probeCell(entry.id, { ...tense, ...pn }, kaikki));
+      outcomes.push(probeCell(entry.id, { ...tense, ...pn }, kaikki, husic));
     }
   }
 
-  // Imperative — only 2sg/2pl
-  outcomes.push(probeCell(entry.id, { mood: 'imperative', tense: 'present', person: 2, number: 'singular' }, kaikki));
-  outcomes.push(probeCell(entry.id, { mood: 'imperative', tense: 'present', person: 2, number: 'plural' }, kaikki));
+  // Imperative — only 2sg/2pl, both voices
+  outcomes.push(probeCell(entry.id, { mood: 'imperative', tense: 'present', person: 2, number: 'singular' }, kaikki, husic));
+  outcomes.push(probeCell(entry.id, { mood: 'imperative', tense: 'present', person: 2, number: 'plural' }, kaikki, husic));
+  outcomes.push(probeCell(entry.id, { mood: 'imperative', tense: 'present', person: 2, number: 'singular', voice: 'middle-passive' }, kaikki, husic));
+  outcomes.push(probeCell(entry.id, { mood: 'imperative', tense: 'present', person: 2, number: 'plural', voice: 'middle-passive' }, kaikki, husic));
 
   return { verbId: entry.id, outcomes, cached: true, fetched: true };
 }
@@ -318,10 +434,13 @@ async function main() {
   }
 
   let totalMatches = 0;
+  let totalMatchesK = 0;
+  let totalMatchesH = 0;
   let totalMismatches = 0;
   let totalMissing = 0;
   let totalErrors = 0;
   const verbsWithoutKaikki: string[] = [];
+  const verbsWithoutHusic: string[] = [];
   const mismatchesByVerb: Map<string, CellOutcome[]> = new Map();
 
   for (const entry of filtered) {
@@ -331,10 +450,18 @@ async function main() {
       console.log(`  ${entry.id.padEnd(10)} no Kaikki entry — skipping`);
       continue;
     }
+    if (!existsSync(join(HUSIC_CACHE_DIR, `${entry.id}.jsonl`))) {
+      verbsWithoutHusic.push(entry.id);
+    }
     let v_matches = 0, v_mismatches = 0, v_missing = 0, v_errors = 0;
+    let v_matchK = 0, v_matchH = 0;
     const localMismatches: CellOutcome[] = [];
     for (const o of result.outcomes) {
-      if (o.status === 'match') v_matches++;
+      if (o.status === 'match') {
+        v_matches++;
+        if (o.matchSource === 'k') v_matchK++;
+        else if (o.matchSource === 'h') v_matchH++;
+      }
       else if (o.status === 'mismatch') {
         v_mismatches++;
         localMismatches.push(o);
@@ -342,6 +469,8 @@ async function main() {
       else if (o.status === 'engine-error') v_errors++;
     }
     totalMatches += v_matches;
+    totalMatchesK += v_matchK;
+    totalMatchesH += v_matchH;
     totalMismatches += v_mismatches;
     totalMissing += v_missing;
     totalErrors += v_errors;
@@ -368,12 +497,22 @@ async function main() {
 
   console.log();
   console.log('Summary:');
-  console.log(`  matches:    ${totalMatches}`);
+  if (totalMatchesH > 0) {
+    console.log(`  matches:    ${totalMatches} (${totalMatchesK} via Kaikki + ${totalMatchesH} via Husić)`);
+  } else {
+    console.log(`  matches:    ${totalMatches}`);
+  }
   console.log(`  mismatches: ${totalMismatches}`);
-  console.log(`  missing:    ${totalMissing}  (Kaikki has no form for that cell)`);
+  console.log(`  missing:    ${totalMissing}  (no source has ground truth for that cell)`);
   console.log(`  errors:     ${totalErrors}`);
   if (verbsWithoutKaikki.length) {
     console.log(`  no Kaikki entry: ${verbsWithoutKaikki.join(', ')}`);
+  }
+  const husicConsulted = filtered.length - verbsWithoutKaikki.length - verbsWithoutHusic.length;
+  if (husicConsulted === 0 && totalMatchesH === 0) {
+    console.log(`  Husić cache empty — see packages/engine/docs/husic-format.md to acquire source`);
+  } else if (verbsWithoutHusic.length > 0) {
+    console.log(`  Husić cache partial: ${verbsWithoutHusic.length} of ${filtered.length} verbs missing Husić data`);
   }
   console.log();
   if (totalMismatches > 0 && !opts.verbose) {

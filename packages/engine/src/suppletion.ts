@@ -32,6 +32,7 @@ export type SuppletiveTenseKey =
   | 'subjunctive.present'
   | 'subjunctive.imperfect'
   | 'admirative.present'
+  | 'admirative.imperfect'
   | 'optative.present'
   | 'imperative.present';
 

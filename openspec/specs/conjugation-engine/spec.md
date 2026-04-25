@@ -101,7 +101,11 @@ The engine SHALL produce correct forms for every cell of the conditional mood ac
 
 ### Requirement: Admirative mood coverage
 
-The engine SHALL produce correct forms for every cell of the admirative mood across these 4 tenses: `present`, `imperfect`, `perfect`, `pluperfect`. The admirative is constructed from the participle stem (with the final `ë` dropped) followed by the admirative auxiliary endings, and SHALL be returned by the engine without external particles.
+The engine SHALL produce correct forms for every cell of the admirative mood across these 4 tenses: `present`, `imperfect`, `perfect`, `pluperfect`. Active-voice admirative forms SHALL be constructed by attaching the admirative endings (`-kam/-ke/-ka/-kemi/-keni/-kan` for present and `-kësha/-këshe/-kësh/-këshim/-këshit/-këshin` for imperfect) to the trimmed participle stem (per the admirative-trim policy that maps `-uar/-ar` → trim 1, `-ur` → trim 2, `-rë` → trim 2, `-rrë` → trim 1, `-ë` → trim 1). Compound admirative tenses (perfect, pluperfect) SHALL be composed as the appropriate admirative form of `kam` followed by the lexical verb's participle. The active simple admirative tenses SHALL be returned by the engine without external particles.
+
+Middle-passive admirative forms SHALL be constructed as follows:
+- **Simple tenses** (present, imperfect): the `u` particle SHALL prefix the active form. E.g., `u folkam` for MP admirative present 1sg of `flas`; `u folkësha` for MP admirative imperfect 1sg.
+- **Compound tenses** (perfect, pluperfect): the auxiliary SHALL be `jam` regardless of `entry.auxiliary`. Perfect uses `qenkam + participle` (jam admirative present + participle); pluperfect uses `qenkësha + participle` (jam admirative imperfect + participle).
 
 #### Scenario: Present admirative class 1 across all six cells
 
@@ -113,18 +117,65 @@ The engine SHALL produce correct forms for every cell of the admirative mood acr
 - **WHEN** `conjugate("punoj", { mood: "admirative", tense: "perfect", voice: "active", person: 1, number: "singular", polarity: "affirmative", modality: "declarative" })` is invoked
 - **THEN** result.form SHALL equal `"paskam punuar"`
 
+#### Scenario: MP admirative present prefixes u-particle
+
+- **WHEN** `conjugate("flas", { mood: "admirative", tense: "present", voice: "middle-passive", person: 3, number: "singular", polarity: "affirmative", modality: "declarative" })` is invoked
+- **THEN** result.form SHALL equal `"u folka"`
+- **AND** the decomposition SHALL contain a segment with `surface: "u"` and `role: "voice-marker"` and `particleName: "u"`
+
+#### Scenario: MP admirative imperfect prefixes u-particle
+
+- **WHEN** `conjugate("flas", { mood: "admirative", tense: "imperfect", voice: "middle-passive", person: 3, number: "plural", polarity: "affirmative", modality: "declarative" })` is invoked
+- **THEN** result.form SHALL equal `"u folkëshin"`
+
+#### Scenario: MP admirative perfect uses jam-aux composition
+
+- **WHEN** `conjugate("flas", { mood: "admirative", tense: "perfect", voice: "middle-passive", person: 1, number: "singular", polarity: "affirmative", modality: "declarative" })` is invoked
+- **THEN** result.form SHALL equal `"qenkam folur"`
+
+#### Scenario: MP admirative pluperfect uses jam-aux composition
+
+- **WHEN** `conjugate("flas", { mood: "admirative", tense: "pluperfect", voice: "middle-passive", person: 1, number: "singular", polarity: "affirmative", modality: "declarative" })` is invoked
+- **THEN** result.form SHALL equal `"qenkësha folur"`
+
+#### Scenario: MP admirative present 1sg works for all corpus verbs (no longer silently returns active form)
+
+- **WHEN** `conjugate("punoj", { mood: "admirative", tense: "present", voice: "middle-passive", person: 1, number: "singular", polarity: "affirmative", modality: "declarative" })` is invoked
+- **THEN** result.form SHALL equal `"u punuakam"` (NOT `"punuakam"`, which was the pre-fix bug behavior)
+
+#### Scenario: MP admirative for suppletive verb shoh
+
+- **WHEN** `conjugate("shoh", { mood: "admirative", tense: "imperfect", voice: "middle-passive", person: 1, number: "singular", polarity: "affirmative", modality: "declarative" })` is invoked
+- **THEN** result.form SHALL equal `"u pakësha"`
+
 ### Requirement: Optative mood coverage
 
-The engine SHALL produce correct forms for every cell of the optative mood across these 2 tenses: `present`, `perfect`. The optative is built on the optative-stem ending `-fsh-` family for the present, and on `paça`-style auxiliary plus participle for the perfect.
+The engine SHALL produce correct forms for every cell of the optative mood across these 2 tenses: `present`, `perfect`. The optative is built on the optative-stem ending `-fsh-` family for the present, and on `paça`-style auxiliary plus participle for the perfect. Middle-passive optative forms SHALL be constructed by prefixing the `u` voice-marker to the active form for the simple tense (`present`), and by composing `qofsha`/`qofshim`/etc. (jam optative present) plus the participle for the compound tense (`perfect`).
 
 #### Scenario: Present optative class 1 across all six cells
 
 - **WHEN** `conjugate("punoj", { mood: "optative", tense: "present", voice: "active", polarity: "affirmative", modality: "declarative" })` is invoked for each cell
 - **THEN** the engine SHALL return forms `punofsha`, `punofsh`, `punoftë`, `punofshim`, `punofshi`, `punofshin`
 
+#### Scenario: MP optative present prefixes u-marker
+
+- **WHEN** `conjugate("punoj", { mood: "optative", tense: "present", voice: "middle-passive", person: 1, number: "singular", polarity: "affirmative", modality: "declarative" })` is invoked
+- **THEN** result.form SHALL equal `"u punofsha"`
+- **AND** the decomposition SHALL begin with a segment with `surface: "u"` and `role: "voice-marker"` and `meta.particleName: "u"`
+
+#### Scenario: MP optative present 6-cell coverage for laj (matches Kaikki)
+
+- **WHEN** `conjugate("laj", { mood: "optative", tense: "present", voice: "middle-passive", polarity: "affirmative", modality: "declarative" })` is invoked for each of the six person/number cells in order 1sg, 2sg, 3sg, 1pl, 2pl, 3pl
+- **THEN** the engine SHALL return forms `u lafsha`, `u lafsh`, `u laftë`, `u lafshim`, `u lafshit`, `u lafshin`
+
+#### Scenario: MP optative perfect uses jam-aux composition
+
+- **WHEN** `conjugate("punoj", { mood: "optative", tense: "perfect", voice: "middle-passive", person: 1, number: "singular", polarity: "affirmative", modality: "declarative" })` is invoked
+- **THEN** result.form SHALL equal `"qofsha punuar"`
+
 ### Requirement: Imperative mood coverage
 
-The engine SHALL produce correct forms for the imperative mood, which is restricted to 2nd person singular and 2nd person plural cells. Other cells SHALL produce a typed `UnsupportedCell` error.
+The engine SHALL produce correct forms for the imperative mood, which is restricted to 2nd person singular and 2nd person plural cells. Other person/number cells SHALL produce a typed `UnsupportedCellError`. Active-voice imperative forms SHALL be derived from `paradigm.imperativeActive` (or per-verb `cellOverrides['imperative.present']`). Middle-passive imperative SHALL be supported only when the corpus entry carries explicit per-verb `cellOverrides['imperative.present.middle-passive']` for the requested cell; if no override exists, the engine SHALL throw `UnsupportedCellError`. The engine SHALL NOT silently fall back to active-voice forms for MP imperative requests.
 
 #### Scenario: Imperative class 1
 
@@ -137,26 +188,63 @@ The engine SHALL produce correct forms for the imperative mood, which is restric
 - **THEN** the engine SHALL throw an `UnsupportedCellError`
 - **AND** the error message SHALL identify the offending cell as `1sg`
 
+#### Scenario: MP imperative throws for verbs without an explicit override
+
+- **WHEN** `conjugate("punoj", { mood: "imperative", voice: "middle-passive", person: 2, number: "singular", polarity: "affirmative", modality: "declarative" })` is invoked
+- **THEN** the engine SHALL throw an `UnsupportedCellError`
+- **AND** the engine SHALL NOT return an active-voice form
+
+#### Scenario: MP imperative for laj uses cellOverride
+
+- **WHEN** `conjugate("laj", { mood: "imperative", voice: "middle-passive", person: 2, number: "singular", polarity: "affirmative", modality: "declarative" })` is invoked
+- **THEN** result.form SHALL equal `"lahu"`
+
+- **WHEN** the same is called with `number: "plural"`
+- **THEN** result.form SHALL equal `"lahuni"`
+
+#### Scenario: MP imperative for shoh uses cellOverride
+
+- **WHEN** `conjugate("shoh", { mood: "imperative", voice: "middle-passive", person: 2, number: "singular", polarity: "affirmative", modality: "declarative" })` is invoked
+- **THEN** result.form SHALL equal `"shihu"`
+
+- **WHEN** the same is called with `number: "plural"`
+- **THEN** result.form SHALL equal `"shihuni"`
+
 ### Requirement: Active and middle-passive voice
 
-The engine SHALL support both `active` and `middle-passive` voice for every mood/tense/cell combination where Albanian permits the distinction. In the middle-passive, the particle `u` SHALL be inserted before the verb in the aorist tense, the auxiliary SHALL switch from `kam` to `jam` for compound tenses, and present/imperfect tenses SHALL use the dedicated middle-passive endings (`-em`, `-esh`, `-et`, `-emi`, `-eni`, `-en`).
+The engine SHALL support both `active` and `middle-passive` voices. Middle-passive simple tenses SHALL surface with the `u` particle prefixing the form (admirative simple tenses, aorist, optative present); middle-passive compound tenses SHALL use `jam` as the auxiliary regardless of the verb's declared `auxiliary`. The `u` particle SHALL appear as a decomposition segment with `role: "voice-marker"` and `particleName: "u"`. The engine SHALL NOT silently return active forms for MP requests on any cell — every MP cell either renders with a voice-distinguishing surface (`u`-prefix or `jam`-aux) or throws `UnsupportedCellError`.
 
 #### Scenario: Middle-passive aorist injects "u" particle
 
 - **WHEN** `conjugate("laj", { mood: "indicative", tense: "aorist", voice: "middle-passive", person: 1, number: "singular", polarity: "affirmative", modality: "declarative" })` is invoked
-- **THEN** result.form SHALL equal `"u lava"`
-- **AND** result.decomposition SHALL contain a segment `{ surface: "u", role: "voice-marker" }`
+- **THEN** result.form SHALL begin with `"u "`
+- **AND** the decomposition SHALL contain a segment with `role: "voice-marker"` and `particleName: "u"`
 
 #### Scenario: Middle-passive perfect uses jam-auxiliary
 
-- **WHEN** `conjugate("laj", { mood: "indicative", tense: "perfect", voice: "middle-passive", person: 1, number: "singular", polarity: "affirmative", modality: "declarative" })` is invoked
-- **THEN** result.form SHALL equal `"jam larë"`
-- **AND** result.decomposition SHALL contain a segment with role `auxiliary` and surface `"jam"`
+- **WHEN** `conjugate("punoj", { mood: "indicative", tense: "perfect", voice: "middle-passive", person: 1, number: "singular", polarity: "affirmative", modality: "declarative" })` is invoked
+- **THEN** result.form SHALL equal `"jam punuar"`
 
 #### Scenario: Middle-passive present uses dedicated endings
 
-- **WHEN** `conjugate("laj", { mood: "indicative", tense: "present", voice: "middle-passive", polarity: "affirmative", modality: "declarative" })` is invoked across all six cells
-- **THEN** the engine SHALL return forms `lahem`, `lahesh`, `lahet`, `lahemi`, `laheni`, `lahen`
+- **WHEN** `conjugate("punoj", { mood: "indicative", tense: "present", voice: "middle-passive", person: 1, number: "singular", polarity: "affirmative", modality: "declarative" })` is invoked
+- **THEN** result.form SHALL equal `"punohem"`
+
+#### Scenario: MP admirative simple tenses prefix u-particle (regression check for the buildSimpleCell bug)
+
+- **WHEN** `conjugate(verb, { mood: "admirative", tense: "present" | "imperfect", voice: "middle-passive", person, number, polarity: "affirmative", modality: "declarative" })` is invoked
+- **THEN** result.form SHALL begin with `"u "`
+- **AND** the decomposition SHALL contain a segment with `role: "voice-marker"` and `particleName: "u"`
+- **AND** the surface form after the `u ` prefix SHALL match the active-voice equivalent (e.g., MP `u folkësha` shares its non-particle segments with active `folkësha`)
+
+#### Scenario: No MP cell silently returns the active form (audit)
+
+- **WHEN** the audit test iterates every cell of `engine.table(verb)` for `verb` in `['punoj', 'flas', 'shoh', 'pjek']`
+- **THEN** for every cell present at key `<cell>.middle-passive`, the cell's surface form SHALL satisfy at least one of these:
+  1. The form starts with `'u '` (u-prefixed simple tense), OR
+  2. The form starts with one of `'qenkam'`, `'qenke'`, `'qenka'`, `'qenkemi'`, `'qenkeni'`, `'qenkan'`, `'qenkësha'`, `'qenkëshe'`, `'qenkësh'`, `'qenkëshim'`, `'qenkëshit'`, `'qenkëshin'`, `'jam'`, `'je'`, `'është'`, `'jemi'`, `'jeni'`, `'janë'`, `'isha'`, `'ishe'`, `'ishte'`, `'ishim'`, `'ishit'`, `'ishin'`, `'qofsha'`, `'qofsh'`, `'qoftë'`, `'qofshim'`, `'qofshit'`, `'qofshin'`, `'qe'`, `'qeshë'`, `'qemë'`, `'qetë'`, `'qenë'` (jam-paradigm-derived auxiliary), OR
+  3. The form ends in MP-specific endings `-em`, `-esh`, `-et`, `-emi`, `-eni`, `-en`, `-esha`, `-eshe`, `-ej`, `-eshim`, `-eshit`, `-eshin`, `-hem`, `-hesh`, `-het`, `-hemi`, `-heni`, `-hen`, `-hesha`, `-heshe`, `-hej`, `-heshim`, `-heshit`, `-heshin` (the dedicated MP indicative present/imperfect endings)
+- **AND** if none of these patterns match, the test SHALL fail with a clear "MP cell silently returned active form" diagnostic
 
 ### Requirement: Negative polarity particle selection
 
@@ -478,4 +566,109 @@ For every `(verbId, options)` pair where `conjugate()` succeeds, `trace()` SHALL
 
 - **WHEN** for every `Question` returned by `practice.generateQuestions({ count: 30 })`, both `conjugate()` and `trace()` are invoked
 - **THEN** `conjugate(verbId, options).form` SHALL equal `trace(verbId, options).at(-1).form` for every cell
+
+### Requirement: verify-engine covers admirative imperfect and pluperfect
+
+The `scripts/verify-engine.ts` cell list SHALL include `{ mood: 'admirative', tense: 'imperfect' }` and `{ mood: 'admirative', tense: 'pluperfect' }` for active voice across all corpus verbs. The match-rate baseline recorded in `packages/engine/docs/sources.md` SHALL be updated to the new total (current cells + new admirative cells), and the verification script SHALL maintain a 100% match against Kaikki for these new cells.
+
+The script SHALL ALSO maintain accurate Kaikki tag mapping for moods Kaikki tags non-canonically (conditional present → `imperfect`, conditional perfect → `past + perfect`), and the past-disambiguation filter SHALL be mood-agnostic (auto-skip Kaikki forms tagged `past` when the wanted tag set does not include `past`).
+
+The script SHALL consult a secondary verification source — Husić's *Albanian Verb Dictionary and Manual* (KU Libraries, 2002) — for cells where Kaikki returns no form. Husić data SHALL be cached at `.cache/husic/<id>.jsonl` in the same shape as the Kaikki cache (`{ form: string, tags: string[] }` records). The dispatch order is Kaikki → Husić → no-ground-truth. Cells matched by Husić SHALL count toward the match-rate baseline. The script's output SHALL annotate the source of each match (e.g., `M (k)` for Kaikki, `M (h)` for Husić) so the verification provenance is auditable per cell.
+
+#### Scenario: verify-engine reports admirative imperfect for every corpus verb
+
+- **WHEN** `npx tsx scripts/verify-engine.ts` is run after this change is implemented
+- **THEN** the output SHALL include at least one match for `admirative.imperfect` per corpus verb that has Kaikki coverage
+- **AND** zero mismatches SHALL be reported for `admirative.imperfect` and `admirative.pluperfect` cells
+
+#### Scenario: Match-rate baseline is updated
+
+- **WHEN** the change is archived
+- **THEN** `packages/engine/docs/sources.md` SHALL no longer mention "admirative imperfect/pluperfect not implemented in v0.1.0" as a deferred item
+- **AND** the recorded baseline match-rate SHALL reflect the expanded cell count
+
+#### Scenario: Conditional present cells match Kaikki
+
+- **WHEN** `npx tsx scripts/verify-engine.ts` is run
+- **AND** the cell list contains `{ mood: 'conditional', tense: 'present' }`
+- **THEN** the script SHALL report a positive match for at least one corpus verb's conditional present 1sg cell
+
+#### Scenario: Conditional perfect cells match Kaikki
+
+- **WHEN** `npx tsx scripts/verify-engine.ts` is run
+- **AND** the cell list contains `{ mood: 'conditional', tense: 'perfect' }`
+- **THEN** the script SHALL report a positive match for at least one corpus verb's conditional perfect 1sg cell
+
+#### Scenario: Husić matches a cell Kaikki does not list
+
+- **WHEN** `npx tsx scripts/verify-engine.ts` is run for a verb whose `.cache/husic/<id>.jsonl` exists and contains a form for the indicative future-perfect 1sg cell
+- **AND** Kaikki has no entry for that cell (`kaikkiForm === null`)
+- **AND** the engine output equals the Husić form
+- **THEN** the script SHALL count the cell as a match
+- **AND** the per-cell line SHALL be annotated `M (h)` (matched via Husić)
+
+#### Scenario: Husić mismatch counts as a real mismatch
+
+- **WHEN** the engine produces a form for a cell where Husić has a different form
+- **AND** Kaikki has no entry for that cell (so the cell would otherwise be `missing-kaikki`)
+- **THEN** the script SHALL report a mismatch for the cell with `kaikkiForm: null` and `husicForm: <Husić's form>`
+
+#### Scenario: Cell genuinely missing from both sources counts as missing-kaikki
+
+- **WHEN** Kaikki has no entry for a cell
+- **AND** Husić also has no entry for that cell
+- **THEN** the script SHALL count the cell as `missing-kaikki` (no source has ground truth)
+- **AND** the cell SHALL NOT be counted as a match or mismatch
+
+#### Scenario: Husić cache absence is a soft fallback, not an error
+
+- **WHEN** `.cache/husic/<id>.jsonl` does not exist for some verb `id`
+- **THEN** the script SHALL fall back to Kaikki-only behavior for that verb
+- **AND** the script SHALL NOT exit with an error
+- **AND** the script SHALL log a warning indicating Husić cache absence (one line per verb)
+
+### Requirement: verify-engine treats Kaikki "u —" as no-ground-truth
+
+The `scripts/verify-engine.ts` script SHALL handle Kaikki forms with surface `"u —"` (Kaikki's marker for "this cell is grammatically unattested") by treating them as equivalent to `kaikkiForm === null` — neither match nor mismatch. The engine MAY produce a derivable surface form for these cells; verify-engine SHALL NOT report a mismatch when our engine outputs a form that Kaikki marks as nonexistent.
+
+#### Scenario: u-em-dash cells skip the comparison
+
+- **WHEN** `npx tsx scripts/verify-engine.ts` is run after this change is implemented
+- **AND** Kaikki contains an entry with surface `"u —"` for some cell of some verb
+- **THEN** the script SHALL NOT count that cell as a mismatch
+- **AND** the script SHALL NOT count that cell as a match
+- **AND** the script SHALL log it as `missing-kaikki` or equivalent (consistent with cells where Kaikki has no entry at all)
+
+### Requirement: verify-engine probes MP optative present
+
+The `scripts/verify-engine.ts` cell list SHALL include `{ mood: 'optative', tense: 'present', voice: 'middle-passive' }`. The match-rate baseline SHALL be updated to reflect the new cell coverage.
+
+#### Scenario: MP optative present matches Kaikki for laj
+
+- **WHEN** `npx tsx scripts/verify-engine.ts` is run after this change is implemented
+- **THEN** the script SHALL report a match for `laj` MP optative present 1sg (engine output `u lafsha` matches Kaikki `u lafsha`)
+- **AND** the script SHALL report zero mismatches across all corpus verbs for MP optative present
+
+### Requirement: parse-husic.ts emits JSONL parallel to Kaikki
+
+The `scripts/parse-husic.ts` script SHALL accept a Husić digital-source input path and emit per-verb JSONL files at `.cache/husic/<id>.jsonl` in the same shape as the Kaikki cache (one JSON record per line, each with at least `form: string` and `tags: string[]` fields). The tag vocabulary SHALL include `indicative | subjunctive | conditional | admirative | optative | imperative`, `present | imperfect | aorist | perfect | pluperfect | future | past-anterior | future-perfect | future-in-past | future-perfect-in-past`, `first-person | second-person | third-person`, `singular | plural`, and `active | middle-passive` (when Husić distinguishes voice). The script SHALL document its input format expectations in `packages/engine/docs/husic-format.md`.
+
+#### Scenario: parse-husic produces one JSONL line per cell
+
+- **WHEN** `npx tsx scripts/parse-husic.ts <source-path>` is run
+- **THEN** for each verb in the source, the script SHALL emit a `.cache/husic/<id>.jsonl` file
+- **AND** each line SHALL be a parseable JSON record with `form` and `tags` fields
+- **AND** the tag vocabulary SHALL match the convention defined in `packages/engine/docs/husic-format.md`
+
+#### Scenario: parse-husic preserves voice distinctions where Husić marks them
+
+- **WHEN** Husić's source contains both active and middle-passive paradigm tables for a verb
+- **THEN** the emitted JSONL SHALL contain entries with `'middle-passive'` tag for the MP cells
+- **AND** entries without an explicit voice tag SHALL be treated as active by `verify-engine.ts`
+
+#### Scenario: parse-husic handles paradigm gaps
+
+- **WHEN** Husić's source omits a particular cell (e.g., 1sg imperative, which doesn't exist in Albanian)
+- **THEN** the emitted JSONL SHALL omit that cell entirely
+- **AND** verify-engine SHALL treat its absence as no-ground-truth (consistent with Kaikki absence)
 

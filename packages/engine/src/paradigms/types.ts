@@ -26,8 +26,10 @@ export interface ClassParadigm {
   aoristActive: SixCells;
   /** "të" particle is added by the composer, not stored in endings */
   subjunctivePresentActive: SixCells;
-  /** Built off the participle stem (final 'r'/'rë' dropped) */
+  /** Built off the participle stem (admirativeTrim policy applied dynamically) */
   admirativePresentActive: SixCells;
+  /** Built off the participle stem (admirativeTrim policy applied dynamically). Endings are kësha-family. */
+  admirativeImperfectActive: SixCells;
   optativePresentActive: SixCells;
   imperativeActive: {
     '2sg': CellRule;

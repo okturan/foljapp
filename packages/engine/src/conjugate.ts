@@ -84,6 +84,7 @@ type SimpleTenseKey =
   | 'aoristActive'
   | 'subjunctivePresentActive'
   | 'admirativePresentActive'
+  | 'admirativeImperfectActive'
   | 'optativePresentActive'
   | 'middlePassivePresent'
   | 'middlePassiveImperfect';
@@ -94,6 +95,7 @@ const SIMPLE_TENSE_OVERRIDE_KEY: Record<SimpleTenseKey, string | null> = {
   aoristActive: 'indicative.aorist',
   subjunctivePresentActive: 'subjunctive.present',
   admirativePresentActive: 'admirative.present',
+  admirativeImperfectActive: 'admirative.imperfect',
   optativePresentActive: 'optative.present',
   // Middle-passive cells share a key with active — overrides on the
   // active form would falsely apply. Skip overrides for MP cells; users
@@ -151,10 +153,13 @@ function buildSimpleCell(
 
   const rule = paradigm[tenseKey][cell];
   const stem = entry.principalParts[rule.stem];
-  const effectiveTrim =
-    tenseKey === 'admirativePresentActive' && rule.stem === 'participle'
-      ? admirativeTrim(stem)
-      : rule.trim ?? 0;
+  const usesAdmirativeTrim =
+    (tenseKey === 'admirativePresentActive' ||
+      tenseKey === 'admirativeImperfectActive') &&
+    rule.stem === 'participle';
+  const effectiveTrim = usesAdmirativeTrim
+    ? admirativeTrim(stem)
+    : rule.trim ?? 0;
   const trimmed = effectiveTrim
     ? stem.slice(0, stem.length - effectiveTrim)
     : stem;
@@ -202,6 +207,7 @@ function suppletiveTenseKeyFor(
     | 'aoristActive'
     | 'subjunctivePresentActive'
     | 'admirativePresentActive'
+    | 'admirativeImperfectActive'
     | 'optativePresentActive'
     | 'middlePassivePresent'
     | 'middlePassiveImperfect',
@@ -217,6 +223,8 @@ function suppletiveTenseKeyFor(
       return 'subjunctive.present';
     case 'admirativePresentActive':
       return 'admirative.present';
+    case 'admirativeImperfectActive':
+      return 'admirative.imperfect';
     case 'optativePresentActive':
       return 'optative.present';
     default:
@@ -295,19 +303,16 @@ function buildIndicative(
       return buildCompoundCell(aux, 'indicative.aorist', participle, person, number);
 
     case 'future': {
-      // do + të + present subjunctive (active)
-      const subj = buildSimpleCell(
-        entry,
-        'subjunctivePresentActive',
-        person,
-        number,
-      );
+      // do + të + present subjunctive (or MP present for middle-passive)
+      const inner = voice === 'middle-passive'
+        ? buildSimpleCell(entry, 'middlePassivePresent', person, number)
+        : buildSimpleCell(entry, 'subjunctivePresentActive', person, number);
       return {
-        surface: `do të ${subj.surface}`,
+        surface: `do të ${inner.surface}`,
         segments: [
           buildSegment({ surface: 'do', role: 'particle', particleName: 'do' }),
           buildSegment({ surface: 'të', role: 'particle', particleName: 'të' }),
-          ...subj.segments,
+          ...inner.segments,
         ],
       };
     }
@@ -327,14 +332,16 @@ function buildIndicative(
     }
 
     case 'future-in-past': {
-      // do + të + imperfect indicative
-      const imp = buildSimpleCell(entry, 'imperfectActive', person, number);
+      // do + të + imperfect indicative (or MP imperfect for middle-passive)
+      const inner = voice === 'middle-passive'
+        ? buildSimpleCell(entry, 'middlePassiveImperfect', person, number)
+        : buildSimpleCell(entry, 'imperfectActive', person, number);
       return {
-        surface: `do të ${imp.surface}`,
+        surface: `do të ${inner.surface}`,
         segments: [
           buildSegment({ surface: 'do', role: 'particle', particleName: 'do' }),
           buildSegment({ surface: 'të', role: 'particle', particleName: 'të' }),
-          ...imp.segments,
+          ...inner.segments,
         ],
       };
     }
@@ -473,8 +480,15 @@ function buildAdmirative(
   const participle = getParticiple(entry);
 
   switch (tense) {
-    case 'present':
-      return buildSimpleCell(entry, 'admirativePresentActive', person, number);
+    case 'present': {
+      const active = buildSimpleCell(entry, 'admirativePresentActive', person, number);
+      return voice === 'middle-passive' ? prependUMarker(active) : active;
+    }
+
+    case 'imperfect': {
+      const active = buildSimpleCell(entry, 'admirativeImperfectActive', person, number);
+      return voice === 'middle-passive' ? prependUMarker(active) : active;
+    }
 
     case 'perfect': {
       const auxForm = buildAuxiliaryCell(aux, 'admirative.present', person, number);
@@ -487,12 +501,16 @@ function buildAdmirative(
       };
     }
 
-    case 'imperfect':
-    case 'pluperfect':
-      throw new UnsupportedCellError(
-        `${tense}/admirative`,
-        'admirative imperfect/pluperfect not implemented in v0.1.0; see packages/engine/docs/sources.md',
-      );
+    case 'pluperfect': {
+      const auxForm = buildAuxiliaryCell(aux, 'admirative.imperfect', person, number);
+      return {
+        surface: `${auxForm} ${participle}`,
+        segments: [
+          buildSegment({ surface: auxForm, role: 'auxiliary', person, number }),
+          buildSegment({ surface: participle, role: 'stem' }),
+        ],
+      };
+    }
   }
 }
 
@@ -507,8 +525,10 @@ function buildOptative(
   const participle = getParticiple(entry);
 
   switch (tense) {
-    case 'present':
-      return buildSimpleCell(entry, 'optativePresentActive', person, number);
+    case 'present': {
+      const active = buildSimpleCell(entry, 'optativePresentActive', person, number);
+      return voice === 'middle-passive' ? prependUMarker(active) : active;
+    }
 
     case 'perfect': {
       const auxForm = buildAuxiliaryCell(aux, 'optative.present', person, number);
@@ -527,6 +547,7 @@ function buildImperative(
   entry: VerbEntry,
   person: Person,
   number: GrammaticalNumber,
+  voice: 'active' | 'middle-passive',
 ): ResolvedCell {
   if (person !== 2) {
     throw new UnsupportedCellError(
@@ -536,6 +557,21 @@ function buildImperative(
   }
 
   const cell = number === 'singular' ? '2sg' : '2pl';
+
+  if (voice === 'middle-passive') {
+    const override =
+      entry.cellOverrides?.['imperative.present.middle-passive']?.[cell];
+    if (override !== undefined) {
+      return {
+        surface: override,
+        segments: [buildSegment({ surface: override, role: 'stem' })],
+      };
+    }
+    throw new UnsupportedCellError(
+      `${cell}/imperative/middle-passive`,
+      `${entry.id} has no middle-passive imperative form (Standard Albanian); add cellOverrides['imperative.present.middle-passive'] to the corpus entry if attested`,
+    );
+  }
 
   if (isSuppletive(entry.id) && entry.flags?.isSuppletive) {
     const supp = suppletiveForm(entry.id, 'imperative.present', cell);
@@ -628,6 +664,21 @@ function prependParticle(
         role: 'particle',
         particleName: particle === "s'" ? 's' : particle,
       }),
+      ...cell.segments,
+    ],
+  };
+}
+
+/**
+ * Inject the middle-passive `u` voice-marker. Mirrors the inline u-prefix
+ * logic used by indicative-aorist MP — same role (`voice-marker`), same
+ * particleName (`u`), so decomposition stays consistent across moods.
+ */
+function prependUMarker(cell: ResolvedCell): ResolvedCell {
+  return {
+    surface: `u ${cell.surface}`,
+    segments: [
+      buildSegment({ surface: 'u', role: 'voice-marker', particleName: 'u' }),
       ...cell.segments,
     ],
   };
@@ -768,7 +819,7 @@ export function conjugate(
       break;
     }
     case 'imperative':
-      cell = buildImperative(entry, person, number);
+      cell = buildImperative(entry, person, number, voice);
       break;
     case 'non-finite':
       cell = buildNonFinite(entry, options.form!);

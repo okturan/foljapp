@@ -20,6 +20,7 @@ export type AuxiliaryTenseKey =
   | 'subjunctive.present'
   | 'subjunctive.imperfect'
   | 'admirative.present'
+  | 'admirative.imperfect'
   | 'optative.present'
   | 'imperative.present';
 
@@ -76,6 +77,14 @@ export const kam: AuxiliaryTable = {
     '1pl': 'paskemi',
     '2pl': 'paskeni',
     '3pl': 'paskan',
+  },
+  'admirative.imperfect': {
+    '1sg': 'paskësha',
+    '2sg': 'paskëshe',
+    '3sg': 'paskësh',
+    '1pl': 'paskëshim',
+    '2pl': 'paskëshit',
+    '3pl': 'paskëshin',
   },
   'optative.present': {
     '1sg': 'paça',
@@ -140,6 +149,14 @@ export const jam: AuxiliaryTable = {
     '1pl': 'qenkemi',
     '2pl': 'qenkeni',
     '3pl': 'qenkan',
+  },
+  'admirative.imperfect': {
+    '1sg': 'qenkësha',
+    '2sg': 'qenkëshe',
+    '3sg': 'qenkësh',
+    '1pl': 'qenkëshim',
+    '2pl': 'qenkëshit',
+    '3pl': 'qenkëshin',
   },
   'optative.present': {
     '1sg': 'qofsha',
