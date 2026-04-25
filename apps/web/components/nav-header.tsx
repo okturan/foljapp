@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 const ITEMS = [
   { href: '/', label: 'Home' },
   { href: '/browse', label: 'Browse' },
+  { href: '/playground', label: 'Playground' },
   { href: '/articles', label: 'Articles' },
   { href: '/random', label: 'Random' },
 ];
