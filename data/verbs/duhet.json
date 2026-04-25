@@ -1,0 +1,18 @@
+{
+  "id": "duhet",
+  "lemma": "duhet",
+  "translationEn": "must / need (impersonal)",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "duh",
+    "aorist": "desh",
+    "participle": "dashur"
+  },
+  "sources": [
+    { "source": "husic", "reference": "Defective / impersonal" }
+  ],
+  "flags": { "irregularAorist": true },
+  "dialect": "tosk",
+  "notes": "Defective: in practice only 3sg/3pl forms are used. Engine produces all cells; consumers should respect impersonal usage."
+}

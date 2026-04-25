@@ -1,0 +1,17 @@
+{
+  "id": "iki",
+  "lemma": "iki",
+  "translationEn": "to leave / to go away",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "ik",
+    "aorist": "ik",
+    "participle": "ikur"
+  },
+  "sources": [
+    { "source": "husic", "reference": "2D (1sg present takes -i ending)" }
+  ],
+  "dialect": "tosk",
+  "notes": "Lemma 'iki' carries an extra vowel; engine class-2 paradigm produces 'ik' for 1sg/2sg/3sg (canonical 1sg is 'iki'). Sub-paradigm support deferred."
+}

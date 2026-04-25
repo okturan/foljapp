@@ -1,0 +1,17 @@
+{
+  "id": "ha",
+  "lemma": "ha",
+  "translationEn": "to eat",
+  "class": 3,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "ha",
+    "aorist": "hëngr",
+    "participle": "ngrënë"
+  },
+  "sources": [
+    { "source": "husic", "reference": "3B (irregular aorist hëngr)" }
+  ],
+  "flags": { "irregularAorist": true },
+  "dialect": "tosk"
+}

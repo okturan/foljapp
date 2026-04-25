@@ -1,0 +1,17 @@
+{
+  "id": "shoh",
+  "lemma": "shoh",
+  "translationEn": "to see",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "shoh",
+    "aorist": "pa",
+    "participle": "parë"
+  },
+  "sources": [
+    { "source": "husic", "reference": "Irregular — shoh" }
+  ],
+  "flags": { "isSuppletive": true, "irregularAorist": true },
+  "dialect": "tosk"
+}

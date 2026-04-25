@@ -1,0 +1,18 @@
+{
+  "id": "djeg",
+  "lemma": "djeg",
+  "translationEn": "to burn",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "djeg",
+    "aorist": "dogj",
+    "participle": "djegur"
+  },
+  "sources": [
+    { "source": "husic", "reference": "2B (mutating g → gj in aorist)" }
+  ],
+  "flags": { "hasMutation": true, "irregularAorist": true },
+  "dialect": "tosk",
+  "notes": "Aorist stem 'dogj' encodes the gj mutation pre-baked."
+}

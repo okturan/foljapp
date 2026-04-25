@@ -1,0 +1,18 @@
+{
+  "id": "pjek",
+  "lemma": "pjek",
+  "translationEn": "to bake / to roast",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "pjek",
+    "aorist": "poq",
+    "participle": "pjekur"
+  },
+  "sources": [
+    { "source": "husic", "reference": "2B (mutating k → q in aorist)" }
+  ],
+  "flags": { "hasMutation": true, "irregularAorist": true },
+  "dialect": "tosk",
+  "notes": "Aorist stem stored pre-mutated as 'poq' so engine concatenates without runtime palatalization."
+}

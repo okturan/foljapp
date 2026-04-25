@@ -1,0 +1,142 @@
+[
+  {
+    "id": "bej",
+    "lemma": "bëj",
+    "translationEn": "to make / to do",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "djeg",
+    "lemma": "djeg",
+    "translationEn": "to burn",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "dua",
+    "lemma": "dua",
+    "translationEn": "to want / to love",
+    "class": 3,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "duhet",
+    "lemma": "duhet",
+    "translationEn": "must / need (impersonal)",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "flas",
+    "lemma": "flas",
+    "translationEn": "to speak",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "ha",
+    "lemma": "ha",
+    "translationEn": "to eat",
+    "class": 3,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "hap",
+    "lemma": "hap",
+    "translationEn": "to open",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "iki",
+    "lemma": "iki",
+    "translationEn": "to leave / to go away",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "jam",
+    "lemma": "jam",
+    "translationEn": "to be",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "jap",
+    "lemma": "jap",
+    "translationEn": "to give",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "laj",
+    "lemma": "laj",
+    "translationEn": "to wash",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "marr",
+    "lemma": "marr",
+    "translationEn": "to take",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "mund",
+    "lemma": "mund",
+    "translationEn": "to be able / can",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "pi",
+    "lemma": "pi",
+    "translationEn": "to drink",
+    "class": 3,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "pjek",
+    "lemma": "pjek",
+    "translationEn": "to bake / to roast",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "punoj",
+    "lemma": "punoj",
+    "translationEn": "to work",
+    "class": 1,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "rri",
+    "lemma": "rri",
+    "translationEn": "to stay / to remain",
+    "class": 3,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "shoh",
+    "lemma": "shoh",
+    "translationEn": "to see",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "them",
+    "lemma": "them",
+    "translationEn": "to say",
+    "class": 2,
+    "auxiliary": "kam"
+  },
+  {
+    "id": "vij",
+    "lemma": "vij",
+    "translationEn": "to come",
+    "class": 1,
+    "auxiliary": "kam"
+  }
+]

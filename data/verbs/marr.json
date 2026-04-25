@@ -1,0 +1,17 @@
+{
+  "id": "marr",
+  "lemma": "marr",
+  "translationEn": "to take",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "marr",
+    "aorist": "mor",
+    "participle": "marrë"
+  },
+  "sources": [
+    { "source": "husic", "reference": "2C (irregular aorist stem mor)" }
+  ],
+  "flags": { "irregularAorist": true },
+  "dialect": "tosk"
+}

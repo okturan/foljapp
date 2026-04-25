@@ -1,0 +1,96 @@
+schema: spec-driven
+
+context: |
+  # foljapp — Albanian Verbal System Reference
+
+  ## Mission
+  A web-based, comprehensive Albanian verb reference. Three audiences,
+  one product:
+    - LEARNERS              -> educational defaults, layered disclosure
+    - STUDENTS              -> reference quality, every form sourced
+    - LINGUISTS/RESEARCHERS -> machine-readable, citable, downloadable
+  Quality bar = Wiktionary + iMekMak + Universal Dependencies, in one app.
+
+  ## Stack
+  - Next.js 15 (App Router, React Server Components)
+  - TypeScript strict mode
+  - Tailwind v4 + shadcn/ui
+  - MDX for grammar articles (custom components)
+  - Conjugation engine: pure TypeScript, framework-independent,
+    lives in /packages/engine, zero runtime deps
+  - Data layer: JSON files in /data/verbs/<lemma>.json,
+    generated from /data/sources/ via /scripts/build-corpus.ts
+  - Search: client-side FlexSearch (compile-time index)
+  - Testing: Vitest (engine + unit), Playwright (E2E)
+  - Repo layout: monorepo (npm workspaces or pnpm)
+  - Deployment target: Vercel-compatible, but no Vercel-only APIs
+
+  ## Domain — Albanian morphology
+  Albanian is fusional Indo-European (NOT agglutinative). Cannot be
+  derived purely from rules — requires a principal-parts dictionary
+  (present stem, aorist stem, participle) per verb, plus a rules engine.
+  Standard = Tosk dialect; Geg noted but secondary in v1.
+
+  - 6 moods: Indicative, Subjunctive, Conditional, Admirative,
+    Optative, Imperative
+  - 2 voices: Active, Middle-Passive
+  - 3 verb classes (zgjedhime): -j endings, consonant endings, vowel endings
+  - 2 auxiliaries: kam (have) for most; jam (be) for some intransitives
+  - Particles: të, do të, duke, pa, me të, për të, u, nuk, s', mos, a
+  - Suppletive cores: jam, jap, shoh, vij, them
+  - Phonological mutations: k -> q, g -> gj, ll -> j (palatalization)
+
+  ## Sources of truth
+  Verb DATA ingestion priority:
+    1. timarkh/uniparser-grammar-albanian (paradigms.txt + sqi_lexemes_V.txt)
+    2. Kaikki Albanian Wiktionary JSONL (English glosses, headword info)
+    3. Husić Albanian Verb Dictionary and Manual (irregulars, auxiliary)
+    4. UD Albanian-TSA + UD Albanian-STAF (frequency, ground truth tags)
+    5. Kote & Biba 2019 corpus (frequency, neural-tagged forms)
+
+  Engine LOGIC authority order:
+    1. Husić Albanian Verb Dictionary (paradigm reference)
+    2. Kadriu 2015 25-formula computational model
+    3. Wikipedia Albanian morphology (cross-check + accessible reference)
+
+  ## Output quality bars
+  - Every conjugated form has a stable URL + permalink anchor
+  - Every morphological claim cites its source
+  - Every page statically renderable (SEO + offline-friendly via SW)
+  - Visual decomposition shows: particle / auxiliary / stem / ending / voice
+  - All output downloadable as JSON / CSV / CoNLL-U / Leipzig IGT
+  - All forms also rendered in IPA (phase 5)
+
+  ## Roadmap of capabilities
+
+  Phase 1 — Foundation       : conjugation-engine, verb-corpus, reference-pages
+  Phase 2 — Core UX          : search-and-browse, conjugation-tables-ui, decomposition
+  Phase 3 — Education        : grammar-articles, interactive-playground, practice-mode
+  Phase 4 — Academic         : igt-export, public-api, frequency-data, citations
+  Phase 5 — Polish           : dialect-support, pronunciation
+
+rules:
+  proposal:
+    - One capability per proposal — never bundle multiple capabilities
+    - Always include a "Non-goals" section
+    - Always cite linguistic sources for any morphological claim
+    - State which audience tier (learner / student / researcher) the change primarily serves
+
+  design:
+    - Include data shape diagrams when a JSON schema is involved
+    - Call out phonological / morphological edge cases explicitly
+    - Note dialectal scope (Tosk only vs. Tosk + Geg) per feature
+    - For UI changes, include an ASCII wireframe
+    - Call out tradeoffs in a dedicated "Tradeoffs" section
+
+  specs:
+    - Test scenarios MUST include at least one suppletive verb (jam, jap, shoh, vij, them)
+    - Test scenarios MUST include at least one phonologically-mutating verb (pjek, djeg)
+    - Specify behavior for both Active and Middle-Passive voices when relevant
+    - Specify behavior for compound tenses (kam-aux and jam-aux paths)
+
+  tasks:
+    - "Max ~2 hours of focused work per task"
+    - 'Atomic — no "and" chaining (one verb per task)'
+    - 'First task in every change reads referenced sources and confirms scope'
+    - 'Last task in every change updates spec.md and runs openspec validate'

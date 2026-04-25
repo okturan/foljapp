@@ -1,0 +1,17 @@
+{
+  "id": "punoj",
+  "lemma": "punoj",
+  "translationEn": "to work",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "puno",
+    "aorist": "punua",
+    "participle": "punuar"
+  },
+  "sources": [
+    { "source": "husic", "reference": "1A" },
+    { "source": "uniparser", "reference": "punoj_class1" }
+  ],
+  "dialect": "tosk"
+}

@@ -1,0 +1,17 @@
+{
+  "id": "flas",
+  "lemma": "flas",
+  "translationEn": "to speak",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "flas",
+    "aorist": "fol",
+    "participle": "folur"
+  },
+  "sources": [
+    { "source": "husic", "reference": "2C (irregular aorist stem fol)" }
+  ],
+  "flags": { "irregularAorist": true },
+  "dialect": "tosk"
+}

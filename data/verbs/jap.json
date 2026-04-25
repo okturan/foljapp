@@ -1,0 +1,17 @@
+{
+  "id": "jap",
+  "lemma": "jap",
+  "translationEn": "to give",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "jap",
+    "aorist": "dhash",
+    "participle": "dhënë"
+  },
+  "sources": [
+    { "source": "husic", "reference": "Irregular — jap" }
+  ],
+  "flags": { "isSuppletive": true, "irregularAorist": true },
+  "dialect": "tosk"
+}

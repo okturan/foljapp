@@ -1,0 +1,18 @@
+{
+  "id": "dua",
+  "lemma": "dua",
+  "translationEn": "to want / to love",
+  "class": 3,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "dua",
+    "aorist": "desh",
+    "participle": "dashur"
+  },
+  "sources": [
+    { "source": "husic", "reference": "3B (irregular aorist desh)" }
+  ],
+  "flags": { "irregularAorist": true },
+  "dialect": "tosk",
+  "notes": "Common modal-like usage; non-aorist plurals use stem 'duam'/'duan'. Review."
+}

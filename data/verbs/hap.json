@@ -1,0 +1,17 @@
+{
+  "id": "hap",
+  "lemma": "hap",
+  "translationEn": "to open",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "hap",
+    "aorist": "hap",
+    "participle": "hapur"
+  },
+  "sources": [
+    { "source": "husic", "reference": "2A" },
+    { "source": "uniparser", "reference": "hap_class2" }
+  ],
+  "dialect": "tosk"
+}

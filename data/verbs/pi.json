@@ -1,0 +1,17 @@
+{
+  "id": "pi",
+  "lemma": "pi",
+  "translationEn": "to drink",
+  "class": 3,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "pi",
+    "aorist": "pi",
+    "participle": "pirë"
+  },
+  "sources": [
+    { "source": "husic", "reference": "3A" },
+    { "source": "uniparser", "reference": "pi_class3" }
+  ],
+  "dialect": "tosk"
+}

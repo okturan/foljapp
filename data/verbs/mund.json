@@ -1,0 +1,17 @@
+{
+  "id": "mund",
+  "lemma": "mund",
+  "translationEn": "to be able / can",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "mund",
+    "aorist": "mund",
+    "participle": "mundur"
+  },
+  "sources": [
+    { "source": "husic", "reference": "2A (modal — common syntax 'mund të X')" }
+  ],
+  "dialect": "tosk",
+  "notes": "Modal usage typically 'mund të' + subjunctive of main verb."
+}

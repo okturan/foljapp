@@ -1,0 +1,19 @@
+{
+  "id": "jam",
+  "lemma": "jam",
+  "translationEn": "to be",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "jam",
+    "aorist": "qe",
+    "participle": "qenë"
+  },
+  "sources": [
+    { "source": "husic", "reference": "Auxiliary 2" },
+    { "source": "manual", "reference": "fully suppletive — engine consults hardcoded suppletion table" }
+  ],
+  "flags": { "isSuppletive": true, "irregularAorist": true },
+  "dialect": "tosk",
+  "notes": "Auxiliary verb. Engine bypasses paradigm machinery via suppletion.ts."
+}

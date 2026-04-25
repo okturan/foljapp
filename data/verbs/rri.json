@@ -1,0 +1,17 @@
+{
+  "id": "rri",
+  "lemma": "rri",
+  "translationEn": "to stay / to remain",
+  "class": 3,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "rri",
+    "aorist": "ndenj",
+    "participle": "ndenjur"
+  },
+  "sources": [
+    { "source": "husic", "reference": "3C (suppletive aorist ndenj)" }
+  ],
+  "flags": { "irregularAorist": true },
+  "dialect": "tosk"
+}

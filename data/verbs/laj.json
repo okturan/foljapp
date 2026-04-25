@@ -1,0 +1,17 @@
+{
+  "id": "laj",
+  "lemma": "laj",
+  "translationEn": "to wash",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "la",
+    "aorist": "la",
+    "participle": "larë"
+  },
+  "sources": [
+    { "source": "husic", "reference": "1B (monosyllabic vowel stem)" }
+  ],
+  "dialect": "tosk",
+  "notes": "Used for middle-passive scenarios in spec (lahem/u lava/jam larë). Aorist 3sg + plurals approximate; review against Husić §1B."
+}

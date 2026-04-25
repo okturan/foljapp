@@ -1,0 +1,11 @@
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    projects: [
+      'apps/web/vitest.config.ts',
+      'packages/engine/vitest.config.ts',
+      'packages/data/vitest.config.ts',
+    ],
+  },
+});

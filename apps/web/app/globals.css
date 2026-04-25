@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+/* Morphology role tokens — final values for v0.1.0.
+ * All five pass WCAG AA contrast against #ffffff backgrounds (light theme only in v0.1.0).
+ * Tonal differentiation chosen to remain distinguishable under deuteranopia simulation.
+ *
+ * particle    → indigo  : structural mood/marker words (të, do të, mos, nuk, a, duke, …)
+ * auxiliary   → teal    : kam/jam in compound tenses
+ * stem        → slate   : the verb root — visual anchor, near-foreground
+ * ending      → orange  : the inflectional suffix
+ * voice       → magenta : the "u" middle-passive marker and equivalents
+ */
+@theme {
+  --color-morph-particle: oklch(0.45 0.18 280);
+  --color-morph-auxiliary: oklch(0.50 0.13 200);
+  --color-morph-stem: oklch(0.22 0.02 250);
+  --color-morph-ending: oklch(0.55 0.18 50);
+  --color-morph-voice: oklch(0.50 0.22 330);
+}
+
+:root {
+  --color-morph-particle: oklch(0.45 0.18 280);
+  --color-morph-auxiliary: oklch(0.50 0.13 200);
+  --color-morph-stem: oklch(0.22 0.02 250);
+  --color-morph-ending: oklch(0.55 0.18 50);
+  --color-morph-voice: oklch(0.50 0.22 330);
+}

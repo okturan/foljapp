@@ -1,0 +1,17 @@
+{
+  "id": "them",
+  "lemma": "them",
+  "translationEn": "to say",
+  "class": 2,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "them",
+    "aorist": "thash",
+    "participle": "thënë"
+  },
+  "sources": [
+    { "source": "husic", "reference": "Irregular — them" }
+  ],
+  "flags": { "isSuppletive": true, "irregularAorist": true },
+  "dialect": "tosk"
+}

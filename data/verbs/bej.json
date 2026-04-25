@@ -1,0 +1,17 @@
+{
+  "id": "bej",
+  "lemma": "bëj",
+  "translationEn": "to make / to do",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "bë",
+    "aorist": "bë",
+    "participle": "bërë"
+  },
+  "sources": [
+    { "source": "husic", "reference": "1B (monosyllabic vowel stem)" }
+  ],
+  "dialect": "tosk",
+  "notes": "Aorist plural endings approximate; review against Husić §1B."
+}

@@ -1,0 +1,18 @@
+{
+  "id": "vij",
+  "lemma": "vij",
+  "translationEn": "to come",
+  "class": 1,
+  "auxiliary": "kam",
+  "principalParts": {
+    "present": "vi",
+    "aorist": "erdh",
+    "participle": "ardhur"
+  },
+  "sources": [
+    { "source": "husic", "reference": "Irregular — vij" }
+  ],
+  "flags": { "isSuppletive": true, "irregularAorist": true },
+  "dialect": "tosk",
+  "notes": "Suppletive across tenses; corpus auxiliary 'kam' chosen per Husić."
+}
