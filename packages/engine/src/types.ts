@@ -199,3 +199,63 @@ export type CellLabel =
 export function cellLabel(person: Person, number: GrammaticalNumber): CellLabel {
   return `${person}${number === 'singular' ? 'sg' : 'pl'}` as CellLabel;
 }
+
+/**
+ * Construction trace returned by `engine.trace(verbId, options)`.
+ *
+ * Each step describes one decision the engine made while building a
+ * form. The first step is always a corpus lookup; the last is `final`
+ * carrying the surface form.
+ */
+export type TraceStep =
+  | {
+      kind: 'corpus-lookup';
+      verbId: string;
+      lemma: string;
+      class: 1 | 2 | 3;
+      auxiliary: 'kam' | 'jam';
+      summary: string;
+    }
+  | {
+      kind: 'suppletive-lookup';
+      verbId: string;
+      cell: string;
+      result: string;
+      summary: string;
+    }
+  | {
+      kind: 'cell-override';
+      key: string;
+      cell: string;
+      result: string;
+      summary: string;
+    }
+  | {
+      kind: 'paradigm-rule';
+      stem: string;
+      ending: string;
+      result: string;
+      summary: string;
+    }
+  | {
+      kind: 'auxiliary-recursion';
+      auxiliary: 'kam' | 'jam';
+      tenseKey: string;
+      cell: string;
+      result: string;
+      summary: string;
+    }
+  | {
+      kind: 'phonology';
+      rule: string;
+      before: string;
+      after: string;
+      summary: string;
+    }
+  | {
+      kind: 'particle-prepend';
+      particle: string;
+      reason: string;
+      summary: string;
+    }
+  | { kind: 'final'; form: string; summary: string };

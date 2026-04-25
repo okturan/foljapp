@@ -24,6 +24,8 @@ export {
   joinDecomposition,
 } from './conjugate.js';
 
+export { trace } from './trace.js';
+
 export { VERSION } from './version.js';
 
 export {
@@ -55,6 +57,7 @@ export type {
   MorphologicalRole,
   DecompositionSegment,
   ConjugationResult,
+  TraceStep,
   VerbEntry,
   VerbEntrySource,
   VerbEntryFlags,

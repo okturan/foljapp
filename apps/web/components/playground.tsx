@@ -2,17 +2,20 @@
 
 import {
   conjugate,
+  trace,
   UnsupportedCellError,
   type ConjugateOptions,
   type Mood,
   type NonFiniteForm,
   type Tense,
+  type TraceStep,
 } from '@foljapp/engine';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DecomposedForm } from '@/components/decomposed-form';
+import { DerivationPanel } from '@/components/derivation-panel';
 import { VerbPicker } from '@/components/verb-picker';
 import '@/lib/corpus-client';
 import { findIndexByLemma } from '@/lib/corpus-index';
@@ -174,10 +177,16 @@ export function Playground() {
   if (config.form) opts.form = config.form;
 
   let result: ReturnType<typeof conjugate> | null = null;
+  let traceSteps: TraceStep[] = [];
   let unsupported = false;
   let errorMsg: string | null = null;
   try {
     result = conjugate(config.verb, opts);
+    try {
+      traceSteps = trace(config.verb, opts);
+    } catch {
+      traceSteps = [];
+    }
   } catch (err) {
     if (err instanceof UnsupportedCellError) {
       unsupported = true;
@@ -303,9 +312,12 @@ export function Playground() {
       <section className="mt-10 border-t border-stone-200 pt-8">
         <p className="text-xs uppercase tracking-wider text-stone-400">Form</p>
         {result ? (
-          <div className="mt-2 text-3xl">
-            <DecomposedForm segments={result.decomposition} />
-          </div>
+          <>
+            <div className="mt-2 text-3xl">
+              <DecomposedForm segments={result.decomposition} />
+            </div>
+            <DerivationPanel steps={traceSteps} />
+          </>
         ) : unsupported ? (
           <p className="mt-2 text-stone-400 italic">
             unsupported cell — engine reports this combination is not part of
