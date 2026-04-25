@@ -181,3 +181,12 @@ The verb page SHALL replace the v0.1.x disabled "Export IGT" placeholder with a 
 - **THEN** the reserved-actions row SHALL contain a non-disabled control labeled `Download` or `IGT export`
 - **AND** clicking it SHALL surface IGT and CoNLL-U format options
 
+### Requirement: Practice link enabled in reserved-actions
+
+The verb page's reserved-actions row SHALL replace the disabled "Practice" placeholder with an enabled anchor pointing to `/practice/quiz?focus=<lemma>`. The Frequency placeholder remains disabled pending its capability.
+
+#### Scenario: Practice link routes to the verb-scoped quiz
+
+- **WHEN** the user clicks the Practice button on `/verb/punoj`
+- **THEN** the browser SHALL navigate to `/practice/quiz?focus=punoj`
+

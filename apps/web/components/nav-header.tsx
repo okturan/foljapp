@@ -9,6 +9,7 @@ const ITEMS = [
   { href: '/', label: 'Home' },
   { href: '/browse', label: 'Browse' },
   { href: '/playground', label: 'Playground' },
+  { href: '/practice', label: 'Practice' },
   { href: '/articles', label: 'Articles' },
   { href: '/random', label: 'Random' },
 ];

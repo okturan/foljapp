@@ -35,16 +35,18 @@ test('unknown verb returns 404 with the requested lemma in body', async ({ page 
   await expect(page.getByText('notarealverb')).toBeVisible();
 });
 
-test('reserved action buttons render disabled (Practice + Frequency)', async ({ page }) => {
+test('reserved actions row exposes Download + Practice (enabled), Frequency (disabled)', async ({ page }) => {
   await page.goto('/verb/punoj');
-  // Download is now enabled (add-igt-export); only Practice + Frequency remain disabled
-  for (const label of ['Practice', 'Frequency']) {
-    const btn = page.getByRole('button', { name: new RegExp(label) });
-    await expect(btn).toBeDisabled();
-  }
-  // Download is enabled
+  // Download is enabled (add-igt-export)
   const downloadBtn = page.getByRole('button', { name: /Download/ }).first();
   await expect(downloadBtn).toBeEnabled();
+  // Practice is enabled, rendered as a Link (add-practice-mode).
+  // Scope to <main> to skip the NavHeader's Practice link.
+  const practiceLink = page.locator('main').getByRole('link', { name: 'Practice' });
+  await expect(practiceLink).toBeVisible();
+  // Frequency remains disabled pending its capability
+  const frequencyBtn = page.getByRole('button', { name: /Frequency/ });
+  await expect(frequencyBtn).toBeDisabled();
 });
 
 test('verb pages render without javascript', async ({ browser }) => {
