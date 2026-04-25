@@ -5,6 +5,7 @@
 import type { VerbEntry, VerbTable } from '@foljapp/engine';
 
 import type { CorpusIndexEntry } from './corpus-index';
+import type { FrequencyEntry } from './frequency';
 
 export interface ApiVerbListResponse {
   engineVersion: string;
@@ -27,6 +28,7 @@ export interface ApiVerbDetailResponse {
       participle: string;
     };
   };
+  frequency: FrequencyEntry | null;
 }
 
 export interface ApiErrorResponse {

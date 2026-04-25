@@ -24,7 +24,8 @@ function loadCorpus(): { entries: VerbEntry[]; version: CorpusVersion } {
     (f) =>
       f.endsWith('.json') &&
       f !== 'index.json' &&
-      f !== 'version.json',
+      f !== 'version.json' &&
+      f !== 'frequency.json',
   );
 
   const entries: VerbEntry[] = [];

@@ -18,7 +18,11 @@ const VERBS_DIR = join(__dirname, '..', '..', '..', 'data', 'verbs');
 
 beforeAll(() => {
   const files = readdirSync(VERBS_DIR).filter(
-    (f) => f.endsWith('.json') && f !== 'index.json' && f !== 'version.json',
+    (f) =>
+      f.endsWith('.json') &&
+      f !== 'index.json' &&
+      f !== 'version.json' &&
+      f !== 'frequency.json',
   );
   const corpus = files.map((f) =>
     JSON.parse(readFileSync(join(VERBS_DIR, f), 'utf8')),

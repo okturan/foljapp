@@ -34,7 +34,13 @@ function parseArgs(): BuildOptions {
 
 function loadVerbFiles(): { id: string; entry: VerbEntry; file: string }[] {
   const files = readdirSync(VERBS_DIR)
-    .filter((f) => f.endsWith('.json') && f !== 'index.json' && f !== 'version.json')
+    .filter(
+      (f) =>
+        f.endsWith('.json') &&
+        f !== 'index.json' &&
+        f !== 'version.json' &&
+        f !== 'frequency.json',
+    )
     .sort();
 
   const entries: { id: string; entry: VerbEntry; file: string }[] = [];

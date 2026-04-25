@@ -9,6 +9,7 @@ import {
 } from '@/lib/api-shapes';
 import { corpusVersion, findEntryByLemma } from '@/lib/corpus';
 import { allLemmas } from '@/lib/corpus';
+import { getFrequency } from '@/lib/frequency';
 import { formatConllu, formatIgtTable } from '@/lib/igt';
 import { toIpa } from '@/lib/ipa';
 
@@ -61,6 +62,7 @@ export async function GET(
         participle: toIpa(entry.principalParts.participle),
       },
     },
+    frequency: getFrequency(entry.id) ?? null,
   };
   return NextResponse.json(body);
 }

@@ -35,18 +35,18 @@ test('unknown verb returns 404 with the requested lemma in body', async ({ page 
   await expect(page.getByText('notarealverb')).toBeVisible();
 });
 
-test('reserved actions row exposes Download + Practice (enabled), Frequency (disabled)', async ({ page }) => {
+test('reserved actions row exposes Download / Practice / Cite / Frequency, all enabled', async ({ page }) => {
   await page.goto('/verb/punoj');
   // Download is enabled (add-igt-export)
   const downloadBtn = page.getByRole('button', { name: /Download/ }).first();
   await expect(downloadBtn).toBeEnabled();
-  // Practice is enabled, rendered as a Link (add-practice-mode).
-  // Scope to <main> to skip the NavHeader's Practice link.
+  // Practice is enabled (add-practice-mode), rendered as a Link
   const practiceLink = page.locator('main').getByRole('link', { name: 'Practice' });
   await expect(practiceLink).toBeVisible();
-  // Frequency remains disabled pending its capability
-  const frequencyBtn = page.getByRole('button', { name: /Frequency/ });
-  await expect(frequencyBtn).toBeDisabled();
+  // Cite is enabled (add-bibliographic-citations)
+  await expect(page.getByRole('button', { name: /^Cite/ }).first()).toBeEnabled();
+  // Frequency is enabled with a tier (add-corpus-frequency-overlay)
+  await expect(page.getByText(/Frequency: (core|common|uncommon|rare)/).first()).toBeVisible();
 });
 
 test('verb pages render without javascript', async ({ browser }) => {

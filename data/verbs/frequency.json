@@ -1,0 +1,86 @@
+{
+  "jam": {
+    "tier": "core",
+    "notes": "to be — the most common verb in any language. Auxiliary, copula, existential."
+  },
+  "kam": {
+    "tier": "core",
+    "notes": "to have — second most common. Auxiliary for compound tenses."
+  },
+  "bej": {
+    "tier": "core",
+    "notes": "to make/do — extremely high frequency, light verb in many constructions."
+  },
+  "dua": {
+    "tier": "core",
+    "notes": "to want/love — high frequency, modal-like ('do you want to' = 'a do të')."
+  },
+  "shoh": {
+    "tier": "core",
+    "notes": "to see — among the top perception verbs."
+  },
+  "them": {
+    "tier": "core",
+    "notes": "to say — high frequency in reported speech."
+  },
+  "ha": {
+    "tier": "core",
+    "notes": "to eat — basic action verb."
+  },
+  "vij": {
+    "tier": "core",
+    "notes": "to come — basic motion verb."
+  },
+  "marr": {
+    "tier": "core",
+    "notes": "to take — high-frequency action verb."
+  },
+  "jap": {
+    "tier": "core",
+    "notes": "to give — high-frequency ditransitive verb."
+  },
+  "punoj": {
+    "tier": "common",
+    "notes": "to work — common, but not core."
+  },
+  "flas": {
+    "tier": "common",
+    "notes": "to speak — high frequency in conversation."
+  },
+  "mund": {
+    "tier": "common",
+    "notes": "to be able — modal, very common in 'mund të'."
+  },
+  "duhet": {
+    "tier": "common",
+    "notes": "must — modal, defective (3sg/3pl only) but extremely common."
+  },
+  "rri": {
+    "tier": "common",
+    "notes": "to stay/remain — common stative."
+  },
+  "iki": {
+    "tier": "common",
+    "notes": "to leave — common motion verb."
+  },
+  "hap": {
+    "tier": "uncommon",
+    "notes": "to open — moderate frequency."
+  },
+  "laj": {
+    "tier": "uncommon",
+    "notes": "to wash — domain-specific (hygiene), moderate frequency."
+  },
+  "pi": {
+    "tier": "uncommon",
+    "notes": "to drink — basic action verb but less frequent than to eat in many corpora."
+  },
+  "pjek": {
+    "tier": "rare",
+    "notes": "to bake/roast — domain-specific (cooking), low frequency in general text."
+  },
+  "djeg": {
+    "tier": "rare",
+    "notes": "to burn — domain-specific, low frequency in general text."
+  }
+}

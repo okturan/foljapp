@@ -85,3 +85,12 @@ Every API route SHALL declare `export const dynamic = 'force-static'` (and `gene
 - **WHEN** the developer runs `npm run build`
 - **THEN** the build output SHALL list `/api/verbs` as a static (`○`) route
 
+### Requirement: API JSON detail includes frequency
+
+`GET /api/verbs/[lemma]` (default JSON format) SHALL include a `frequency` field whose shape matches the entries in `data/verbs/frequency.json`.
+
+#### Scenario: API JSON includes frequency.tier
+
+- **WHEN** the user requests `GET /api/verbs/punoj`
+- **THEN** `body.frequency.tier` SHALL be one of `"core"`, `"common"`, `"uncommon"`, `"rare"`
+
