@@ -136,6 +136,13 @@ export interface VerbEntryFlags {
   irregularAorist?: boolean;
 }
 
+/**
+ * Per-cell overrides keyed by `<mood>.<tense>`, then by cell label.
+ * Engine consults these BEFORE the paradigm engine, mirroring the
+ * suppletion-table escape hatch but at single-cell granularity.
+ */
+export type CellOverrides = Record<string, Partial<Record<CellLabel, string>>>;
+
 export interface VerbEntry {
   id: string;
   lemma: string;
@@ -151,6 +158,7 @@ export interface VerbEntry {
   flags?: VerbEntryFlags;
   dialect?: 'tosk' | 'geg';
   notes?: string;
+  cellOverrides?: CellOverrides;
 }
 
 export interface MoodTable {

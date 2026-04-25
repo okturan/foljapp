@@ -10,8 +10,22 @@
     "participle": "bërë"
   },
   "sources": [
-    { "source": "husic", "reference": "1B (monosyllabic vowel stem)" }
+    { "source": "husic", "reference": "1B (monosyllabic vowel stem with -r aorist)" },
+    { "source": "kaikki", "reference": "https://en.wiktionary.org/wiki/b%C3%ABj#Albanian" }
   ],
   "dialect": "tosk",
-  "notes": "Aorist plural endings approximate; review against Husić §1B."
+  "notes": "Class 1B with -r aorist infix: bëra/bëre/bëri/bëmë/bëtë/bënë. Imperative 2sg restores the -j (bëj).",
+  "cellOverrides": {
+    "indicative.aorist": {
+      "1sg": "bëra",
+      "2sg": "bëre",
+      "3sg": "bëri",
+      "1pl": "bëmë",
+      "2pl": "bëtë",
+      "3pl": "bënë"
+    },
+    "imperative.present": {
+      "2sg": "bëj"
+    }
+  }
 }

@@ -10,8 +10,31 @@
     "participle": "ngrënë"
   },
   "sources": [
-    { "source": "husic", "reference": "3B (irregular aorist hëngr)" }
+    { "source": "husic", "reference": "3B (irregular aorist hëngr)" },
+    { "source": "kaikki", "reference": "https://en.wiktionary.org/wiki/ha#Albanian" }
   ],
   "flags": { "irregularAorist": true },
-  "dialect": "tosk"
+  "dialect": "tosk",
+  "notes": "Aorist stem is consonant-final (hëngr), so aorist takes Class 2 endings rather than the Class 3 -va/-ve/-u/-më/-të/-në that the present-class implies. Subjunctive 3sg present is 'të haje' (not 'të hajë').",
+  "cellOverrides": {
+    "indicative.aorist": {
+      "1sg": "hëngra",
+      "2sg": "hëngre",
+      "3sg": "hëngri",
+      "1pl": "hëngrëm",
+      "2pl": "hëngrët",
+      "3pl": "hëngrën"
+    },
+    "subjunctive.present": {
+      "3sg": "të haje"
+    },
+    "optative.present": {
+      "1sg": "ngrënça",
+      "2sg": "ngrënç",
+      "3sg": "ngrëntë",
+      "1pl": "ngrënçim",
+      "2pl": "ngrënçi",
+      "3pl": "ngrënçin"
+    }
+  }
 }

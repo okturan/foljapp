@@ -10,8 +10,48 @@
     "participle": "folur"
   },
   "sources": [
-    { "source": "husic", "reference": "2C (irregular aorist stem fol)" }
+    { "source": "husic", "reference": "2C (stem alternation flas/flet/flis + suppletive aorist fol)" },
+    { "source": "kaikki", "reference": "https://en.wiktionary.org/wiki/flas#Albanian" }
   ],
   "flags": { "irregularAorist": true },
-  "dialect": "tosk"
+  "dialect": "tosk",
+  "notes": "Three present-system stems: flas (1sg/1pl/3pl), flet (2sg/3sg), flis (2pl + all imperfect). Aorist takes Class 2 endings on stem 'fol'.",
+  "cellOverrides": {
+    "indicative.present": {
+      "2sg": "flet",
+      "3sg": "flet",
+      "2pl": "flisni"
+    },
+    "indicative.imperfect": {
+      "1sg": "flisja",
+      "2sg": "flisje",
+      "3sg": "fliste",
+      "1pl": "flisnim",
+      "2pl": "flisnit",
+      "3pl": "flisnin"
+    },
+    "indicative.aorist": {
+      "1sg": "fola",
+      "2sg": "fole",
+      "3sg": "foli",
+      "1pl": "folëm",
+      "2pl": "folët",
+      "3pl": "folën"
+    },
+    "subjunctive.present": {
+      "2pl": "të flisni"
+    },
+    "optative.present": {
+      "1sg": "folsha",
+      "2sg": "folsh",
+      "3sg": "foltë",
+      "1pl": "folshim",
+      "2pl": "folshi",
+      "3pl": "folshin"
+    },
+    "imperative.present": {
+      "2sg": "fol",
+      "2pl": "flisni"
+    }
+  }
 }

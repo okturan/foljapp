@@ -10,8 +10,23 @@
     "participle": "larë"
   },
   "sources": [
-    { "source": "husic", "reference": "1B (monosyllabic vowel stem)" }
+    { "source": "husic", "reference": "1B (monosyllabic vowel stem)" },
+    { "source": "kaikki", "reference": "https://en.wiktionary.org/wiki/laj#Albanian" }
   ],
   "dialect": "tosk",
-  "notes": "Used for middle-passive scenarios in spec (lahem/u lava/jam larë). Aorist 3sg + plurals approximate; review against Husić §1B."
+  "notes": "Class 1B vowel-stem -j: aorist 3sg uses -u (lau, not lai), aorist plurals retain -ë (lamë/latë/lanë). Imperative 2sg restores the -j (laj). Optative 2pl ends in -t.",
+  "cellOverrides": {
+    "indicative.aorist": {
+      "3sg": "lau",
+      "1pl": "lamë",
+      "2pl": "latë",
+      "3pl": "lanë"
+    },
+    "optative.present": {
+      "2pl": "lafshit"
+    },
+    "imperative.present": {
+      "2sg": "laj"
+    }
+  }
 }

@@ -10,8 +10,40 @@
     "participle": "marrë"
   },
   "sources": [
-    { "source": "husic", "reference": "2C (irregular aorist stem mor)" }
+    { "source": "husic", "reference": "2C (stem alternation marr/merr + irregular aorist mor)" },
+    { "source": "kaikki", "reference": "https://en.wiktionary.org/wiki/marr#Albanian" }
   ],
   "flags": { "irregularAorist": true },
-  "dialect": "tosk"
+  "dialect": "tosk",
+  "notes": "Stem 'marr' alternates to 'merr' in present 2sg/3sg/2pl and all imperfect. Aorist takes Class 2 endings on the suppletive stem 'mor'.",
+  "cellOverrides": {
+    "indicative.present": {
+      "2sg": "merr",
+      "3sg": "merr",
+      "2pl": "merrni"
+    },
+    "indicative.imperfect": {
+      "1sg": "merrja",
+      "2sg": "merrje",
+      "3sg": "merrte",
+      "1pl": "merrnim",
+      "2pl": "merrnit",
+      "3pl": "merrnin"
+    },
+    "indicative.aorist": {
+      "1sg": "mora",
+      "2sg": "more",
+      "3sg": "mori",
+      "1pl": "morëm",
+      "2pl": "morët",
+      "3pl": "morën"
+    },
+    "subjunctive.present": {
+      "2pl": "të merrni"
+    },
+    "imperative.present": {
+      "2sg": "merr",
+      "2pl": "merrni"
+    }
+  }
 }

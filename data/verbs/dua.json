@@ -10,9 +10,53 @@
     "participle": "dashur"
   },
   "sources": [
-    { "source": "husic", "reference": "3B (irregular aorist desh)" }
+    { "source": "husic", "reference": "3B (irregular aorist desh)" },
+    { "source": "kaikki", "reference": "https://en.wiktionary.org/wiki/dua#Albanian" }
   ],
   "flags": { "irregularAorist": true },
   "dialect": "tosk",
-  "notes": "Common modal-like usage; non-aorist plurals use stem 'duam'/'duan'. Review."
+  "notes": "Highly irregular Class 3 verb with extensive stem alternation (dua/do, duam/doni). Optative uses a different aorist-like stem (daç-). Cells enumerated against Kaikki.",
+  "cellOverrides": {
+    "indicative.present": {
+      "2sg": "do",
+      "3sg": "do",
+      "1pl": "duam",
+      "2pl": "doni",
+      "3pl": "duan"
+    },
+    "indicative.imperfect": {
+      "1sg": "doja",
+      "2sg": "doje",
+      "3sg": "donte",
+      "1pl": "donim",
+      "2pl": "donit",
+      "3pl": "donin"
+    },
+    "indicative.aorist": {
+      "1sg": "desha",
+      "2sg": "deshe",
+      "3sg": "deshi",
+      "1pl": "deshëm",
+      "2pl": "deshët",
+      "3pl": "deshën"
+    },
+    "subjunctive.present": {
+      "3sg": "të dojë",
+      "1pl": "të duam",
+      "2pl": "të doni",
+      "3pl": "të duan"
+    },
+    "optative.present": {
+      "1sg": "daça",
+      "2sg": "daç",
+      "3sg": "daçtë",
+      "1pl": "daçim",
+      "2pl": "daçi",
+      "3pl": "daçin"
+    },
+    "imperative.present": {
+      "2sg": "duaj",
+      "2pl": "doni"
+    }
+  }
 }

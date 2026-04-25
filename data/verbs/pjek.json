@@ -10,9 +10,33 @@
     "participle": "pjekur"
   },
   "sources": [
-    { "source": "husic", "reference": "2B (mutating k → q in aorist)" }
+    { "source": "husic", "reference": "2B (mutating k → q before consonant-cluster suffixes)" },
+    { "source": "kaikki", "reference": "https://en.wiktionary.org/wiki/pjek#Albanian" }
   ],
   "flags": { "hasMutation": true, "irregularAorist": true },
   "dialect": "tosk",
-  "notes": "Aorist stem stored pre-mutated as 'poq' so engine concatenates without runtime palatalization."
+  "notes": "Stem 'pjek' palatalizes to 'piq' before consonant-cluster suffixes (present 2pl, all imperfect). Aorist stem 'poq' is pre-mutated.",
+  "cellOverrides": {
+    "indicative.present": {
+      "2pl": "piqni"
+    },
+    "indicative.imperfect": {
+      "1sg": "piqja",
+      "2sg": "piqje",
+      "3sg": "piqte",
+      "1pl": "piqnim",
+      "2pl": "piqnit",
+      "3pl": "piqnin"
+    },
+    "subjunctive.present": {
+      "2pl": "të piqni"
+    },
+    "optative.present": {
+      "2pl": "pjekshit"
+    },
+    "imperative.present": {
+      "2sg": "piq",
+      "2pl": "piqni"
+    }
+  }
 }

@@ -17,6 +17,21 @@ export const verbEntryFlagsSchema = z
   })
   .strict();
 
+/**
+ * Per-cell overrides keyed by `<mood>.<tense>`, then by cell label.
+ * Used for verbs whose paradigm matches their class for most cells but
+ * diverges in a small handful (e.g., iki present 1sg = `iki`, not `ik`).
+ *
+ * Cell labels: `1sg`, `2sg`, `3sg`, `1pl`, `2pl`, `3pl`.
+ * Mood-tense keys: `indicative.present`, `indicative.imperfect`,
+ * `indicative.aorist`, `subjunctive.present`, `imperative.present`, etc.
+ */
+const cellLabelEnum = z.enum(['1sg', '2sg', '3sg', '1pl', '2pl', '3pl']);
+export const cellOverridesSchema = z.record(
+  z.string(),
+  z.record(cellLabelEnum, z.string()),
+);
+
 export const verbEntrySchema = z
   .object({
     id: z.string().regex(/^[a-z0-9-]+$/, 'id must be kebab-case'),
@@ -33,6 +48,7 @@ export const verbEntrySchema = z
     flags: verbEntryFlagsSchema.optional(),
     dialect: z.enum(['tosk', 'geg']).optional(),
     notes: z.string().optional(),
+    cellOverrides: cellOverridesSchema.optional(),
   })
   .strict();
 

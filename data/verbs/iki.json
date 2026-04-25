@@ -10,8 +10,19 @@
     "participle": "ikur"
   },
   "sources": [
-    { "source": "husic", "reference": "2D (1sg present takes -i ending)" }
+    { "source": "husic", "reference": "2D (1sg present takes -i ending)" },
+    { "source": "kaikki", "reference": "https://en.wiktionary.org/wiki/iki#Albanian" }
   ],
   "dialect": "tosk",
-  "notes": "Lemma 'iki' carries an extra vowel; engine class-2 paradigm produces 'ik' for 1sg/2sg/3sg (canonical 1sg is 'iki'). Sub-paradigm support deferred."
+  "notes": "Class 2D pattern: 1sg present takes -i, 2sg/3sg present take -ën, aorist 3sg takes -u. Encoded via cellOverrides rather than introducing a new paradigm class for one verb.",
+  "cellOverrides": {
+    "indicative.present": {
+      "1sg": "iki",
+      "2sg": "ikën",
+      "3sg": "ikën"
+    },
+    "indicative.aorist": {
+      "3sg": "iku"
+    }
+  }
 }

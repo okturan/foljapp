@@ -10,8 +10,28 @@
     "participle": "ndenjur"
   },
   "sources": [
-    { "source": "husic", "reference": "3C (suppletive aorist ndenj)" }
+    { "source": "husic", "reference": "3C (suppletive aorist ndenj)" },
+    { "source": "kaikki", "reference": "https://en.wiktionary.org/wiki/rri#Albanian" }
   ],
   "flags": { "irregularAorist": true },
-  "dialect": "tosk"
+  "dialect": "tosk",
+  "notes": "Aorist stem ndenj takes Class 2 endings (consonant stem). Optative is built from aorist stem with -ça-/-ç family endings.",
+  "cellOverrides": {
+    "indicative.aorist": {
+      "1sg": "ndenja",
+      "2sg": "ndenje",
+      "3sg": "ndenji",
+      "1pl": "ndenjëm",
+      "2pl": "ndenjët",
+      "3pl": "ndenjën"
+    },
+    "optative.present": {
+      "1sg": "ndenjça",
+      "2sg": "ndenjç",
+      "3sg": "ndenjtë",
+      "1pl": "ndenjçim",
+      "2pl": "ndenjçi",
+      "3pl": "ndenjçin"
+    }
+  }
 }

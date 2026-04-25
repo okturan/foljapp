@@ -10,9 +10,33 @@
     "participle": "djegur"
   },
   "sources": [
-    { "source": "husic", "reference": "2B (mutating g → gj in aorist)" }
+    { "source": "husic", "reference": "2B (mutating g → gj before consonant-cluster suffixes)" },
+    { "source": "kaikki", "reference": "https://en.wiktionary.org/wiki/djeg#Albanian" }
   ],
   "flags": { "hasMutation": true, "irregularAorist": true },
   "dialect": "tosk",
-  "notes": "Aorist stem 'dogj' encodes the gj mutation pre-baked."
+  "notes": "Stem 'djeg' palatalizes to 'digj' before consonant-cluster suffixes (present 2pl, all imperfect). Aorist stem 'dogj' is pre-mutated.",
+  "cellOverrides": {
+    "indicative.present": {
+      "2pl": "digjni"
+    },
+    "indicative.imperfect": {
+      "1sg": "digjja",
+      "2sg": "digjje",
+      "3sg": "digjte",
+      "1pl": "digjnim",
+      "2pl": "digjnit",
+      "3pl": "digjnin"
+    },
+    "subjunctive.present": {
+      "2pl": "të digjni"
+    },
+    "optative.present": {
+      "2pl": "djegshit"
+    },
+    "imperative.present": {
+      "2sg": "digj",
+      "2pl": "digjni"
+    }
+  }
 }

@@ -78,22 +78,56 @@ function getParticiple(entry: VerbEntry): string {
   return entry.principalParts.participle;
 }
 
+type SimpleTenseKey =
+  | 'presentActive'
+  | 'imperfectActive'
+  | 'aoristActive'
+  | 'subjunctivePresentActive'
+  | 'admirativePresentActive'
+  | 'optativePresentActive'
+  | 'middlePassivePresent'
+  | 'middlePassiveImperfect';
+
+const SIMPLE_TENSE_OVERRIDE_KEY: Record<SimpleTenseKey, string | null> = {
+  presentActive: 'indicative.present',
+  imperfectActive: 'indicative.imperfect',
+  aoristActive: 'indicative.aorist',
+  subjunctivePresentActive: 'subjunctive.present',
+  admirativePresentActive: 'admirative.present',
+  optativePresentActive: 'optative.present',
+  // Middle-passive cells share a key with active — overrides on the
+  // active form would falsely apply. Skip overrides for MP cells; users
+  // who need MP overrides can add a voice-axis later.
+  middlePassivePresent: null,
+  middlePassiveImperfect: null,
+};
+
 function buildSimpleCell(
   entry: VerbEntry,
-  tenseKey:
-    | 'presentActive'
-    | 'imperfectActive'
-    | 'aoristActive'
-    | 'subjunctivePresentActive'
-    | 'admirativePresentActive'
-    | 'optativePresentActive'
-    | 'middlePassivePresent'
-    | 'middlePassiveImperfect',
+  tenseKey: SimpleTenseKey,
   person: Person,
   number: GrammaticalNumber,
 ): ResolvedCell {
   const paradigm = paradigmFor(entry);
   const cell = cellLabel(person, number);
+
+  // Per-verb cell override at the simple-cell level. Picks up cases
+  // where compound forms compose around a simple cell that should
+  // respect a corpus override (e.g., `do të haje` = "do" + subjunctive
+  // present 3sg of `ha`, where the subj 3sg is overridden to "haje").
+  const overrideKey = SIMPLE_TENSE_OVERRIDE_KEY[tenseKey];
+  if (overrideKey) {
+    const override = entry.cellOverrides?.[overrideKey]?.[cell];
+    if (override !== undefined) {
+      // Strip a leading "të " if present — buildSimpleCell returns the
+      // bare inner form; the orchestrator prepends mood particles.
+      const bare = override.startsWith('të ') ? override.slice(3) : override;
+      return {
+        surface: bare,
+        segments: [buildSegment({ surface: bare, role: 'stem', person, number })],
+      };
+    }
+  }
 
   if (isSuppletive(entry.id) && entry.flags?.isSuppletive) {
     const suppKey = suppletiveTenseKeyFor(tenseKey);
@@ -677,6 +711,34 @@ export function conjugate(
   const voice = options.voice ?? 'active';
   const person = (options.person ?? 2) as Person;
   const number = options.number ?? 'singular';
+
+  // Per-verb cell-level escape hatch. Consulted before paradigm dispatch
+  // for active-voice finite cells. Multi-word forms (compound tenses,
+  // particle-prefixed moods) are NOT overrideable here — those are
+  // composed by the orchestrator and the override applies to the
+  // simple-cell stage upstream.
+  if (
+    options.mood !== 'non-finite' &&
+    voice === 'active' &&
+    (options.polarity ?? 'affirmative') === 'affirmative' &&
+    (options.modality ?? 'declarative') === 'declarative'
+  ) {
+    const cellLabelStr = cellLabel(person, number);
+    const tenseStr = options.tense ?? 'present';
+    const overrideKey = `${options.mood}.${tenseStr}`;
+    const override = entry.cellOverrides?.[overrideKey]?.[cellLabelStr];
+    if (override !== undefined) {
+      return {
+        form: normalize(override),
+        decomposition: [buildSegment({ surface: override, role: 'stem' })],
+        options,
+        unsupported: false,
+        interrogative: false,
+        engineVersion: VERSION,
+        corpusVersion: getCorpusVersion(),
+      };
+    }
+  }
 
   let cell: ResolvedCell;
   switch (options.mood) {
