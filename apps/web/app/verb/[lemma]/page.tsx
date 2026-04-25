@@ -94,7 +94,7 @@ export default async function VerbPage({
       </nav>
 
       <VerbHeader entry={entry} />
-      <ReservedActions />
+      <ReservedActions verbId={entry.id} lemma={entry.lemma} />
 
       <ConjugationTable
         title="Indicative (Dëftore)"

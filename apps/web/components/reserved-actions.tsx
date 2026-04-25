@@ -1,15 +1,20 @@
+import { DownloadActions } from '@/components/download-actions';
 import { Button } from '@/components/ui/button';
 
 const ACTIONS = [
   { label: 'Practice', tooltip: 'Coming soon — see roadmap for practice-mode' },
-  { label: 'Playground', tooltip: 'Coming soon — see roadmap for interactive-playground' },
-  { label: 'Export IGT', tooltip: 'Coming soon — see roadmap for igt-export' },
   { label: 'Frequency: —', tooltip: 'Coming soon — see roadmap for frequency-data' },
 ];
 
-export function ReservedActions() {
+interface Props {
+  verbId: string;
+  lemma: string;
+}
+
+export function ReservedActions({ verbId, lemma }: Props) {
   return (
-    <div className="flex flex-wrap gap-3 border-b border-stone-200 py-6">
+    <div className="flex flex-wrap items-start gap-3 border-b border-stone-200 py-6">
+      <DownloadActions verbId={verbId} lemma={lemma} />
       {ACTIONS.map((a) => (
         <Button
           key={a.label}
