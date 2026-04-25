@@ -24,10 +24,16 @@ implementing the conjugation engine. Source-priority order is set by
 Run `npx tsx scripts/verify-engine.ts` to compare engine output against
 Kaikki/Wiktionary's tagged conjugation tables for every corpus verb.
 
-| Match rate | 7980 / 7980 cells across 100 verbs   | 100%   |
+| Match rate | 8237 / 8239 cells across 100 verbs   | 99.98% |
+|            | (7822 via Kaikki + 257 via Husić)     |        |
+|            | 2 documented Kaikki↔Husić disagreements |      |
 | Verified   | v0.1 seed (20) + tier-1 (30 -oj) +    |        |
 |            | tier-2 (50: 40 Class 1 + 7 Class 2 +  |        |
 |            | 3 hand-crafted irregulars)            | 100/100 |
+| Husić cache | 31 of 100 verbs with Husić paradigm  |        |
+|            | data (the rest of Husić's PDF lists  |        |
+|            | non-paradigm-model verbs we haven't   |        |
+|            | added to the corpus)                  |        |
 
 The 1824 baseline includes both active and middle-passive admirative
 across all 4 tenses. Verify-engine probes both voices; for MP cells,
@@ -104,11 +110,21 @@ that the engine consults before paradigm dispatch. Specifically:
   need the manual-cellOverrides path.
 - **Husić verification scaffolding**: `scripts/parse-husic.ts` skeleton
   + `verify-engine.ts` Husić-fallback dispatch + format documentation
-  (`packages/engine/docs/husic-format.md`). Husić data acquisition is a
-  manual prerequisite (print-only as of this writing); once a digital
-  source is parsed into `.cache/husic/<id>.jsonl` files, verify-engine
-  consults Husić for cells where Kaikki has no entry. Match-rate output
-  breaks out per-source counts (`M (k)` vs `M (h)`).
+  (`packages/engine/docs/husic-format.md`). The PDF source is freely
+  available open-access at KU ScholarWorks (handle 1808/1661); not
+  print-only as initially assumed. `scripts/parse-husic-pdf.py` parses
+  the OpenOffice-generated PDF into per-verb JSONL with the same shape
+  as the Kaikki cache. Husić consultation is automatic when
+  `.cache/husic/<id>.jsonl` exists for a corpus verb.
+- **Two documented Kaikki↔Husić disagreements**: `djeg` and `pjek`
+  optative present 2pl. Kaikki: `djegshit` / `pjekshit` (with -t).
+  Husić: `djegshi` / `pjekshi` (without -t). Engine follows Kaikki via
+  cellOverrides. The active form is verifiable; the MP form (where
+  Kaikki has no entry) defaults to Husić's `u djegshi` / `u pjekshi`,
+  which the engine doesn't match because of the cellOverride. Treated
+  as a documented data discrepancy; standard Albanian grammars (Newmark
+  1982 §10) give `-shi` so Husić is likely correct, but resolution is
+  out of scope for this change.
 - **Tier-2 corpus expansion**: 50→100 verbs. Extended
   `scripts/ingest-kaikki-batch.ts` with Class 1 -uaj, Class 2 consonant-
   stem, and Class 3 vowel-stem derivation rules. Class 1 -aj/-ej throw
@@ -133,7 +149,7 @@ that the engine consults before paradigm dispatch. Specifically:
   `pakam`/etc. in `packages/engine/src/suppletion.ts`.
 
 `scripts/verify-engine.ts` is the canonical regression check. Any
-corpus or engine change must keep the match-rate at 7980/7980 or
+corpus or engine change must keep the match-rate at 8237/8239 or
 explicitly justify the regression in its OpenSpec change.
 
 ## Suppletive paradigm references
