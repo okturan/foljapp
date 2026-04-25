@@ -1,22 +1,24 @@
+import type { VerbEntry } from '@foljapp/engine';
 import Link from 'next/link';
 
+import { CiteButton } from '@/components/cite-button';
 import { DownloadActions } from '@/components/download-actions';
 import { Button } from '@/components/ui/button';
 
 interface Props {
-  verbId: string;
-  lemma: string;
+  entry: VerbEntry;
 }
 
-export function ReservedActions({ verbId, lemma }: Props) {
+export function ReservedActions({ entry }: Props) {
   return (
     <div className="flex flex-wrap items-start gap-3 border-b border-stone-200 py-6">
-      <DownloadActions verbId={verbId} lemma={lemma} />
+      <DownloadActions verbId={entry.id} lemma={entry.lemma} />
       <Button asChild variant="outline" size="sm">
-        <Link href={`/practice/quiz?focus=${encodeURIComponent(lemma)}`}>
+        <Link href={`/practice/quiz?focus=${encodeURIComponent(entry.lemma)}`}>
           Practice
         </Link>
       </Button>
+      <CiteButton entry={entry} />
       <Button
         variant="outline"
         size="sm"

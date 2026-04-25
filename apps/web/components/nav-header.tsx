@@ -11,6 +11,7 @@ const ITEMS = [
   { href: '/playground', label: 'Playground' },
   { href: '/practice', label: 'Practice' },
   { href: '/articles', label: 'Articles' },
+  { href: '/references', label: 'References' },
   { href: '/random', label: 'Random' },
 ];
 
