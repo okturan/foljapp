@@ -5,10 +5,10 @@ test('punoj verb page renders header, table, and citations', async ({ page }) =>
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('punoj');
   await expect(page.getByText('to work').first()).toBeVisible();
   await expect(page.getByText('Zgjedhimi 1')).toBeVisible();
-  // "kam punuar" is rendered as adjacent role-tagged spans; assert via accessible label
-  await expect(page.getByLabel('auxiliary kam').first()).toBeVisible();
-  await expect(page.getByLabel('stem punuar').first()).toBeVisible();
-  await expect(page.getByLabel('particle do').first()).toBeVisible();
+  // Compound forms render as role-tagged spans; assert presence via cell anchor IDs
+  await expect(page.locator('#indicative-perfect-1sg')).toContainText('kam');
+  await expect(page.locator('#indicative-perfect-1sg')).toContainText('punuar');
+  await expect(page.locator('#conditional-present-1sg')).toContainText('do');
   await expect(page.getByText('punuakam')).toBeVisible();
   await expect(page.getByText('Sources')).toBeVisible();
   await expect(page.getByText(/engine: 0\.1\.0 · corpus: 0\.1\.0/)).toBeVisible();
@@ -18,8 +18,8 @@ test('jam verb page renders suppletive forms', async ({ page }) => {
   await page.goto('/verb/jam');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('jam');
   await expect(page.getByText('to be').first()).toBeVisible();
-  await expect(page.getByLabel('stem është').first()).toBeVisible();
-  await expect(page.getByLabel('stem qeshë').first()).toBeVisible();
+  await expect(page.locator('#indicative-present-3sg')).toContainText('është');
+  await expect(page.locator('#indicative-aorist-1sg')).toContainText('qeshë');
 });
 
 test('pjek verb page renders mutated aorist', async ({ page }) => {
