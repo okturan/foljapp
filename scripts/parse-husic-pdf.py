@@ -386,6 +386,86 @@ def parse_full_text(full_text: str) -> Iterable[dict]:
             yield result
 
 
+# ---------- Alphabetical glossary parsing ----------------------------
+
+# Glossary line format: "<lemma-with-stem-markers> <class-pattern> (like <model>) <english>"
+# Examples:
+#   "kërk[o]-j I-I-1a (like çliroj) seek"
+#   "hap-0 II-I (like hap) open"
+#   "godi{t/s}-0 II-I-1 (like godit) hit"
+GLOSSARY_LINE_RE = re.compile(
+    # lemma may contain [vowel] alternation markers, {t/s} alt-suffix markers,
+    # diacritics, or hyphens before the suffix tag
+    r"^(?P<lemma_raw>[a-zëçáéíóúàèìòùâêîôûäöü\[\]{}/]+)"
+    r"-(?P<suffix>j|0)\s+"
+    r"(?P<pattern>(?:[IV]+(?:-[IV]+)*(?:-\d+[a-z]?)?))\s+"
+    r"\(like\s+(?P<model>[a-zëçA-ZËÇ]+)\)"
+    r"(?:\s+(?P<gloss>.+))?\s*$",
+    re.IGNORECASE,
+)
+
+
+def normalize_lemma(raw: str, suffix: str) -> str:
+    """Strip Husić's alternation markers ([o], {t/s}, etc.) to get the citation
+    form. Strategy: pick the FIRST alternative inside any brackets/braces."""
+    # [vowel] markers — keep the bracketed letter(s)
+    s = re.sub(r"\[([^\]]+)\]", r"\1", raw)
+    # {alt1/alt2} markers — keep the first alternative
+    s = re.sub(r"\{([^/}]+)/[^}]+\}", r"\1", s)
+    # Append the suffix (j or empty for class 2)
+    if suffix == "j":
+        return s + "j"
+    return s
+
+
+def parse_glossary_section(full_text: str) -> list[dict]:
+    """Parse the 'Index to Verbs by Conjugation Pattern' section.
+
+    The section heading appears twice in the PDF: once in the table of
+    contents (page 0/1) and once as the actual section heading. We skip
+    the first occurrence and parse from the second.
+
+    Returns a list of dicts: {lemma, lemma_id, suffix, pattern, model, gloss}.
+    """
+    lines = full_text.split("\n")
+    # Find all occurrences of the heading; the section start is at the
+    # second one (the first is in the TOC).
+    occurrences = [i for i, line in enumerate(lines) if "Index to Verbs by Conjugation Pattern" in line]
+    if len(occurrences) < 2:
+        return []
+    start_idx = occurrences[1] + 1
+    # Section ends at the next major heading after start
+    end_idx = len(lines)
+    for i in range(start_idx, len(lines)):
+        if (
+            "Albanian-English Verb Glossary" in lines[i]
+            or "English-Albanian Verb Glossary" in lines[i]
+            or "Index to Verbs by Conjugation Type" in lines[i]
+            or "Verb Paradigms Index" in lines[i]
+        ):
+            end_idx = i
+            break
+
+    entries: list[dict] = []
+    for i in range(start_idx, end_idx):
+        line = lines[i].strip()
+        if not line or is_page_artifact(line):
+            continue
+        m = GLOSSARY_LINE_RE.match(line)
+        if not m:
+            continue
+        lemma = normalize_lemma(m.group("lemma_raw"), m.group("suffix"))
+        entries.append({
+            "lemma": lemma,
+            "lemma_id": ascii_id(lemma),
+            "suffix": m.group("suffix"),
+            "pattern": m.group("pattern"),
+            "model": m.group("model").lower(),
+            "gloss": (m.group("gloss") or "").strip(),
+        })
+    return entries
+
+
 def emit_jsonl(entries: list[dict], only_verb: str | None) -> int:
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     written = 0
@@ -406,6 +486,11 @@ def main() -> int:
     parser.add_argument("--only-verb", help="Only emit cache for this verb id")
     parser.add_argument("--list", action="store_true", help="List parsed verbs without writing")
     parser.add_argument("--limit", type=int, help="Process only the first N verbs (debugging)")
+    parser.add_argument(
+        "--emit-glossary-map",
+        help="Emit alphabetical-glossary entries as a JSON map to this path "
+             "(used by the TypeScript cross-resolver).",
+    )
     args = parser.parse_args()
 
     if not os.path.exists(args.pdf_path):
@@ -422,6 +507,12 @@ def main() -> int:
     if args.limit:
         entries = entries[: args.limit]
     print(f"  found {len(entries)} verb sections")
+
+    if args.emit_glossary_map:
+        glossary = parse_glossary_section(full_text)
+        with open(args.emit_glossary_map, "w", encoding="utf-8") as f:
+            json.dump(glossary, f, ensure_ascii=False, indent=2)
+        print(f"  glossary entries: {len(glossary)} → {args.emit_glossary_map}")
 
     if args.list:
         for e in entries:

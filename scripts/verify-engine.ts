@@ -293,20 +293,27 @@ interface CellOutcome {
   kaikkiForm: string | null;
   husicForm?: string | null;
   /** Which source produced the matching form, if status === 'match'. */
-  matchSource?: 'k' | 'h';
+  matchSource?: 'k' | 'h' | 'h*';
+  /** True when matched against a Husić-derived record (cross-resolved from
+   * the alphabetical glossary's class-pattern lookup, not directly tabulated). */
+  husicDerived?: boolean;
   status: 'match' | 'mismatch' | 'missing-kaikki' | 'engine-error';
   engineError?: string;
 }
 
-function loadHusicForms(verbId: string): KaikkiForm[] | null {
+interface HusicForm extends KaikkiForm {
+  derived?: boolean;
+}
+
+function loadHusicForms(verbId: string): HusicForm[] | null {
   const path = join(HUSIC_CACHE_DIR, `${verbId}.jsonl`);
   if (!existsSync(path)) return null;
   const raw = readFileSync(path, 'utf8');
-  const forms: KaikkiForm[] = [];
+  const forms: HusicForm[] = [];
   for (const line of raw.split('\n')) {
     if (!line.trim()) continue;
     try {
-      const obj = JSON.parse(line) as KaikkiForm;
+      const obj = JSON.parse(line) as HusicForm;
       if (obj.form && Array.isArray(obj.tags)) forms.push(obj);
     } catch {
       // skip malformed line
@@ -315,16 +322,39 @@ function loadHusicForms(verbId: string): KaikkiForm[] | null {
   return forms;
 }
 
-function findHusicForm(forms: KaikkiForm[], spec: CellSpec): string | null {
-  // Husić cache shares Kaikki shape, so reuse the filter.
-  return findKaikkiForm(forms, spec);
+function findHusicFormWithProvenance(forms: HusicForm[], spec: CellSpec): { form: string | null; derived: boolean } {
+  // Reuse findKaikkiForm's matching logic but also surface the derived flag.
+  // We do a manual scan to track which record matched.
+  const wanted = tagsFor(spec);
+  const voice = spec.voice ?? 'active';
+  for (const f of forms) {
+    const ftags = new Set(f.tags);
+    let matches = true;
+    for (const t of wanted) {
+      if (!ftags.has(t)) { matches = false; break; }
+    }
+    if (!matches) continue;
+    const conflictingMoods = ['indicative', 'subjunctive', 'conditional', 'admirative', 'optative', 'imperative'];
+    const wantMood = [...wanted].find((t) => conflictingMoods.includes(t));
+    const fMood = [...ftags].find((t) => conflictingMoods.includes(t));
+    if (wantMood && fMood && wantMood !== fMood) continue;
+    if (spec.mood === 'indicative' && spec.tense === 'present' && ftags.has('future')) continue;
+    if (!wanted.has('past') && ftags.has('past')) continue;
+    const raw = f.form;
+    if (raw === '-' || raw === 'u —') return { form: null, derived: !!f.derived };
+    if (!formMatchesVoice(raw, voice, spec)) continue;
+    const stripped = raw.replace(/\s*\([^)]*\)\s*$/, '').trim();
+    return { form: stripped, derived: !!f.derived };
+  }
+  return { form: null, derived: false };
 }
+
 
 function probeCell(
   verbId: string,
   spec: CellSpec,
   kaikki: KaikkiForm[],
-  husic: KaikkiForm[] | null,
+  husic: HusicForm[] | null,
 ): CellOutcome {
   const opts: ConjugateOptions = {
     mood: spec.mood,
@@ -349,13 +379,15 @@ function probeCell(
   }
 
   const kaikkiForm = findKaikkiForm(kaikki, spec);
-  // Consult Husić as fallback when Kaikki has no entry.
-  const husicForm = kaikkiForm === null && husic !== null
-    ? findHusicForm(husic, spec)
-    : null;
+  // Consult Husić as fallback when Kaikki has no entry. Track derived flag.
+  const husicLookup = kaikkiForm === null && husic !== null
+    ? findHusicFormWithProvenance(husic, spec)
+    : { form: null as string | null, derived: false };
+  const husicForm = husicLookup.form;
+  const husicDerived = husicLookup.derived;
 
   let status: CellOutcome['status'];
-  let matchSource: 'k' | 'h' | undefined;
+  let matchSource: 'k' | 'h' | 'h*' | undefined;
   if (engineError === 'unsupported') {
     if (kaikkiForm === null && husicForm === null) status = 'match';
     else status = 'mismatch';
@@ -366,7 +398,7 @@ function probeCell(
     if (status === 'match') matchSource = 'k';
   } else if (husicForm !== null) {
     status = engineForm === husicForm ? 'match' : 'mismatch';
-    if (status === 'match') matchSource = 'h';
+    if (status === 'match') matchSource = husicDerived ? 'h*' : 'h';
   } else {
     status = 'missing-kaikki';
   }
@@ -379,6 +411,7 @@ function probeCell(
   };
   if (husicForm !== null) outcome.husicForm = husicForm;
   if (matchSource !== undefined) outcome.matchSource = matchSource;
+  if (husicDerived) outcome.husicDerived = true;
   if (engineError !== undefined) outcome.engineError = engineError;
   return outcome;
 }
@@ -436,6 +469,7 @@ async function main() {
   let totalMatches = 0;
   let totalMatchesK = 0;
   let totalMatchesH = 0;
+  let totalMatchesHDerived = 0;
   let totalMismatches = 0;
   let totalMissing = 0;
   let totalErrors = 0;
@@ -461,6 +495,7 @@ async function main() {
         v_matches++;
         if (o.matchSource === 'k') v_matchK++;
         else if (o.matchSource === 'h') v_matchH++;
+        else if (o.matchSource === 'h*') totalMatchesHDerived++;
       }
       else if (o.status === 'mismatch') {
         v_mismatches++;
@@ -497,8 +532,11 @@ async function main() {
 
   console.log();
   console.log('Summary:');
-  if (totalMatchesH > 0) {
-    console.log(`  matches:    ${totalMatches} (${totalMatchesK} via Kaikki + ${totalMatchesH} via Husić)`);
+  if (totalMatchesH > 0 || totalMatchesHDerived > 0) {
+    const husicParts: string[] = [];
+    if (totalMatchesH > 0) husicParts.push(`${totalMatchesH} via Husić-direct`);
+    if (totalMatchesHDerived > 0) husicParts.push(`${totalMatchesHDerived} via Husić-derived`);
+    console.log(`  matches:    ${totalMatches} (${totalMatchesK} via Kaikki + ${husicParts.join(' + ')})`);
   } else {
     console.log(`  matches:    ${totalMatches}`);
   }
