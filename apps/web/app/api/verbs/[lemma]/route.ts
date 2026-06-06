@@ -7,17 +7,19 @@ import {
   type ApiErrorResponse,
   type ApiVerbDetailResponse,
 } from '@/lib/api-shapes';
-import { allLemmas, corpusVersion, findEntryByLemma } from '@/lib/corpus';
+import {
+  bundledCorpusVersion,
+  findBundledEntryByLemma,
+} from '@/lib/corpus-bundle';
 import { buildGlossTable } from '@/lib/english-gloss-table';
 import { getFrequency } from '@/lib/frequency';
 import { formatConllu, formatIgtTable } from '@/lib/igt';
 import { toIpa } from '@/lib/ipa';
 
+export const runtime = 'edge';
+
 // Not force-static: the route honors ?format=... which varies per request.
-// Static prerendering for the JSON default still happens via generateStaticParams.
-export function generateStaticParams(): Array<{ lemma: string }> {
-  return allLemmas().map((lemma) => ({ lemma }));
-}
+// It runs at the edge so Cloudflare Pages can serve the full API surface.
 
 export async function GET(
   request: NextRequest,
@@ -25,7 +27,7 @@ export async function GET(
 ) {
   const { lemma: rawLemma } = await params;
   const lemma = decodeURIComponent(rawLemma);
-  const entry = findEntryByLemma(lemma);
+  const entry = findBundledEntryByLemma(lemma);
 
   if (!entry) {
     const body: ApiErrorResponse = { error: 'unknown verb', lemma };
@@ -53,7 +55,7 @@ export async function GET(
 
   const body: ApiVerbDetailResponse = {
     engineVersion: VERSION,
-    corpusVersion: corpusVersion.version,
+    corpusVersion: bundledCorpusVersion.version,
     cite: citationFor(`/api/verbs/${entry.lemma}`),
     entry,
     table: verbTable,
