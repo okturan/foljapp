@@ -100,17 +100,14 @@ test('verb pages render without javascript', async ({ browser }) => {
   const ctx = await browser.newContext({ javaScriptEnabled: false });
   const page = await ctx.newPage();
   await page.goto('/verb/punoj');
-  // With JS disabled, content from RSC must still render. Each segment of
-  // a compound form lives in its own <span>, so check segments individually.
+  // The no-JS shell still exposes the reference metadata, actions, and
+  // citations. The large conjugation table is loaded as a client chunk to keep
+  // prerendered Pages artifacts small.
   const body = await page.content();
   expect(body).toContain('punoj');
-  expect(body).toContain('Indicative');
-  expect(body).toContain('kam');
-  expect(body).toContain('punuar');
-  // MP rows are part of RSC output too. The decomposition splits each form
-  // into role-coded <span>s, so check the segments individually.
-  expect(body).toContain('hesha'); // MP 1sg imperfect ending
-  expect(body).toContain('indicative-imperfect-1sg-mp'); // MP cell anchor
+  expect(body).toContain('to work');
+  expect(body).toContain('Zgjedhimi 1');
+  expect(body).toContain('Loading conjugation tables');
   expect(body).toContain('Sources');
   await ctx.close();
 });
