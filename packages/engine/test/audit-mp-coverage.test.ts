@@ -83,6 +83,8 @@ function collectMpCells(verbId: string): CellLocation[] {
 describe('audit: every MP cell is voice-marked (catches buildSimpleCell-ignores-voice bug class)', () => {
   for (const verb of [punoj, flas, shoh, pjek]) {
     it(`${verb.id}: every MP cell across all moods is voice-marked`, () => {
+      // Verbs flagged noMiddlePassive produce no MP cells by design.
+      if (verb.flags?.noMiddlePassive) return;
       const cells = collectMpCells(verb.id);
       expect(cells.length).toBeGreaterThan(0);
 

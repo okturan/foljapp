@@ -140,3 +140,190 @@ The mobile result band SHALL contain the same content as the desktop result pane
 - **AND** the user clicks the `middle-passive` radio
 - **THEN** the result band SHALL be pinned at viewport top with the updated form visible
 
+### Requirement: Option groups use a density-aware responsive grid layout
+
+The `/playground` page SHALL render each radio-button option group with a layout chosen by the group's option count:
+
+| Option count | Layout                                                |
+|--------------|-------------------------------------------------------|
+| 1–3          | `flex flex-wrap` single-row natural-width pills       |
+| 4 or more    | CSS Grid: 2 columns at viewport widths < 1024px; 3 columns at widths ≥ 1024px (Tailwind `lg`). |
+
+In grid mode, cells SHALL be equal-width (`1fr`) and the option label SHALL be horizontally centered within its cell. The pill styling (rounded border, padding, `text-sm`, active = `bg-stone-900 text-stone-50`, hover = `bg-stone-50`) SHALL be unchanged.
+
+In flex mode, the layout SHALL behave as today: pills sized to their content, wrapping to a new line when a row is full.
+
+The decision SHALL be derived from `options.length` inside the component; callers (Mood, Tense, Voice, Polarity, Modality, Person, Number, Form) SHALL NOT need to pass a density flag.
+
+#### Scenario: Mood (7 options) renders as a 2-column grid on a narrow viewport
+
+- **GIVEN** a viewport width of 768px
+- **WHEN** the user opens `/playground`
+- **THEN** the Mood option group SHALL render in a CSS grid with 2 columns
+- **AND** the 7 mood pills SHALL appear in 4 rows (2 + 2 + 2 + 1)
+- **AND** every pill in a non-final row SHALL have the same width as its row neighbor
+
+#### Scenario: Mood (7 options) renders as a 3-column grid on a wide viewport
+
+- **GIVEN** a viewport width ≥ 1024px (Tailwind `lg`)
+- **WHEN** the user opens `/playground`
+- **THEN** the Mood option group SHALL render in a CSS grid with 3 columns
+- **AND** the 7 mood pills SHALL appear in 3 rows (3 + 3 + 1)
+
+#### Scenario: Tense (indicative — 10 options) renders as a grid
+
+- **GIVEN** Mood = `indicative` (10 tense values)
+- **WHEN** the page renders at viewport width ≥ 1024px
+- **THEN** the Tense option group SHALL render as a 3-column grid
+- **AND** all 10 tense pills SHALL have visually equal width
+
+#### Scenario: Voice (2 options) keeps the flex single-row layout
+
+- **GIVEN** any viewport width ≥ 320px
+- **WHEN** the page renders the Voice control
+- **THEN** the Voice option group SHALL render as a flex single row (NOT a grid)
+- **AND** the pill widths SHALL be sized to their labels (`active`, `middle-passive`)
+
+#### Scenario: Person (3 options) keeps the flex single-row layout
+
+- **GIVEN** any viewport width ≥ 320px
+- **WHEN** the page renders the Person control
+- **THEN** the Person option group SHALL render as a flex single row
+- **AND** the three pills (`1`, `2`, `3`) SHALL appear next to each other with natural width
+
+#### Scenario: Tense layout adapts when Mood changes
+
+- **GIVEN** the user has Mood = `indicative` (10 tenses, grid mode active)
+- **WHEN** the user clicks the `conditional` mood pill
+- **THEN** the Tense control SHALL re-render with 2 options (`present`, `perfect`)
+- **AND** the Tense control SHALL switch to flex single-row layout (since 2 ≤ 3)
+
+### Requirement: Keyboard focus is visible on radio-button pills
+
+When the hidden `<input type="radio">` inside a playground option pill receives keyboard focus, the wrapping `<label>` SHALL display a visible focus indicator. The indicator SHALL be a 2px ring in `stone-900` with a 1px offset, applied via `focus-within:` styling on the label.
+
+The focus indicator SHALL appear only on keyboard focus (`focus-visible` semantics), not on mouse click; this matches Tailwind's `focus-within:` behavior combined with the browser's built-in `focus-visible` matching for the inner `<input>`.
+
+#### Scenario: Tab navigation reveals focus ring
+
+- **GIVEN** the user has loaded `/playground`
+- **WHEN** the user presses `Tab` until focus reaches a Mood pill
+- **THEN** the focused pill's label SHALL render with a 2px stone-900 ring
+- **AND** the ring SHALL disappear when focus leaves that pill
+
+#### Scenario: Mouse click does not show focus ring
+
+- **GIVEN** the user is on `/playground`
+- **WHEN** the user clicks a mood pill with a mouse
+- **THEN** the pill SHALL update its selection state (active styling) but SHALL NOT show the keyboard focus ring
+
+### Requirement: Playground supports every corpus verb
+
+The `/playground` page SHALL accept any lemma present in the foljapp corpus index (`data/verbs/index.json`). Submitting a corpus lemma to the verb input SHALL produce a conjugation result, NOT an "Unknown verb" error.
+
+The client-side engine SHALL be configured at module load with the full corpus — every verb entry validated by `scripts/build-corpus.ts` SHALL be reachable from the browser bundle.
+
+#### Scenario: Any corpus lemma resolves in the playground
+
+- **GIVEN** a corpus lemma (e.g., `dhemb`, `kërkoj`, `qëndroj`, `tregoj`) that has a `.json` file under `data/verbs/`
+- **WHEN** the user navigates to `/playground?verb=<lemma>&mood=indicative&tense=present&voice=active&person=1&number=singular&polarity=affirmative&modality=declarative`
+- **THEN** the result panel SHALL render a conjugated form (NOT an "Unknown verb" / "No corpus entry found" error)
+
+#### Scenario: Verb-page lemma list and playground lemma list match
+
+- **GIVEN** the corpus index `data/verbs/index.json` lists 204 lemmas
+- **WHEN** the playground configures its client-side engine on first load
+- **THEN** the engine's `listVerbs()` SHALL return 204 entries
+- **AND** for every lemma `L` rendered as a static `/verb/<L>` page, `/playground?verb=<L>` SHALL conjugate `L` without throwing `UnknownVerbError`
+
+### Requirement: Compact option groups pack into a responsive parent grid
+
+The compact option groups on `/playground` (Voice, Polarity, Modality, Person, Number) SHALL be wrapped in a parent CSS Grid container with column count determined by viewport width:
+
+| Viewport | Column count |
+|----------|--------------|
+| < 640px (mobile)             | 1 |
+| ≥ 640px and < 1024px (`sm`)  | 2 |
+| ≥ 1024px (`lg`)              | 3 |
+
+Each compact group SHALL retain its own `<fieldset>` and `<legend>` (no semantic regrouping). The parent grid SHALL use a horizontal column gap of 1.5rem (`gap-x-6`); vertical row spacing SHALL come from the existing per-fieldset `mt-6` margin.
+
+The wide groups (Mood; Tense when option count ≥ 4; Form) SHALL remain OUTSIDE the parent grid, rendered full-width above it. This preserves the within-group 2/3-col layout established by `improve-playground-option-grid`.
+
+#### Scenario: Five compact groups stack vertically on mobile
+
+- **GIVEN** a viewport width of 375px
+- **WHEN** the user opens `/playground`
+- **THEN** the compact-group parent grid SHALL render with `display: grid` and `grid-template-columns` resolving to a single 1fr track
+- **AND** Voice, Polarity, Modality, Person, Number SHALL appear in five distinct rows
+
+#### Scenario: Compact groups pack into 2 columns at sm
+
+- **GIVEN** a viewport width of 768px
+- **WHEN** the user opens `/playground`
+- **THEN** the parent grid SHALL resolve to 2 column tracks
+- **AND** Voice and Polarity SHALL share row 1 (Voice in col 1, Polarity in col 2)
+- **AND** Modality and Person SHALL share row 2
+- **AND** Number SHALL occupy row 3 col 1 (col 2 empty)
+
+#### Scenario: Compact groups pack into 3 columns at lg
+
+- **GIVEN** a viewport width of 1280px
+- **WHEN** the user opens `/playground`
+- **THEN** the parent grid SHALL resolve to 3 column tracks
+- **AND** Voice, Polarity, Modality SHALL share row 1
+- **AND** Person, Number SHALL share row 2 (col 3 empty)
+
+#### Scenario: Mood and Tense groups stay full-width above the compact grid
+
+- **GIVEN** any viewport width ≥ 320px
+- **WHEN** the user opens `/playground`
+- **THEN** the Mood option group SHALL render outside the compact-group grid
+- **AND** the Tense option group SHALL render outside the compact-group grid
+- **AND** both SHALL span the full controls-panel width (NOT a column of the parent grid)
+
+### Requirement: Playground controls reflect engine feasibility per verb
+
+The `/playground` page SHALL render any radio-button option whose selection would yield an `UnsupportedCellError` from the engine — given the current values of the other controls — as a visually-disabled pill: reduced contrast (`text-stone-300`, `bg-stone-50`, `border-stone-100`), `cursor-not-allowed`, no hover effect, and a `title` attribute reading "not a standard form for this verb".
+
+The disabled pill's inner `<input type="radio">` SHALL carry the native `disabled` attribute, so click events do not fire and form submission cannot select the value.
+
+The feasibility check SHALL derive from `engine.table(verbId)` for the currently-selected verb. A cell is feasible iff the table populates a value for that `(mood, tense, voice, cellLabel)` tuple. For non-finite forms, feasibility comes from `table.nonFinite[form]`.
+
+The following controls SHALL apply feasibility-based disabling: **Mood**, **Tense**, **Voice**, **Person**, **Number**, **Form (non-finite)**. The following controls SHALL NOT be disabled by feasibility: **Polarity**, **Modality** (always supported as post-engine string transforms).
+
+#### Scenario: punoj + imperative greys out the middle-passive voice pill
+
+- **GIVEN** `/playground?verb=punoj` (a verb without MP imperative cellOverrides) AND mood = `imperative`
+- **WHEN** the page renders
+- **THEN** the Voice control's `middle-passive` pill SHALL render as disabled (`text-stone-300`, `cursor-not-allowed`)
+- **AND** clicking the pill SHALL NOT change the URL or the selected voice
+
+#### Scenario: laj + imperative keeps middle-passive enabled
+
+- **GIVEN** `/playground?verb=laj` (a verb WITH MP imperative cellOverrides — `lahu`, `lahuni`)
+- **WHEN** the user selects mood = `imperative`
+- **THEN** the Voice control's `middle-passive` pill SHALL render as enabled (default style)
+- **AND** clicking it SHALL select MP voice and produce `lahu` / `lahuni`
+
+#### Scenario: imperative greys persons 1 and 3
+
+- **GIVEN** `/playground?verb=punoj&mood=imperative`
+- **WHEN** the page renders
+- **THEN** the Person control's `1` and `3` pills SHALL render as disabled
+- **AND** the `2` pill SHALL remain enabled and selected
+
+#### Scenario: switching verbs re-evaluates feasibility
+
+- **GIVEN** the user has `verb=laj&mood=imperative&voice=middle-passive`
+- **WHEN** the user changes verb to `punoj` (no MP imperative)
+- **THEN** the Voice control's `middle-passive` pill SHALL switch to disabled state
+- **AND** the result panel SHALL show the "unsupported cell" message (until the user picks a feasible voice)
+
+#### Scenario: Polarity and Modality are never disabled
+
+- **GIVEN** `/playground?verb=punoj` with any combination of mood / tense / voice / person / number
+- **WHEN** the page renders
+- **THEN** both Polarity pills (`affirmative`, `negative`) SHALL be enabled
+- **AND** both Modality pills (`declarative`, `interrogative`) SHALL be enabled
+

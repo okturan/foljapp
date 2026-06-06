@@ -30,7 +30,7 @@ let overrides: Set<string>;
 beforeAll(() => {
   const files = readdirSync(VERBS_DIR).filter(
     (f) => f.endsWith('.json') &&
-      !['index.json', 'version.json', 'frequency.json'].includes(f),
+      !['index.json', 'version.json', 'frequency.json', '_corpus.client.json'].includes(f),
   );
   corpus = files.map((f) => JSON.parse(readFileSync(join(VERBS_DIR, f), 'utf8')) as VerbEntry);
   configure(corpus, '0.1.0');

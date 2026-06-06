@@ -1,0 +1,5303 @@
+[
+  {
+    "id": "abstenoj",
+    "lemma": "abstenoj",
+    "translationEn": "to abstain",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "absteno",
+      "aorist": "abstenua",
+      "participle": "abstenuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/abstenoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "abuzoj",
+    "lemma": "abuzoj",
+    "translationEn": "to abuse",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "abuzo",
+      "aorist": "abuzua",
+      "participle": "abuzuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/abuzoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "adhuroj",
+    "lemma": "adhuroj",
+    "translationEn": "to adore",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "adhuro",
+      "aorist": "adhurua",
+      "participle": "adhuruar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/adhuroj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "admiroj",
+    "lemma": "admiroj",
+    "translationEn": "to admire",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "admiro",
+      "aorist": "admirua",
+      "participle": "admiruar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/admiroj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "adoptoj",
+    "lemma": "adoptoj",
+    "translationEn": "to adopt",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "adopto",
+      "aorist": "adoptua",
+      "participle": "adoptuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/adoptoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "adresoj",
+    "lemma": "adresoj",
+    "translationEn": "to address",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "adreso",
+      "aorist": "adresua",
+      "participle": "adresuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/adresoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "afroj",
+    "lemma": "afroj",
+    "translationEn": "to approach",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "afro",
+      "aorist": "afrua",
+      "participle": "afruar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/afroj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "ajros",
+    "lemma": "ajros",
+    "translationEn": "to air",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "ajros",
+      "aorist": "ajros",
+      "participle": "ajrosur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/ajros#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "akuzoj",
+    "lemma": "akuzoj",
+    "translationEn": "to accuse",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "akuzo",
+      "aorist": "akuzua",
+      "participle": "akuzuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/akuzoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/akuzoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "banoj",
+    "lemma": "banoj",
+    "translationEn": "to reside",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "bano",
+      "aorist": "banua",
+      "participle": "banuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/banoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "barazoj",
+    "lemma": "barazoj",
+    "translationEn": "to compare",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "barazo",
+      "aorist": "barazua",
+      "participle": "barazuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/barazoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "bashkoj",
+    "lemma": "bashkoj",
+    "translationEn": "to unite",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "bashko",
+      "aorist": "bashkua",
+      "participle": "bashkuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/bashkoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/bashkoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "bastis",
+    "lemma": "bastis",
+    "translationEn": "to raid",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "bastis",
+      "aorist": "bastis",
+      "participle": "bastisur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/bastis#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "bej",
+    "lemma": "bëj",
+    "translationEn": "to make / to do",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "bë",
+      "aorist": "bë",
+      "participle": "bërë"
+    },
+    "sources": [
+      {
+        "source": "husic",
+        "reference": "1B (monosyllabic vowel stem with -r aorist)"
+      },
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/b%C3%ABj#Albanian"
+      }
+    ],
+    "dialect": "tosk",
+    "notes": "Class 1B with -r aorist infix: bëra/bëre/bëri/bëmë/bëtë/bënë. Imperative 2sg restores the -j (bëj).",
+    "cellOverrides": {
+      "indicative.aorist": {
+        "1sg": "bëra",
+        "2sg": "bëre",
+        "3sg": "bëri",
+        "1pl": "bëmë",
+        "2pl": "bëtë",
+        "3pl": "bënë"
+      },
+      "imperative.present": {
+        "2sg": "bëj"
+      }
+    }
+  },
+  {
+    "id": "bekoj",
+    "lemma": "bekoj",
+    "translationEn": "to bless",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "beko",
+      "aorist": "bekua",
+      "participle": "bekuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/bekoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "besoj",
+    "lemma": "besoj",
+    "translationEn": "to believe",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "beso",
+      "aorist": "besua",
+      "participle": "besuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/besoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "bezdis",
+    "lemma": "bezdis",
+    "translationEn": "to bother",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "bezdis",
+      "aorist": "bezdis",
+      "participle": "bezdisur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/bezdis#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "bisedoj",
+    "lemma": "bisedoj",
+    "translationEn": "to converse / talk",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "bisedo",
+      "aorist": "bisedua",
+      "participle": "biseduar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/bisedoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/bisedoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "bitis",
+    "lemma": "bitis",
+    "translationEn": "to complete",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "bitis",
+      "aorist": "bitis",
+      "participle": "bitisur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/bitis#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "botoj",
+    "lemma": "botoj",
+    "translationEn": "to publish",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "boto",
+      "aorist": "botua",
+      "participle": "botuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/botoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/botoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "caktoj",
+    "lemma": "caktoj",
+    "translationEn": "to determine",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "cakto",
+      "aorist": "caktua",
+      "participle": "caktuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/caktoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "caloj",
+    "lemma": "çaloj",
+    "translationEn": "to limp",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "çalo",
+      "aorist": "çalua",
+      "participle": "çaluar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/%C3%A7aloj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "carmatos",
+    "lemma": "çarmatos",
+    "translationEn": "to disarm",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "çarmatos",
+      "aorist": "çarmatos",
+      "participle": "çarmatosur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/%C3%A7armatos#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "cel",
+    "lemma": "çel",
+    "translationEn": "to open; bloom",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "çel",
+      "aorist": "çel",
+      "participle": "çelur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/%C3%A7el#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk",
+    "notes": "Multi-sense translationEn 'to open; bloom' uses ';' separator that the gloss first-sense picker doesn't split — explicit override picks 'open' as the primary English sense.",
+    "englishForms": {
+      "base": "open"
+    }
+  },
+  {
+    "id": "clodh",
+    "lemma": "çlodh",
+    "translationEn": "to refresh",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "çlodh",
+      "aorist": "çlodh",
+      "participle": "çlodhur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/%C3%A7lodh#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "cmoj",
+    "lemma": "çmoj",
+    "translationEn": "to value",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "çmo",
+      "aorist": "çmua",
+      "participle": "çmuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/%C3%A7moj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "coj",
+    "lemma": "çoj",
+    "translationEn": "to send",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "ço",
+      "aorist": "çua",
+      "participle": "çuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/%C3%A7oj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "copetoj",
+    "lemma": "copetoj",
+    "translationEn": "to tear",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "copeto",
+      "aorist": "copetua",
+      "participle": "copetuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/copetoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "dalloj",
+    "lemma": "dalloj",
+    "translationEn": "to distinguish",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "dallo",
+      "aorist": "dallua",
+      "participle": "dalluar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/dalloj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "dashuroj",
+    "lemma": "dashuroj",
+    "translationEn": "to love",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "dashuro",
+      "aorist": "dashurua",
+      "participle": "dashuruar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/dashuroj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "degjoj",
+    "lemma": "dëgjoj",
+    "translationEn": "to listen / to hear",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "dëgjo",
+      "aorist": "dëgjua",
+      "participle": "dëgjuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/d%C3%ABgjoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/degjoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "demtoj",
+    "lemma": "dëmtoj",
+    "translationEn": "to harm",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "dëmto",
+      "aorist": "dëmtua",
+      "participle": "dëmtuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/d%C3%ABmtoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "dend",
+    "lemma": "dend",
+    "translationEn": "to compress",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "dend",
+      "aorist": "dend",
+      "participle": "dendur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/dend#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "denoj",
+    "lemma": "dënoj",
+    "translationEn": "to punish",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "dëno",
+      "aorist": "dënua",
+      "participle": "dënuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/d%C3%ABnoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "depertoj",
+    "lemma": "depërtoj",
+    "translationEn": "to penetrate",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "depërto",
+      "aorist": "depërtua",
+      "participle": "depërtuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/dep%C3%ABrtoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "depozitoj",
+    "lemma": "depozitoj",
+    "translationEn": "to deposit",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "depozito",
+      "aorist": "depozitua",
+      "participle": "depozituar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/depozitoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "derdh",
+    "lemma": "derdh",
+    "translationEn": "to spill",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "derdh",
+      "aorist": "derdh",
+      "participle": "derdhur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/derdh#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "dergoj",
+    "lemma": "dërgoj",
+    "translationEn": "to send",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "dërgo",
+      "aorist": "dërgua",
+      "participle": "dërguar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/d%C3%ABrgoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "deshiroj",
+    "lemma": "dëshiroj",
+    "translationEn": "to desire",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "dëshiro",
+      "aorist": "dëshirua",
+      "participle": "dëshiruar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/d%C3%ABshiroj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "deshmoj",
+    "lemma": "dëshmoj",
+    "translationEn": "to testify",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "dëshmo",
+      "aorist": "dëshmua",
+      "participle": "dëshmuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/d%C3%ABshmoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "deshperoj",
+    "lemma": "dëshpëroj",
+    "translationEn": "to sadden",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "dëshpëro",
+      "aorist": "dëshpërua",
+      "participle": "dëshpëruar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/d%C3%ABshp%C3%ABroj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "detyroj",
+    "lemma": "detyroj",
+    "translationEn": "to charge",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "detyro",
+      "aorist": "detyrua",
+      "participle": "detyruar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/detyroj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "dhemb",
+    "lemma": "dhemb",
+    "translationEn": "to hurt",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "dhemb",
+      "aorist": "dhemb",
+      "participle": "dhembur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/dhemb#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "dhuroj",
+    "lemma": "dhuroj",
+    "translationEn": "to present",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "dhuro",
+      "aorist": "dhurua",
+      "participle": "dhuruar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/dhuroj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "diskutoj",
+    "lemma": "diskutoj",
+    "translationEn": "to discuss",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "diskuto",
+      "aorist": "diskutua",
+      "participle": "diskutuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/diskutoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "djeg",
+    "lemma": "djeg",
+    "translationEn": "to burn",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "djeg",
+      "aorist": "dogj",
+      "participle": "djegur"
+    },
+    "sources": [
+      {
+        "source": "husic",
+        "reference": "2B (mutating g → gj before consonant-cluster suffixes)"
+      },
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/djeg#Albanian"
+      }
+    ],
+    "flags": {
+      "hasMutation": true,
+      "irregularAorist": true
+    },
+    "dialect": "tosk",
+    "notes": "Stem 'djeg' palatalizes to 'digj' before consonant-cluster suffixes (present 2pl, all imperfect, all MP). Aorist stem 'dogj' is pre-mutated.",
+    "cellOverrides": {
+      "indicative.present": {
+        "2pl": "digjni"
+      },
+      "indicative.present.middle-passive": {
+        "1sg": "digjem",
+        "2sg": "digjesh",
+        "3sg": "digjet",
+        "1pl": "digjemi",
+        "2pl": "digjeni",
+        "3pl": "digjen"
+      },
+      "indicative.imperfect": {
+        "1sg": "digjja",
+        "2sg": "digjje",
+        "3sg": "digjte",
+        "1pl": "digjnim",
+        "2pl": "digjnit",
+        "3pl": "digjnin"
+      },
+      "indicative.imperfect.middle-passive": {
+        "1sg": "digjesha",
+        "2sg": "digjeshe",
+        "3sg": "digjej",
+        "1pl": "digjeshim",
+        "2pl": "digjeshit",
+        "3pl": "digjeshin"
+      },
+      "subjunctive.present": {
+        "2pl": "të digjni"
+      },
+      "imperative.present": {
+        "2sg": "digj",
+        "2pl": "digjni"
+      }
+    }
+  },
+  {
+    "id": "dorezoj",
+    "lemma": "dorëzoj",
+    "translationEn": "to deliver / to surrender",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "dorëzo",
+      "aorist": "dorëzua",
+      "participle": "dorëzuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/dor%C3%ABzoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "drejtoj",
+    "lemma": "drejtoj",
+    "translationEn": "to direct / steer",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "drejto",
+      "aorist": "drejtua",
+      "participle": "drejtuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/drejtoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/drejtoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "dua",
+    "lemma": "dua",
+    "translationEn": "to want / to love",
+    "class": 3,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "dua",
+      "aorist": "desh",
+      "participle": "dashur"
+    },
+    "sources": [
+      {
+        "source": "husic",
+        "reference": "3B (irregular aorist desh)"
+      },
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/dua#Albanian"
+      }
+    ],
+    "flags": {
+      "irregularAorist": true
+    },
+    "dialect": "tosk",
+    "notes": "Highly irregular Class 3 verb with extensive stem alternation (dua/do, duam/doni). Optative uses a different aorist-like stem (daç-). Cells enumerated against Kaikki.",
+    "cellOverrides": {
+      "indicative.present": {
+        "2sg": "do",
+        "3sg": "do",
+        "1pl": "duam",
+        "2pl": "doni",
+        "3pl": "duan"
+      },
+      "indicative.present.middle-passive": {
+        "1sg": "duhem",
+        "2sg": "duhesh",
+        "3sg": "duhet",
+        "1pl": "duhemi",
+        "2pl": "duheni",
+        "3pl": "duhen"
+      },
+      "indicative.imperfect": {
+        "1sg": "doja",
+        "2sg": "doje",
+        "3sg": "donte",
+        "1pl": "donim",
+        "2pl": "donit",
+        "3pl": "donin"
+      },
+      "indicative.imperfect.middle-passive": {
+        "1sg": "duhesha",
+        "2sg": "duheshe",
+        "3sg": "duhej",
+        "1pl": "duheshim",
+        "2pl": "duheshit",
+        "3pl": "duheshin"
+      },
+      "indicative.aorist": {
+        "1sg": "desha",
+        "2sg": "deshe",
+        "3sg": "deshi",
+        "1pl": "deshëm",
+        "2pl": "deshët",
+        "3pl": "deshën"
+      },
+      "subjunctive.present": {
+        "3sg": "të dojë",
+        "1pl": "të duam",
+        "2pl": "të doni",
+        "3pl": "të duan"
+      },
+      "optative.present": {
+        "1sg": "daça",
+        "2sg": "daç",
+        "3sg": "daçtë",
+        "1pl": "daçim",
+        "2pl": "daçi",
+        "3pl": "daçin"
+      },
+      "imperative.present": {
+        "2sg": "duaj",
+        "2pl": "doni"
+      }
+    }
+  },
+  {
+    "id": "duhet",
+    "lemma": "duhet",
+    "translationEn": "must / need (impersonal)",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "duh",
+      "aorist": "desh",
+      "participle": "dashur"
+    },
+    "sources": [
+      {
+        "source": "husic",
+        "reference": "Defective / impersonal"
+      }
+    ],
+    "flags": {
+      "irregularAorist": true
+    },
+    "dialect": "tosk",
+    "notes": "Defective: in practice only 3sg/3pl forms are used. englishForms uses defective 'must' for present and 'had to' periphrasis for past/perfect (the only English equivalent that conjugates across tenses).",
+    "englishForms": {
+      "base": "must",
+      "past": "had to",
+      "participle": "had to",
+      "gerund": "having to"
+    }
+  },
+  {
+    "id": "duroj",
+    "lemma": "duroj",
+    "translationEn": "to endure",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "duro",
+      "aorist": "durua",
+      "participle": "duruar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/duroj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/duroj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "dyshoj",
+    "lemma": "dyshoj",
+    "translationEn": "to doubt",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "dysho",
+      "aorist": "dyshua",
+      "participle": "dyshuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/dyshoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "edukoj",
+    "lemma": "edukoj",
+    "translationEn": "to educate",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "eduko",
+      "aorist": "edukua",
+      "participle": "edukuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/edukoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "eksportoj",
+    "lemma": "eksportoj",
+    "translationEn": "to export",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "eksporto",
+      "aorist": "eksportua",
+      "participle": "eksportuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/eksportoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "ekspozoj",
+    "lemma": "ekspozoj",
+    "translationEn": "to exhibit",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "ekspozo",
+      "aorist": "ekspozua",
+      "participle": "ekspozuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/ekspozoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "ekzistoj",
+    "lemma": "ekzistoj",
+    "translationEn": "to exist",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "ekzisto",
+      "aorist": "ekzistua",
+      "participle": "ekzistuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/ekzistoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "embelsoj",
+    "lemma": "ëmbëlsoj",
+    "translationEn": "to sweeten",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "ëmbëlso",
+      "aorist": "ëmbëlsua",
+      "participle": "ëmbëlsuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/%C3%ABmb%C3%ABlsoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "end",
+    "lemma": "end",
+    "translationEn": "to weave",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "end",
+      "aorist": "end",
+      "participle": "endur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/end#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "enderroj",
+    "lemma": "ëndërroj",
+    "translationEn": "to dream",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "ëndërro",
+      "aorist": "ëndërrua",
+      "participle": "ëndërruar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/%C3%ABnd%C3%ABrroj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "fabrikoj",
+    "lemma": "fabrikoj",
+    "translationEn": "to manufacture",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "fabriko",
+      "aorist": "fabrikua",
+      "participle": "fabrikuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/fabrikoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "fal",
+    "lemma": "fal",
+    "translationEn": "to excuse",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "fal",
+      "aorist": "fal",
+      "participle": "falur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/fal#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "falenderoj",
+    "lemma": "falënderoj",
+    "translationEn": "to thank",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "falëndero",
+      "aorist": "falënderua",
+      "participle": "falënderuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/fal%C3%ABnderoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "falsifikoj",
+    "lemma": "falsifikoj",
+    "translationEn": "to falsify",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "falsifiko",
+      "aorist": "falsifikua",
+      "participle": "falsifikuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/falsifikoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "farketoj",
+    "lemma": "farkëtoj",
+    "translationEn": "to forge",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "farkëto",
+      "aorist": "farkëtua",
+      "participle": "farkëtuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/fark%C3%ABtoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "farmakos",
+    "lemma": "farmakos",
+    "translationEn": "to poison",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "farmakos",
+      "aorist": "farmakos",
+      "participle": "farmakosur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/farmakos#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "fejoj",
+    "lemma": "fejoj",
+    "translationEn": "to annoy",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "fejo",
+      "aorist": "fejua",
+      "participle": "fejuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/fejoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "ferkoj",
+    "lemma": "fërkoj",
+    "translationEn": "to rub",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "fërko",
+      "aorist": "fërkua",
+      "participle": "fërkuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/f%C3%ABrkoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "festoj",
+    "lemma": "festoj",
+    "translationEn": "to celebrate",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "festo",
+      "aorist": "festua",
+      "participle": "festuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/festoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "filloj",
+    "lemma": "filloj",
+    "translationEn": "to begin",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "fillo",
+      "aorist": "fillua",
+      "participle": "filluar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/filloj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "firmoj",
+    "lemma": "firmoj",
+    "translationEn": "to sign",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "firmo",
+      "aorist": "firmua",
+      "participle": "firmuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/firmoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "fitoj",
+    "lemma": "fitoj",
+    "translationEn": "to win",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "fito",
+      "aorist": "fitua",
+      "participle": "fituar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/fitoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/fitoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "fjalos",
+    "lemma": "fjalos",
+    "translationEn": "to converse",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "fjalos",
+      "aorist": "fjalos",
+      "participle": "fjalosur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/fjalos#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "flak",
+    "lemma": "flak",
+    "translationEn": "to throw",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "flak",
+      "aorist": "flak",
+      "participle": "flakur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/flak#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk",
+    "cellOverrides": {
+      "indicative.aorist": {
+        "3sg": "flaku"
+      }
+    }
+  },
+  {
+    "id": "flas",
+    "lemma": "flas",
+    "translationEn": "to speak",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "flas",
+      "aorist": "fol",
+      "participle": "folur"
+    },
+    "sources": [
+      {
+        "source": "husic",
+        "reference": "2C (stem alternation flas/flet/flis + suppletive aorist fol)"
+      },
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/flas#Albanian"
+      }
+    ],
+    "flags": {
+      "irregularAorist": true
+    },
+    "dialect": "tosk",
+    "notes": "Three present-system stems: flas (1sg/1pl/3pl), flet (2sg/3sg), flis (2pl + all imperfect). Aorist takes Class 2 endings on stem 'fol'.",
+    "cellOverrides": {
+      "indicative.present": {
+        "2sg": "flet",
+        "3sg": "flet",
+        "2pl": "flisni"
+      },
+      "indicative.imperfect": {
+        "1sg": "flisja",
+        "2sg": "flisje",
+        "3sg": "fliste",
+        "1pl": "flisnim",
+        "2pl": "flisnit",
+        "3pl": "flisnin"
+      },
+      "indicative.aorist": {
+        "1sg": "fola",
+        "2sg": "fole",
+        "3sg": "foli",
+        "1pl": "folëm",
+        "2pl": "folët",
+        "3pl": "folën"
+      },
+      "subjunctive.present": {
+        "2pl": "të flisni"
+      },
+      "optative.present": {
+        "1sg": "folsha",
+        "2sg": "folsh",
+        "3sg": "foltë",
+        "1pl": "folshim",
+        "2pl": "folshi",
+        "3pl": "folshin"
+      },
+      "imperative.present": {
+        "2sg": "fol",
+        "2pl": "flisni"
+      }
+    }
+  },
+  {
+    "id": "formoj",
+    "lemma": "formoj",
+    "translationEn": "to form",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "formo",
+      "aorist": "formua",
+      "participle": "formuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/formoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "frikesoj",
+    "lemma": "frikësoj",
+    "translationEn": "to intimidate",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "frikëso",
+      "aorist": "frikësua",
+      "participle": "frikësuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/frik%C3%ABsoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "frymezoj",
+    "lemma": "frymëzoj",
+    "translationEn": "to inspire",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "frymëzo",
+      "aorist": "frymëzua",
+      "participle": "frymëzuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/frym%C3%ABzoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "ftoj",
+    "lemma": "ftoj",
+    "translationEn": "to invite",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "fto",
+      "aorist": "ftua",
+      "participle": "ftuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/ftoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "gaboj",
+    "lemma": "gaboj",
+    "translationEn": "to mistake",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "gabo",
+      "aorist": "gabua",
+      "participle": "gabuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/gaboj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "gajas",
+    "lemma": "gajas",
+    "translationEn": "to tire",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "gajas",
+      "aorist": "gajas",
+      "participle": "gajasur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/gajas#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "gdhend",
+    "lemma": "gdhend",
+    "translationEn": "to carve",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "gdhend",
+      "aorist": "gdhend",
+      "participle": "gdhendur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/gdhend#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "germoj",
+    "lemma": "gërmoj",
+    "translationEn": "to dig",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "gërmo",
+      "aorist": "gërmua",
+      "participle": "gërmuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/g%C3%ABrmoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "gervisht",
+    "lemma": "gërvisht",
+    "translationEn": "to scratch",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "gërvisht",
+      "aorist": "gërvisht",
+      "participle": "gërvishtur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/g%C3%ABrvisht#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "gjakos",
+    "lemma": "gjakos",
+    "translationEn": "to make bleed",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "gjakos",
+      "aorist": "gjakos",
+      "participle": "gjakosur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/gjakos#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "gjezdis",
+    "lemma": "gjezdis",
+    "translationEn": "to sightsee",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "gjezdis",
+      "aorist": "gjezdis",
+      "participle": "gjezdisur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/gjezdis#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "gjykoj",
+    "lemma": "gjykoj",
+    "translationEn": "to judge",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "gjyko",
+      "aorist": "gjykua",
+      "participle": "gjykuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/gjykoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "godit",
+    "lemma": "godit",
+    "translationEn": "to hit / strike",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "godit",
+      "aorist": "godit",
+      "participle": "goditur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/godit#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/godit.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "gris",
+    "lemma": "gris",
+    "translationEn": "to tear",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "gris",
+      "aorist": "gris",
+      "participle": "grisur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/gris#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "gudulis",
+    "lemma": "gudulis",
+    "translationEn": "to tickle",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "gudulis",
+      "aorist": "gudulis",
+      "participle": "gudulisur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/gudulis#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "guxoj",
+    "lemma": "guxoj",
+    "translationEn": "to dare",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "guxo",
+      "aorist": "guxua",
+      "participle": "guxuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/guxoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "ha",
+    "lemma": "ha",
+    "translationEn": "to eat",
+    "class": 3,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "ha",
+      "aorist": "hëngr",
+      "participle": "ngrënë"
+    },
+    "sources": [
+      {
+        "source": "husic",
+        "reference": "3B (irregular aorist hëngr)"
+      },
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/ha#Albanian"
+      }
+    ],
+    "flags": {
+      "irregularAorist": true
+    },
+    "dialect": "tosk",
+    "notes": "Aorist stem is consonant-final (hëngr), so aorist takes Class 2 endings rather than the Class 3 -va/-ve/-u/-më/-të/-në that the present-class implies. Subjunctive 3sg present is 'të haje' (not 'të hajë').",
+    "cellOverrides": {
+      "indicative.aorist": {
+        "1sg": "hëngra",
+        "2sg": "hëngre",
+        "3sg": "hëngri",
+        "1pl": "hëngrëm",
+        "2pl": "hëngrët",
+        "3pl": "hëngrën"
+      },
+      "indicative.aorist.middle-passive": {
+        "3sg": "u hëngër"
+      },
+      "subjunctive.present": {
+        "3sg": "të haje"
+      },
+      "optative.present": {
+        "1sg": "ngrënça",
+        "2sg": "ngrënç",
+        "3sg": "ngrëntë",
+        "1pl": "ngrënçim",
+        "2pl": "ngrënçi",
+        "3pl": "ngrënçin"
+      }
+    }
+  },
+  {
+    "id": "hap",
+    "lemma": "hap",
+    "translationEn": "to open",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "hap",
+      "aorist": "hap",
+      "participle": "hapur"
+    },
+    "sources": [
+      {
+        "source": "husic",
+        "reference": "2A"
+      },
+      {
+        "source": "uniparser",
+        "reference": "hap_class2"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "harroj",
+    "lemma": "harroj",
+    "translationEn": "to forget",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "harro",
+      "aorist": "harrua",
+      "participle": "harruar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/harroj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/harroj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "has",
+    "lemma": "has",
+    "translationEn": "to bump into",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "has",
+      "aorist": "has",
+      "participle": "hasur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/has#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "hekuros",
+    "lemma": "hekuros",
+    "translationEn": "to iron",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "hekuros",
+      "aorist": "hekuros",
+      "participle": "hekurosur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/hekuros#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk",
+    "notes": "Kaikki has malformed aorist 3sg entry (hekuroshekuros); engine produces hekurosi which matches the regular -os pattern."
+  },
+  {
+    "id": "helmoj",
+    "lemma": "helmoj",
+    "translationEn": "to poison",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "helmo",
+      "aorist": "helmua",
+      "participle": "helmuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/helmoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "hetoj",
+    "lemma": "hetoj",
+    "translationEn": "to inquire",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "heto",
+      "aorist": "hetua",
+      "participle": "hetuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/hetoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "holloj",
+    "lemma": "holloj",
+    "translationEn": "to make thin",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "hollo",
+      "aorist": "hollua",
+      "participle": "holluar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/holloj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "humb",
+    "lemma": "humb",
+    "translationEn": "to lose",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "humb",
+      "aorist": "humb",
+      "participle": "humbur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/humb#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "hutoj",
+    "lemma": "hutoj",
+    "translationEn": "to stun",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "huto",
+      "aorist": "hutua",
+      "participle": "hutuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/hutoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "iki",
+    "lemma": "iki",
+    "translationEn": "to leave / to go away",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "ik",
+      "aorist": "ik",
+      "participle": "ikur"
+    },
+    "sources": [
+      {
+        "source": "husic",
+        "reference": "2D (1sg present takes -i ending)"
+      },
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/iki#Albanian"
+      }
+    ],
+    "flags": {
+      "noMiddlePassive": true
+    },
+    "dialect": "tosk",
+    "notes": "Class 2D pattern: 1sg present takes -i, 2sg/3sg present take -ën, aorist 3sg takes -u. Encoded via cellOverrides rather than introducing a new paradigm class for one verb. Intransitive — no MP voice in standard Albanian.",
+    "cellOverrides": {
+      "indicative.present": {
+        "1sg": "iki",
+        "2sg": "ikën",
+        "3sg": "ikën"
+      },
+      "indicative.aorist": {
+        "3sg": "iku"
+      }
+    }
+  },
+  {
+    "id": "importoj",
+    "lemma": "importoj",
+    "translationEn": "to import",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "importo",
+      "aorist": "importua",
+      "participle": "importuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/importoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "inatos",
+    "lemma": "inatos",
+    "translationEn": "to anger",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "inatos",
+      "aorist": "inatos",
+      "participle": "inatosur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/inatos#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "informoj",
+    "lemma": "informoj",
+    "translationEn": "to inform",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "informo",
+      "aorist": "informua",
+      "participle": "informuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/informoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "inkurajoj",
+    "lemma": "inkurajoj",
+    "translationEn": "to encourage",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "inkurajo",
+      "aorist": "inkurajua",
+      "participle": "inkurajuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/inkurajoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "interesoj",
+    "lemma": "interesoj",
+    "translationEn": "to interest",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "intereso",
+      "aorist": "interesua",
+      "participle": "interesuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/interesoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "interpretoj",
+    "lemma": "interpretoj",
+    "translationEn": "to interpret",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "interpreto",
+      "aorist": "interpretua",
+      "participle": "interpretuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/interpretoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "jam",
+    "lemma": "jam",
+    "translationEn": "to be",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "jam",
+      "aorist": "qe",
+      "participle": "qenë"
+    },
+    "sources": [
+      {
+        "source": "husic",
+        "reference": "Auxiliary 2"
+      },
+      {
+        "source": "manual",
+        "reference": "fully suppletive — engine consults hardcoded suppletion table"
+      }
+    ],
+    "flags": {
+      "isSuppletive": true,
+      "irregularAorist": true,
+      "noMiddlePassive": true
+    },
+    "dialect": "tosk",
+    "notes": "Auxiliary verb. Engine bypasses paradigm machinery via suppletion.ts. englishForms override triggers be-copula virtualization in english-gloss.ts so simple-tense glosses use am/are/is/was/were rather than the bare 'be'.",
+    "englishForms": {
+      "base": "be",
+      "past": "was",
+      "participle": "been",
+      "gerund": "being"
+    }
+  },
+  {
+    "id": "jap",
+    "lemma": "jap",
+    "translationEn": "to give",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "jap",
+      "aorist": "dhash",
+      "participle": "dhënë"
+    },
+    "sources": [
+      {
+        "source": "husic",
+        "reference": "Irregular — jap"
+      }
+    ],
+    "flags": {
+      "isSuppletive": true,
+      "irregularAorist": true
+    },
+    "dialect": "tosk",
+    "notes": "Suppletive aorist (dhash). MP present alternates stem to 'jep' before MP endings.",
+    "cellOverrides": {
+      "indicative.present.middle-passive": {
+        "1sg": "jepem",
+        "2sg": "jepesh",
+        "3sg": "jepet",
+        "1pl": "jepemi",
+        "2pl": "jepeni",
+        "3pl": "jepen"
+      },
+      "indicative.aorist.middle-passive": {
+        "3sg": "u dha"
+      }
+    }
+  },
+  {
+    "id": "kafshoj",
+    "lemma": "kafshoj",
+    "translationEn": "to bite",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "kafsho",
+      "aorist": "kafshua",
+      "participle": "kafshuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/kafshoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "kallezoj",
+    "lemma": "kallëzoj",
+    "translationEn": "to report",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "kallëzo",
+      "aorist": "kallëzua",
+      "participle": "kallëzuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/kall%C3%ABzoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "kap",
+    "lemma": "kap",
+    "translationEn": "to catch",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "kap",
+      "aorist": "kap",
+      "participle": "kapur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/kap#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "kendoj",
+    "lemma": "këndoj",
+    "translationEn": "to sing",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "këndo",
+      "aorist": "këndua",
+      "participle": "kënduar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/k%C3%ABndoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/kendoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "kercenoj",
+    "lemma": "kërcënoj",
+    "translationEn": "to threaten",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "kërcëno",
+      "aorist": "kërcënua",
+      "participle": "kërcënuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/k%C3%ABrc%C3%ABnoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/kercenoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "kerkoj",
+    "lemma": "kërkoj",
+    "translationEn": "to look for / to ask",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "kërko",
+      "aorist": "kërkua",
+      "participle": "kërkuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/k%C3%ABrkoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/kerkoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "kontrolloj",
+    "lemma": "kontrolloj",
+    "translationEn": "to control / to check",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "kontrollo",
+      "aorist": "kontrollua",
+      "participle": "kontrolluar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/kontrolloj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "kooperoj",
+    "lemma": "kooperoj",
+    "translationEn": "to cooperate",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "koopero",
+      "aorist": "kooperua",
+      "participle": "kooperuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/kooperoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "kopjoj",
+    "lemma": "kopjoj",
+    "translationEn": "to copy",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "kopjo",
+      "aorist": "kopjua",
+      "participle": "kopjuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/kopjoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "krahasoj",
+    "lemma": "krahasoj",
+    "translationEn": "to compare",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "krahaso",
+      "aorist": "krahasua",
+      "participle": "krahasuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/krahasoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "kremtoj",
+    "lemma": "kremtoj",
+    "translationEn": "to celebrate",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "kremto",
+      "aorist": "kremtua",
+      "participle": "kremtuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/kremtoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "krijoj",
+    "lemma": "krijoj",
+    "translationEn": "to create",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "krijo",
+      "aorist": "krijua",
+      "participle": "krijuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/krijoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/krijoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "kujtoj",
+    "lemma": "kujtoj",
+    "translationEn": "to remember",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "kujto",
+      "aorist": "kujtua",
+      "participle": "kujtuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/kujtoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "kulloj",
+    "lemma": "kulloj",
+    "translationEn": "to strain",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "kullo",
+      "aorist": "kullua",
+      "participle": "kulluar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/kulloj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "kundershtoj",
+    "lemma": "kundërshtoj",
+    "translationEn": "to protest",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "kundërshto",
+      "aorist": "kundërshtua",
+      "participle": "kundërshtuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/kund%C3%ABrshtoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "kuptoj",
+    "lemma": "kuptoj",
+    "translationEn": "to understand",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "kupto",
+      "aorist": "kuptua",
+      "participle": "kuptuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/kuptoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/kuptoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "kushtoj",
+    "lemma": "kushtoj",
+    "translationEn": "to dedicate",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "kushto",
+      "aorist": "kushtua",
+      "participle": "kushtuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/kushtoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "kuvendoj",
+    "lemma": "kuvendoj",
+    "translationEn": "to speak",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "kuvendo",
+      "aorist": "kuvendua",
+      "participle": "kuvenduar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/kuvendoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "lag",
+    "lemma": "lag",
+    "translationEn": "to water",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "lag",
+      "aorist": "lag",
+      "participle": "lagur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/lag#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "laj",
+    "lemma": "laj",
+    "translationEn": "to wash",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "la",
+      "aorist": "la",
+      "participle": "larë"
+    },
+    "sources": [
+      {
+        "source": "husic",
+        "reference": "1B (monosyllabic vowel stem)"
+      },
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/laj#Albanian"
+      }
+    ],
+    "dialect": "tosk",
+    "notes": "Class 1B vowel-stem -j: aorist 3sg uses -u (lau, not lai), aorist plurals retain -ë (lamë/latë/lanë). Imperative 2sg restores the -j (laj).",
+    "cellOverrides": {
+      "indicative.aorist": {
+        "3sg": "lau",
+        "1pl": "lamë",
+        "2pl": "latë",
+        "3pl": "lanë"
+      },
+      "imperative.present": {
+        "2sg": "laj"
+      },
+      "imperative.present.middle-passive": {
+        "2sg": "lahu",
+        "2pl": "lahuni"
+      }
+    }
+  },
+  {
+    "id": "lajmeroj",
+    "lemma": "lajmëroj",
+    "translationEn": "to announce",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "lajmëro",
+      "aorist": "lajmërua",
+      "participle": "lajmëruar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/lajm%C3%ABroj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "lakmoj",
+    "lemma": "lakmoj",
+    "translationEn": "to crave",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "lakmo",
+      "aorist": "lakmua",
+      "participle": "lakmuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/lakmoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "largoj",
+    "lemma": "largoj",
+    "translationEn": "to remove",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "largo",
+      "aorist": "largua",
+      "participle": "larguar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/largoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "lavderoj",
+    "lemma": "lavdëroj",
+    "translationEn": "to praise",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "lavdëro",
+      "aorist": "lavdërua",
+      "participle": "lavdëruar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/lavd%C3%ABroj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "ledhatoj",
+    "lemma": "ledhatoj",
+    "translationEn": "to caress",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "ledhato",
+      "aorist": "ledhatua",
+      "participle": "ledhatuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/ledhatoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "lejoj",
+    "lemma": "lejoj",
+    "translationEn": "to permit",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "lejo",
+      "aorist": "lejua",
+      "participle": "lejuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/lejoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/lejoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "leroj",
+    "lemma": "lëroj",
+    "translationEn": "to plow",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "lëro",
+      "aorist": "lërua",
+      "participle": "lëruar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/l%C3%ABroj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "leshoj",
+    "lemma": "lëshoj",
+    "translationEn": "to release / to issue",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "lësho",
+      "aorist": "lëshua",
+      "participle": "lëshuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/l%C3%ABshoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/leshoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "leviz",
+    "lemma": "lëviz",
+    "translationEn": "to move",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "lëviz",
+      "aorist": "lëviz",
+      "participle": "lëvizur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/l%C3%ABviz#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "lexoj",
+    "lemma": "lexoj",
+    "translationEn": "to read",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "lexo",
+      "aorist": "lexua",
+      "participle": "lexuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/lexoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/lexoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "lidhoj",
+    "lemma": "lidhoj",
+    "translationEn": "to bind / connect",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "lidho",
+      "aorist": "lidhua",
+      "participle": "lidhuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/lidhoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "lind",
+    "lemma": "lind",
+    "translationEn": "to born (be born)",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "lind",
+      "aorist": "lind",
+      "participle": "lindur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/lind#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk",
+    "notes": "Albanian intransitive 'be born'. englishForms override gives the be-compound that english-gloss.ts virtualizes for correct simple-tense agreement (we were born, am I born?, etc.).",
+    "englishForms": {
+      "base": "be born",
+      "past": "was born",
+      "participle": "been born",
+      "gerund": "being born"
+    }
+  },
+  {
+    "id": "marr",
+    "lemma": "marr",
+    "translationEn": "to take",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "marr",
+      "aorist": "mor",
+      "participle": "marrë"
+    },
+    "sources": [
+      {
+        "source": "husic",
+        "reference": "2C (stem alternation marr/merr + irregular aorist mor)"
+      },
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/marr#Albanian"
+      }
+    ],
+    "flags": {
+      "irregularAorist": true
+    },
+    "dialect": "tosk",
+    "notes": "Stem 'marr' alternates to 'merr' in present 2sg/3sg/2pl and all imperfect. Aorist takes Class 2 endings on the suppletive stem 'mor'.",
+    "cellOverrides": {
+      "indicative.present": {
+        "2sg": "merr",
+        "3sg": "merr",
+        "2pl": "merrni"
+      },
+      "indicative.present.middle-passive": {
+        "1sg": "merrem",
+        "2sg": "merresh",
+        "3sg": "merret",
+        "1pl": "merremi",
+        "2pl": "merreni",
+        "3pl": "merren"
+      },
+      "indicative.imperfect": {
+        "1sg": "merrja",
+        "2sg": "merrje",
+        "3sg": "merrte",
+        "1pl": "merrnim",
+        "2pl": "merrnit",
+        "3pl": "merrnin"
+      },
+      "indicative.imperfect.middle-passive": {
+        "1sg": "merresha",
+        "2sg": "merreshe",
+        "3sg": "merrej",
+        "1pl": "merreshim",
+        "2pl": "merreshit",
+        "3pl": "merreshin"
+      },
+      "indicative.aorist": {
+        "1sg": "mora",
+        "2sg": "more",
+        "3sg": "mori",
+        "1pl": "morëm",
+        "2pl": "morët",
+        "3pl": "morën"
+      },
+      "subjunctive.present": {
+        "2pl": "të merrni"
+      },
+      "imperative.present": {
+        "2sg": "merr",
+        "2pl": "merrni"
+      }
+    }
+  },
+  {
+    "id": "mbaroj",
+    "lemma": "mbaroj",
+    "translationEn": "to finish",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "mbaro",
+      "aorist": "mbarua",
+      "participle": "mbaruar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/mbaroj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/mbaroj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "mbroj",
+    "lemma": "mbroj",
+    "translationEn": "to defend / to protect",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "mbro",
+      "aorist": "mbrua",
+      "participle": "mbruar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/mbroj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "mbyll",
+    "lemma": "mbyll",
+    "translationEn": "to close",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "mbyll",
+      "aorist": "mbyll",
+      "participle": "mbyllur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/mbyll#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/mbyll.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "menaxhoj",
+    "lemma": "menaxhoj",
+    "translationEn": "to manage",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "menaxho",
+      "aorist": "menaxhua",
+      "participle": "menaxhuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/menaxhoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "mendoj",
+    "lemma": "mendoj",
+    "translationEn": "to think",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "mendo",
+      "aorist": "mendua",
+      "participle": "menduar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/mendoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/mendoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "mesoj",
+    "lemma": "mësoj",
+    "translationEn": "to learn / to teach",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "mëso",
+      "aorist": "mësua",
+      "participle": "mësuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/m%C3%ABsoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/mesoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "mund",
+    "lemma": "mund",
+    "translationEn": "to be able / can",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "mund",
+      "aorist": "mund",
+      "participle": "mundur"
+    },
+    "sources": [
+      {
+        "source": "husic",
+        "reference": "2A (modal — common syntax 'mund të X')"
+      }
+    ],
+    "dialect": "tosk",
+    "notes": "Modal usage typically 'mund të' + subjunctive of main verb. englishForms override picks 'be able' (the 'can' second sense isn't useful as a finite English verb across the grid).",
+    "englishForms": {
+      "base": "be able",
+      "past": "was able",
+      "participle": "been able",
+      "gerund": "being able"
+    }
+  },
+  {
+    "id": "ndal",
+    "lemma": "ndal",
+    "translationEn": "to stop",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "ndal",
+      "aorist": "ndal",
+      "participle": "ndalur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/ndal#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "ndaloj",
+    "lemma": "ndaloj",
+    "translationEn": "to forbid / to halt",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "ndalo",
+      "aorist": "ndalua",
+      "participle": "ndaluar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/ndaloj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/ndaloj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "ndez",
+    "lemma": "ndez",
+    "translationEn": "to light / to ignite",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "ndez",
+      "aorist": "ndez",
+      "participle": "ndezur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/ndez#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "ndihmoj",
+    "lemma": "ndihmoj",
+    "translationEn": "to help",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "ndihmo",
+      "aorist": "ndihmua",
+      "participle": "ndihmuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/ndihmoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/ndihmoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "ndryshoj",
+    "lemma": "ndryshoj",
+    "translationEn": "to change",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "ndrysho",
+      "aorist": "ndryshua",
+      "participle": "ndryshuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/ndryshoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/ndryshoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "ngarkoj",
+    "lemma": "ngarkoj",
+    "translationEn": "to load",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "ngarko",
+      "aorist": "ngarkua",
+      "participle": "ngarkuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/ngarkoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/ngarkoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "ngrij",
+    "lemma": "ngrij",
+    "translationEn": "to freeze / to rise",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "ngri",
+      "aorist": "ngri",
+      "participle": "ngrirë"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/ngrij#Albanian"
+      }
+    ],
+    "flags": {
+      "irregularAorist": true
+    },
+    "dialect": "tosk",
+    "notes": "Class 1 -ij verb. Aorist 3sg uses -u (ngriu); aorist plurals retain -ë (ngrimë/ngritë/ngrinë). Participle ngrirë.",
+    "cellOverrides": {
+      "indicative.aorist": {
+        "3sg": "ngriu",
+        "1pl": "ngrimë",
+        "2pl": "ngritë",
+        "3pl": "ngrinë"
+      }
+    }
+  },
+  {
+    "id": "nis",
+    "lemma": "nis",
+    "translationEn": "to start",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "nis",
+      "aorist": "nis",
+      "participle": "nisur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/nis#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/nis.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "njoftoj",
+    "lemma": "njoftoj",
+    "translationEn": "to inform",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "njofto",
+      "aorist": "njoftua",
+      "participle": "njoftuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/njoftoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/njoftoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "nxis",
+    "lemma": "nxis",
+    "translationEn": "to encourage / incite",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "nxis",
+      "aorist": "nxis",
+      "participle": "nxisur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/nxis#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "ofroj",
+    "lemma": "ofroj",
+    "translationEn": "to offer",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "ofro",
+      "aorist": "ofrua",
+      "participle": "ofruar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/ofroj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "organizoj",
+    "lemma": "organizoj",
+    "translationEn": "to organize",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "organizo",
+      "aorist": "organizua",
+      "participle": "organizuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/organizoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/organizoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "perfundoj",
+    "lemma": "përfundoj",
+    "translationEn": "to conclude / finish",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "përfundo",
+      "aorist": "përfundua",
+      "participle": "përfunduar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/p%C3%ABrfundoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "pi",
+    "lemma": "pi",
+    "translationEn": "to drink",
+    "class": 3,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "pi",
+      "aorist": "pi",
+      "participle": "pirë"
+    },
+    "sources": [
+      {
+        "source": "husic",
+        "reference": "3A"
+      },
+      {
+        "source": "uniparser",
+        "reference": "pi_class3"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "pjek",
+    "lemma": "pjek",
+    "translationEn": "to bake / to roast",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "pjek",
+      "aorist": "poq",
+      "participle": "pjekur"
+    },
+    "sources": [
+      {
+        "source": "husic",
+        "reference": "2B (mutating k → q before consonant-cluster suffixes)"
+      },
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/pjek#Albanian"
+      }
+    ],
+    "flags": {
+      "hasMutation": true,
+      "irregularAorist": true
+    },
+    "dialect": "tosk",
+    "notes": "Stem 'pjek' palatalizes to 'piq' before consonant-cluster suffixes (present 2pl, all imperfect, all MP). Aorist stem 'poq' is pre-mutated.",
+    "cellOverrides": {
+      "indicative.present": {
+        "2pl": "piqni"
+      },
+      "indicative.present.middle-passive": {
+        "1sg": "piqem",
+        "2sg": "piqesh",
+        "3sg": "piqet",
+        "1pl": "piqemi",
+        "2pl": "piqeni",
+        "3pl": "piqen"
+      },
+      "indicative.imperfect": {
+        "1sg": "piqja",
+        "2sg": "piqje",
+        "3sg": "piqte",
+        "1pl": "piqnim",
+        "2pl": "piqnit",
+        "3pl": "piqnin"
+      },
+      "indicative.imperfect.middle-passive": {
+        "1sg": "piqesha",
+        "2sg": "piqeshe",
+        "3sg": "piqej",
+        "1pl": "piqeshim",
+        "2pl": "piqeshit",
+        "3pl": "piqeshin"
+      },
+      "subjunctive.present": {
+        "2pl": "të piqni"
+      },
+      "imperative.present": {
+        "2sg": "piq",
+        "2pl": "piqni"
+      }
+    }
+  },
+  {
+    "id": "pranoj",
+    "lemma": "pranoj",
+    "translationEn": "to accept",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "prano",
+      "aorist": "pranua",
+      "participle": "pranuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/pranoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/pranoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "prish",
+    "lemma": "prish",
+    "translationEn": "to spoil / to break",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "prish",
+      "aorist": "prish",
+      "participle": "prishur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/prish#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/prish.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "publikoj",
+    "lemma": "publikoj",
+    "translationEn": "to publish",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "publiko",
+      "aorist": "publikua",
+      "participle": "publikuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/publikoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "punesoj",
+    "lemma": "punësoj",
+    "translationEn": "to employ / to hire",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "punëso",
+      "aorist": "punësua",
+      "participle": "punësuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/pun%C3%ABsoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "punoj",
+    "lemma": "punoj",
+    "translationEn": "to work",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "puno",
+      "aorist": "punua",
+      "participle": "punuar"
+    },
+    "sources": [
+      {
+        "source": "husic",
+        "reference": "1A"
+      },
+      {
+        "source": "uniparser",
+        "reference": "punoj_class1"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "qartesoj",
+    "lemma": "qartësoj",
+    "translationEn": "to clarify",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "qartëso",
+      "aorist": "qartësua",
+      "participle": "qartësuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/qart%C3%ABsoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "qendroj",
+    "lemma": "qëndroj",
+    "translationEn": "to stand / to remain",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "qëndro",
+      "aorist": "qëndrua",
+      "participle": "qëndruar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/q%C3%ABndroj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/qendroj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "regjistroj",
+    "lemma": "regjistroj",
+    "translationEn": "to register",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "regjistro",
+      "aorist": "regjistrua",
+      "participle": "regjistruar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/regjistroj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/regjistroj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "respektoj",
+    "lemma": "respektoj",
+    "translationEn": "to respect",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "respekto",
+      "aorist": "respektua",
+      "participle": "respektuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/respektoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/respektoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "rri",
+    "lemma": "rri",
+    "translationEn": "to stay / to remain",
+    "class": 3,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "rri",
+      "aorist": "ndenj",
+      "participle": "ndenjur"
+    },
+    "sources": [
+      {
+        "source": "husic",
+        "reference": "3C (suppletive aorist ndenj)"
+      },
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/rri#Albanian"
+      }
+    ],
+    "flags": {
+      "irregularAorist": true
+    },
+    "dialect": "tosk",
+    "notes": "Aorist stem ndenj takes Class 2 endings (consonant stem). Optative is built from aorist stem with -ça-/-ç family endings.",
+    "cellOverrides": {
+      "indicative.aorist": {
+        "1sg": "ndenja",
+        "2sg": "ndenje",
+        "3sg": "ndenji",
+        "1pl": "ndenjëm",
+        "2pl": "ndenjët",
+        "3pl": "ndenjën"
+      },
+      "optative.present": {
+        "1sg": "ndenjça",
+        "2sg": "ndenjç",
+        "3sg": "ndenjtë",
+        "1pl": "ndenjçim",
+        "2pl": "ndenjçi",
+        "3pl": "ndenjçin"
+      }
+    }
+  },
+  {
+    "id": "sherbej",
+    "lemma": "shërbej",
+    "translationEn": "to serve",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "shërbe",
+      "aorist": "shërbye",
+      "participle": "shërbyer"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/sh%C3%ABrbej#Albanian"
+      }
+    ],
+    "flags": {
+      "irregularAorist": true
+    },
+    "dialect": "tosk",
+    "notes": "Class 1 -ej irregular. Present stem shërbe; aorist stem shërbye (e → ye); participle shërbyer.",
+    "cellOverrides": {
+      "indicative.aorist": {
+        "3sg": "shërbeu"
+      }
+    }
+  },
+  {
+    "id": "shkoj",
+    "lemma": "shkoj",
+    "translationEn": "to go",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "shko",
+      "aorist": "shkua",
+      "participle": "shkuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/shkoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/shkoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "shkurtoj",
+    "lemma": "shkurtoj",
+    "translationEn": "to shorten",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "shkurto",
+      "aorist": "shkurtua",
+      "participle": "shkurtuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/shkurtoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/shkurtoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "shoh",
+    "lemma": "shoh",
+    "translationEn": "to see",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "shoh",
+      "aorist": "pa",
+      "participle": "parë"
+    },
+    "sources": [
+      {
+        "source": "husic",
+        "reference": "Irregular — shoh"
+      }
+    ],
+    "flags": {
+      "isSuppletive": true,
+      "irregularAorist": true
+    },
+    "dialect": "tosk",
+    "notes": "Suppletive active paradigm. MP cells alternate stem to 'shih' before MP endings.",
+    "cellOverrides": {
+      "indicative.present.middle-passive": {
+        "1sg": "shihem",
+        "2sg": "shihesh",
+        "3sg": "shihet",
+        "1pl": "shihemi",
+        "2pl": "shiheni",
+        "3pl": "shihen"
+      },
+      "indicative.imperfect.middle-passive": {
+        "1sg": "shihesha",
+        "2sg": "shiheshe",
+        "3sg": "shihej",
+        "1pl": "shiheshim",
+        "2pl": "shiheshit",
+        "3pl": "shiheshin"
+      },
+      "imperative.present.middle-passive": {
+        "2sg": "shihu",
+        "2pl": "shihuni"
+      }
+    }
+  },
+  {
+    "id": "shoqeroj",
+    "lemma": "shoqëroj",
+    "translationEn": "to accompany",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "shoqëro",
+      "aorist": "shoqërua",
+      "participle": "shoqëruar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/shoq%C3%ABroj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/shoqeroj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "shpalos",
+    "lemma": "shpalos",
+    "translationEn": "to unfold / reveal",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "shpalos",
+      "aorist": "shpalos",
+      "participle": "shpalosur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/shpalos#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "shpejtoj",
+    "lemma": "shpejtoj",
+    "translationEn": "to hurry / to speed up",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "shpejto",
+      "aorist": "shpejtua",
+      "participle": "shpejtuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/shpejtoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "shpresoj",
+    "lemma": "shpresoj",
+    "translationEn": "to hope",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "shpreso",
+      "aorist": "shpresua",
+      "participle": "shpresuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/shpresoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/shpresoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "shqiperoj",
+    "lemma": "shqipëroj",
+    "translationEn": "to translate to Albanian",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "shqipëro",
+      "aorist": "shqipërua",
+      "participle": "shqipëruar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/shqip%C3%ABroj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk",
+    "notes": "translationEn 'to translate to Albanian' is verbose for the gloss grid; override 'translate' yields the cleaner gloss line ('I translate', 'I translated', etc.).",
+    "englishForms": {
+      "base": "translate"
+    }
+  },
+  {
+    "id": "shqyrtoj",
+    "lemma": "shqyrtoj",
+    "translationEn": "to examine / review",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "shqyrto",
+      "aorist": "shqyrtua",
+      "participle": "shqyrtuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/shqyrtoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "shtoj",
+    "lemma": "shtoj",
+    "translationEn": "to add",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "shto",
+      "aorist": "shtua",
+      "participle": "shtuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/shtoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "siguroj",
+    "lemma": "siguroj",
+    "translationEn": "to ensure / secure",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "siguro",
+      "aorist": "sigurua",
+      "participle": "siguruar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/siguroj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "studioj",
+    "lemma": "studioj",
+    "translationEn": "to study",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "studio",
+      "aorist": "studiua",
+      "participle": "studiuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/studioj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "sulmoj",
+    "lemma": "sulmoj",
+    "translationEn": "to attack",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "sulmo",
+      "aorist": "sulmua",
+      "participle": "sulmuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/sulmoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "takoj",
+    "lemma": "takoj",
+    "translationEn": "to meet",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "tako",
+      "aorist": "takua",
+      "participle": "takuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/takoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/takoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "terheq",
+    "lemma": "tërheq",
+    "translationEn": "to pull / to attract",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "tërheq",
+      "aorist": "tërhoq",
+      "participle": "tërhequr"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/t%C3%ABrheq#Albanian"
+      }
+    ],
+    "flags": {
+      "irregularAorist": true
+    },
+    "dialect": "tosk",
+    "notes": "Three-stem alternation: tërheq (1sg/1pl/3pl), tërhiq (2pl + all imperfect), tërhoq (aorist).",
+    "cellOverrides": {
+      "indicative.present": {
+        "2pl": "tërhiqni"
+      },
+      "indicative.imperfect": {
+        "1sg": "tërhiqja",
+        "2sg": "tërhiqje",
+        "3sg": "tërhiqte",
+        "1pl": "tërhiqnim",
+        "2pl": "tërhiqnit",
+        "3pl": "tërhiqnin"
+      },
+      "subjunctive.present": {
+        "2pl": "të tërhiqni"
+      },
+      "imperative.present": {
+        "2sg": "tërhiq",
+        "2pl": "tërhiqni"
+      }
+    }
+  },
+  {
+    "id": "them",
+    "lemma": "them",
+    "translationEn": "to say",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "them",
+      "aorist": "thash",
+      "participle": "thënë"
+    },
+    "sources": [
+      {
+        "source": "husic",
+        "reference": "Irregular — them"
+      }
+    ],
+    "flags": {
+      "isSuppletive": true,
+      "irregularAorist": true
+    },
+    "dialect": "tosk"
+  },
+  {
+    "id": "themeloj",
+    "lemma": "themeloj",
+    "translationEn": "to found / establish",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "themelo",
+      "aorist": "themelua",
+      "participle": "themeluar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/themeloj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "tregoj",
+    "lemma": "tregoj",
+    "translationEn": "to tell / to show",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "trego",
+      "aorist": "tregua",
+      "participle": "treguar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/tregoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/tregoj.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "tregtoj",
+    "lemma": "tregtoj",
+    "translationEn": "to trade",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "tregto",
+      "aorist": "tregtua",
+      "participle": "tregtuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/tregtoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "udhetoj",
+    "lemma": "udhëtoj",
+    "translationEn": "to travel",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "udhëto",
+      "aorist": "udhëtua",
+      "participle": "udhëtuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/udh%C3%ABtoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "udhezoj",
+    "lemma": "udhëzoj",
+    "translationEn": "to instruct / to direct",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "udhëzo",
+      "aorist": "udhëzua",
+      "participle": "udhëzuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/udh%C3%ABzoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "vazhdoj",
+    "lemma": "vazhdoj",
+    "translationEn": "to continue",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "vazhdo",
+      "aorist": "vazhdua",
+      "participle": "vazhduar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/vazhdoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "vendos",
+    "lemma": "vendos",
+    "translationEn": "to decide / to place",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "vendos",
+      "aorist": "vendos",
+      "participle": "vendosur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/vendos#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      },
+      {
+        "source": "husic",
+        "reference": "Husić 2002 — parsed cache (.cache/husic/vendos.jsonl)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "veproj",
+    "lemma": "veproj",
+    "translationEn": "to act",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "vepro",
+      "aorist": "veprua",
+      "participle": "vepruar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/veproj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "vertetoj",
+    "lemma": "vërtetoj",
+    "translationEn": "to prove / confirm",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "vërteto",
+      "aorist": "vërtetua",
+      "participle": "vërtetuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/v%C3%ABrtetoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "vesh",
+    "lemma": "vesh",
+    "translationEn": "to dress / to wear",
+    "class": 2,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "vesh",
+      "aorist": "vesh",
+      "participle": "veshur"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/vesh#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "vij",
+    "lemma": "vij",
+    "translationEn": "to come",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "vi",
+      "aorist": "erdh",
+      "participle": "ardhur"
+    },
+    "sources": [
+      {
+        "source": "husic",
+        "reference": "Irregular — vij"
+      }
+    ],
+    "flags": {
+      "isSuppletive": true,
+      "irregularAorist": true,
+      "noMiddlePassive": true
+    },
+    "dialect": "tosk",
+    "notes": "Suppletive across tenses; corpus auxiliary 'kam' chosen per Husić. Intransitive — no MP voice (vihem belongs to vë 'to put', a different verb)."
+  },
+  {
+    "id": "votoj",
+    "lemma": "votoj",
+    "translationEn": "to vote",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "voto",
+      "aorist": "votua",
+      "participle": "votuar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/votoj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  },
+  {
+    "id": "zhvilloj",
+    "lemma": "zhvilloj",
+    "translationEn": "to develop",
+    "class": 1,
+    "auxiliary": "kam",
+    "principalParts": {
+      "present": "zhvillo",
+      "aorist": "zhvillua",
+      "participle": "zhvilluar"
+    },
+    "sources": [
+      {
+        "source": "kaikki",
+        "reference": "https://en.wiktionary.org/wiki/zhvilloj#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "scaffolded by ingest-kaikki-batch"
+      }
+    ],
+    "dialect": "tosk"
+  }
+]

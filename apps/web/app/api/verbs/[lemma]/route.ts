@@ -7,8 +7,8 @@ import {
   type ApiErrorResponse,
   type ApiVerbDetailResponse,
 } from '@/lib/api-shapes';
-import { corpusVersion, findEntryByLemma } from '@/lib/corpus';
-import { allLemmas } from '@/lib/corpus';
+import { allLemmas, corpusVersion, findEntryByLemma } from '@/lib/corpus';
+import { buildGlossTable } from '@/lib/english-gloss-table';
 import { getFrequency } from '@/lib/frequency';
 import { formatConllu, formatIgtTable } from '@/lib/igt';
 import { toIpa } from '@/lib/ipa';
@@ -48,12 +48,16 @@ export async function GET(
     });
   }
 
+  const verbTable = table(entry.id);
+  const glossTable = buildGlossTable(entry, verbTable);
+
   const body: ApiVerbDetailResponse = {
     engineVersion: VERSION,
     corpusVersion: corpusVersion.version,
     cite: citationFor(`/api/verbs/${entry.lemma}`),
     entry,
-    table: table(entry.id),
+    table: verbTable,
+    englishGlosses: glossTable,
     ipa: {
       lemma: toIpa(entry.lemma),
       principalParts: {

@@ -13,7 +13,13 @@
     { "source": "husic", "reference": "Auxiliary 2" },
     { "source": "manual", "reference": "fully suppletive — engine consults hardcoded suppletion table" }
   ],
-  "flags": { "isSuppletive": true, "irregularAorist": true },
+  "flags": { "isSuppletive": true, "irregularAorist": true, "noMiddlePassive": true },
   "dialect": "tosk",
-  "notes": "Auxiliary verb. Engine bypasses paradigm machinery via suppletion.ts."
+  "englishForms": {
+    "base": "be",
+    "past": "was",
+    "participle": "been",
+    "gerund": "being"
+  },
+  "notes": "Auxiliary verb. Engine bypasses paradigm machinery via suppletion.ts. englishForms override triggers be-copula virtualization in english-gloss.ts so simple-tense glosses use am/are/is/was/were rather than the bare 'be'."
 }

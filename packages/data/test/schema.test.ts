@@ -75,4 +75,52 @@ describe('verbEntrySchema', () => {
     const result = verbEntrySchema.safeParse(invalid);
     expect(result.success).toBe(false);
   });
+
+  it('accepts a full englishForms override', () => {
+    const valid = {
+      id: 'jam',
+      lemma: 'jam',
+      translationEn: 'to be',
+      class: 2 as const,
+      auxiliary: 'kam' as const,
+      principalParts: { present: 'jam', aorist: 'qe', participle: 'qenë' },
+      sources: [{ source: 'husic' as const, reference: 'Auxiliary 2' }],
+      englishForms: {
+        base: 'be',
+        past: 'was',
+        participle: 'been',
+        gerund: 'being',
+      },
+    };
+    expect(() => verbEntrySchema.parse(valid)).not.toThrow();
+  });
+
+  it('accepts a partial englishForms override', () => {
+    const valid = {
+      id: 'kerkoj',
+      lemma: 'kërkoj',
+      translationEn: 'to look for / to ask',
+      class: 1 as const,
+      auxiliary: 'kam' as const,
+      principalParts: { present: 'kërko', aorist: 'kërkua', participle: 'kërkuar' },
+      sources: [{ source: 'husic' as const, reference: '1A' }],
+      englishForms: { base: 'look for' },
+    };
+    expect(() => verbEntrySchema.parse(valid)).not.toThrow();
+  });
+
+  it('rejects englishForms with empty base', () => {
+    const invalid = {
+      id: 'punoj',
+      lemma: 'punoj',
+      translationEn: 'to work',
+      class: 1,
+      auxiliary: 'kam',
+      principalParts: { present: 'puno', aorist: 'punua', participle: 'punuar' },
+      sources: [{ source: 'husic', reference: '1A' }],
+      englishForms: { base: '' },
+    };
+    const result = verbEntrySchema.safeParse(invalid);
+    expect(result.success).toBe(false);
+  });
 });

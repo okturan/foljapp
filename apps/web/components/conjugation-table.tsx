@@ -13,6 +13,12 @@ interface Props {
   order?: string[];
   /** When true, render only 2sg/2pl columns (imperative) */
   imperativeOnly?: boolean;
+  /**
+   * Cell-by-cell English glosses. Keyed by `${tense}.${cellLabel}.${voice}`,
+   * e.g., "perfect.1sg.active". Surfaced via the cell's title attribute and
+   * an sr-only span so the gloss is reachable on hover/focus and by AT.
+   */
+  glosses?: Record<string, string>;
 }
 
 const FULL_CELLS: Array<{ key: string; header: string }> = [
@@ -33,7 +39,7 @@ function readableTense(tense: string): string {
   return tense.replace(/-/g, ' ');
 }
 
-export function ConjugationTable({ title, moodKey, tenses, order, imperativeOnly = false }: Props) {
+export function ConjugationTable({ title, moodKey, tenses, order, imperativeOnly = false, glosses }: Props) {
   const cells = imperativeOnly ? IMPERATIVE_CELLS : FULL_CELLS;
   const tenseKeys = order ?? Object.keys(tenses);
 
@@ -48,7 +54,7 @@ export function ConjugationTable({ title, moodKey, tenses, order, imperativeOnly
             <tr className="border-b border-stone-200">
               <th
                 scope="col"
-                className="py-2 pr-4 text-left text-xs font-medium uppercase tracking-wider text-stone-500"
+                className="sticky left-0 z-10 bg-white py-2 pr-2 text-left text-xs font-medium uppercase tracking-wider text-stone-500 border-r border-stone-100"
               >
                 tense
               </th>
@@ -56,7 +62,7 @@ export function ConjugationTable({ title, moodKey, tenses, order, imperativeOnly
                 <th
                   key={c.key}
                   scope="col"
-                  className="py-2 px-3 text-left text-xs font-medium uppercase tracking-wider text-stone-500"
+                  className="py-2 px-2 text-left text-xs font-medium uppercase tracking-wider text-stone-500"
                 >
                   {c.header}
                 </th>
@@ -73,21 +79,31 @@ export function ConjugationTable({ title, moodKey, tenses, order, imperativeOnly
                 <tr key={`${tense}-active`} className="border-b border-stone-100">
                   <th
                     scope="row"
-                    className="py-3 pr-4 text-left text-xs uppercase text-stone-500"
+                    className="sticky left-0 z-10 bg-white py-2.5 pr-2 text-left text-xs uppercase text-stone-500 whitespace-nowrap border-r border-stone-100"
                   >
                     {readableTense(tense)}
                   </th>
                   {cells.map((c) => {
                     const result = row[`${c.key}.active`];
                     const cellId = `${moodKey}-${tense}-${c.key}`;
+                    const gloss = glosses?.[`${tense}.${c.key}.active`];
                     if (result) {
                       return (
                         <td
                           key={c.key}
                           id={cellId}
-                          className="py-3 px-3 align-top scroll-mt-20"
+                          className="py-2.5 px-2 align-top scroll-mt-20"
+                          title={gloss ? `English: "${gloss}"` : undefined}
                         >
                           <DecomposedForm segments={result.decomposition} />
+                          {gloss ? (
+                            <span
+                              data-testid={`gloss-${cellId}`}
+                              className="sr-only"
+                            >
+                              English: &ldquo;{gloss}&rdquo;
+                            </span>
+                          ) : null}
                         </td>
                       );
                     }
@@ -95,7 +111,7 @@ export function ConjugationTable({ title, moodKey, tenses, order, imperativeOnly
                       <td
                         key={c.key}
                         id={cellId}
-                        className="py-3 px-3 align-top text-stone-300 scroll-mt-20"
+                        className="py-2.5 px-2 align-top text-stone-300 scroll-mt-20"
                         aria-label="unsupported cell"
                       >
                         —
@@ -109,7 +125,7 @@ export function ConjugationTable({ title, moodKey, tenses, order, imperativeOnly
                 <tr key={`${tense}-mp`} className="border-b border-stone-100 bg-stone-50/50">
                   <th
                     scope="row"
-                    className="py-3 pr-4 text-left text-xs uppercase text-stone-500"
+                    className="sticky left-0 z-10 bg-stone-50 py-2.5 pr-2 text-left text-xs uppercase text-stone-500 whitespace-nowrap border-r border-stone-100"
                   >
                     {readableTense(tense)}
                     <span
@@ -122,14 +138,24 @@ export function ConjugationTable({ title, moodKey, tenses, order, imperativeOnly
                   {cells.map((c) => {
                     const result = row[`${c.key}.middle-passive`];
                     const cellId = `${moodKey}-${tense}-${c.key}-mp`;
+                    const gloss = glosses?.[`${tense}.${c.key}.middle-passive`];
                     if (result) {
                       return (
                         <td
                           key={c.key}
                           id={cellId}
-                          className="py-3 px-3 align-top scroll-mt-20"
+                          className="py-2.5 px-2 align-top scroll-mt-20"
+                          title={gloss ? `English: "${gloss}"` : undefined}
                         >
                           <DecomposedForm segments={result.decomposition} />
+                          {gloss ? (
+                            <span
+                              data-testid={`gloss-${cellId}`}
+                              className="sr-only"
+                            >
+                              English: &ldquo;{gloss}&rdquo;
+                            </span>
+                          ) : null}
                         </td>
                       );
                     }
@@ -137,7 +163,7 @@ export function ConjugationTable({ title, moodKey, tenses, order, imperativeOnly
                       <td
                         key={c.key}
                         id={cellId}
-                        className="py-3 px-3 align-top text-stone-300 scroll-mt-20"
+                        className="py-2.5 px-2 align-top text-stone-300 scroll-mt-20"
                         aria-label="unsupported cell"
                       >
                         —

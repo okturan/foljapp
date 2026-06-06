@@ -22,6 +22,14 @@
       "3sg": "merr",
       "2pl": "merrni"
     },
+    "indicative.present.middle-passive": {
+      "1sg": "merrem",
+      "2sg": "merresh",
+      "3sg": "merret",
+      "1pl": "merremi",
+      "2pl": "merreni",
+      "3pl": "merren"
+    },
     "indicative.imperfect": {
       "1sg": "merrja",
       "2sg": "merrje",
@@ -29,6 +37,14 @@
       "1pl": "merrnim",
       "2pl": "merrnit",
       "3pl": "merrnin"
+    },
+    "indicative.imperfect.middle-passive": {
+      "1sg": "merresha",
+      "2sg": "merreshe",
+      "3sg": "merrej",
+      "1pl": "merreshim",
+      "2pl": "merreshit",
+      "3pl": "merreshin"
     },
     "indicative.aorist": {
       "1sg": "mora",

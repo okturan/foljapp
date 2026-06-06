@@ -1,4 +1,5 @@
 import type { VerbEntrySource } from '@foljapp/engine';
+import Link from 'next/link';
 
 interface Props {
   sources: VerbEntrySource[];
@@ -52,6 +53,17 @@ export function CitationsFooter({
       {notes ? (
         <p className="mt-4 text-stone-500 italic">Notes: {notes}</p>
       ) : null}
+      <p className="mt-4 text-stone-500 italic">
+        Paradigm engine derived from uniparser-grammar-albanian, Husić
+        (2002), Kadriu (2015), and Wikipedia. See{' '}
+        <Link
+          href="/references"
+          className="underline underline-offset-2 hover:text-stone-700"
+        >
+          References
+        </Link>{' '}
+        for full bibliography.
+      </p>
       <p className="mt-4 font-mono text-stone-400">
         engine: {engineVersion} · corpus: {corpusVersion}
       </p>

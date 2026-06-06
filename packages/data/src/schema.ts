@@ -14,6 +14,7 @@ export const verbEntryFlagsSchema = z
     isSuppletive: z.boolean().optional(),
     hasMutation: z.boolean().optional(),
     irregularAorist: z.boolean().optional(),
+    noMiddlePassive: z.boolean().optional(),
   })
   .strict();
 
@@ -32,6 +33,20 @@ export const cellOverridesSchema = z.record(
   z.record(cellLabelEnum, z.string()),
 );
 
+/**
+ * Optional per-verb override for English verb-form derivation used by
+ * the english-gloss capability. Partial overrides are allowed: any
+ * field omitted falls through to the irregulars registry / auto-rules.
+ */
+export const englishFormsSchema = z
+  .object({
+    base: z.string().min(1),
+    past: z.string().min(1).optional(),
+    participle: z.string().min(1).optional(),
+    gerund: z.string().min(1).optional(),
+  })
+  .strict();
+
 export const verbEntrySchema = z
   .object({
     id: z.string().regex(/^[a-z0-9-]+$/, 'id must be kebab-case'),
@@ -49,6 +64,7 @@ export const verbEntrySchema = z
     dialect: z.enum(['tosk', 'geg']).optional(),
     notes: z.string().optional(),
     cellOverrides: cellOverridesSchema.optional(),
+    englishForms: englishFormsSchema.optional(),
   })
   .strict();
 
@@ -72,3 +88,4 @@ export type VerbEntryInput = z.input<typeof verbEntrySchema>;
 export type VerbEntry = z.output<typeof verbEntrySchema>;
 export type CorpusIndexEntry = z.output<typeof corpusIndexEntrySchema>;
 export type CorpusVersion = z.output<typeof corpusVersionSchema>;
+export type EnglishForms = z.output<typeof englishFormsSchema>;

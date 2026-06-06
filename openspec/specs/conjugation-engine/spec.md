@@ -754,3 +754,162 @@ After this change is implemented, the Husić-derived match count SHALL exceed th
 - **THEN** the combined Husić match count (direct + derived) SHALL be ≥ 1500
 - **AND** the derived count SHALL be ≥ the direct count
 
+### Requirement: Middle-passive aorist 3sg uses the bare aorist stem
+
+When the engine builds indicative aorist for `voice: 'middle-passive'` and `person: 3` with `number: 'singular'`, the produced surface form SHALL equal `u <aorist-stem>` where `<aorist-stem>` is the verb's `principalParts.aorist`. The form SHALL NOT use the active 3sg ending (which surfaces as `-i` for Class 1 `-oj` and Class 2 verbs, `-u` for Class 1B `-aj`/`-ej` and Class 3, etc.).
+
+The decomposition SHALL contain exactly two segments: a `voice-marker` segment with surface `u` and `particleName: 'u'`, followed by a `stem` segment with the aorist-stem surface.
+
+For other `(person, number)` combinations under indicative aorist MP — `1sg`, `2sg`, `1pl`, `2pl`, `3pl` — the form SHALL remain `u <active-form>` as before.
+
+If the verb entry defines `cellOverrides['indicative.aorist.middle-passive']['3sg']`, that override value SHALL win over the default bare-stem rule.
+
+#### Scenario: Class 1 -oj verb produces u <aorist-stem>
+
+- **WHEN** `conjugate('lexoj', { mood: 'indicative', tense: 'aorist', voice: 'middle-passive', person: 3, number: 'singular', polarity: 'affirmative', modality: 'declarative' })` is invoked
+- **THEN** result.form SHALL equal `'u lexua'`
+- **AND** the decomposition SHALL contain exactly the segments `[{ surface: 'u', role: 'voice-marker' }, { surface: 'lexua', role: 'stem' }]`
+
+#### Scenario: Class 1A polysyllabic verb (punoj) is unaffected by stem alternation
+
+- **WHEN** `conjugate('punoj', { mood: 'indicative', tense: 'aorist', voice: 'middle-passive', person: 3, number: 'singular', polarity: 'affirmative', modality: 'declarative' })` is invoked
+- **THEN** result.form SHALL equal `'u punua'`
+
+#### Scenario: Class 1B monosyllabic verb (bëj) emits the suppletive aorist stem
+
+- **WHEN** `conjugate('bej', { mood: 'indicative', tense: 'aorist', voice: 'middle-passive', person: 3, number: 'singular', polarity: 'affirmative', modality: 'declarative' })` is invoked
+- **THEN** result.form SHALL equal `'u bë'`
+
+#### Scenario: Class 1B (laj) — bare aorist stem
+
+- **WHEN** `conjugate('laj', { mood: 'indicative', tense: 'aorist', voice: 'middle-passive', person: 3, number: 'singular', polarity: 'affirmative', modality: 'declarative' })` is invoked
+- **THEN** result.form SHALL equal `'u la'`
+
+#### Scenario: Class 2 verb (hap) — bare aorist stem
+
+- **WHEN** `conjugate('hap', { mood: 'indicative', tense: 'aorist', voice: 'middle-passive', person: 3, number: 'singular', polarity: 'affirmative', modality: 'declarative' })` is invoked
+- **THEN** result.form SHALL equal `'u hap'`
+
+#### Scenario: Class 3 vowel-stem (pi) — bare aorist stem
+
+- **WHEN** `conjugate('pi', { mood: 'indicative', tense: 'aorist', voice: 'middle-passive', person: 3, number: 'singular', polarity: 'affirmative', modality: 'declarative' })` is invoked
+- **THEN** result.form SHALL equal `'u pi'`
+
+#### Scenario: Other persons under MP aorist remain u + active-form
+
+- **WHEN** `conjugate('lexoj', { mood: 'indicative', tense: 'aorist', voice: 'middle-passive', person: 1, number: 'singular', ... })` is invoked
+- **THEN** result.form SHALL equal `'u lexova'`
+
+- **WHEN** the same call but `person: 3, number: 'plural'`
+- **THEN** result.form SHALL equal `'u lexuan'`
+
+#### Scenario: cellOverride wins over the default
+
+- **GIVEN** a corpus verb whose entry includes `cellOverrides: { 'indicative.aorist.middle-passive': { '3sg': 'u special-form' } }`
+- **WHEN** the MP aorist 3sg is conjugated
+- **THEN** result.form SHALL equal `'u special-form'`
+
+### Requirement: Middle-passive simple-tense cells respect cellOverrides keyed by voice
+
+When the engine builds a middle-passive simple-tense cell — `indicative.present`, `indicative.imperfect`, and any compound that reuses these inner cells (subjunctive present/imperfect, conditional present) — and the verb entry defines `cellOverrides[<inner-key>]['<cellLabel>']` where `<inner-key>` is `'indicative.present.middle-passive'` or `'indicative.imperfect.middle-passive'`, that override value SHALL be the surface form returned for the inner cell. The decomposition SHALL contain a single `stem` segment with the override surface.
+
+Override values are full surface forms (matching the existing convention used by `buildSimpleCell`'s active override path, the imperative MP override path, and the orchestrator-level override path).
+
+If no MP override is present, the engine SHALL fall through to the paradigm-table dispatch as before.
+
+#### Scenario: Class 2B mutation verb with MP present override
+
+- **GIVEN** verb `djeg` with `cellOverrides['indicative.present.middle-passive']['1sg'] = 'digjem'`
+- **WHEN** `conjugate('djeg', { mood: 'indicative', tense: 'present', voice: 'middle-passive', person: 1, number: 'singular', polarity: 'affirmative', modality: 'declarative' })` is invoked
+- **THEN** result.form SHALL equal `'digjem'`
+- **AND** the decomposition SHALL contain exactly one segment with `surface: 'digjem'` and `role: 'stem'`
+
+#### Scenario: MP imperfect override cascades to subjunctive imperfect MP
+
+- **GIVEN** verb `marr` with `cellOverrides['indicative.imperfect.middle-passive']['1sg'] = 'merresha'`
+- **WHEN** `conjugate('marr', { mood: 'subjunctive', tense: 'imperfect', voice: 'middle-passive', person: 1, number: 'singular', ... })` is invoked
+- **THEN** result.form SHALL equal `'të merresha'` (the orchestrator prepends the `të` particle)
+
+#### Scenario: MP override does NOT bleed into active
+
+- **GIVEN** verb `djeg` with both `cellOverrides['indicative.present']['2pl'] = 'digjni'` (active) and `cellOverrides['indicative.present.middle-passive']['2pl'] = 'digjeni'` (MP)
+- **WHEN** active 2pl is requested
+- **THEN** result.form SHALL equal `'digjni'`
+- **WHEN** MP 2pl is requested
+- **THEN** result.form SHALL equal `'digjeni'`
+
+#### Scenario: No MP override falls through to paradigm
+
+- **GIVEN** verb `lexoj` with no `indicative.present.middle-passive` override
+- **WHEN** MP indicative present 1sg is requested
+- **THEN** result.form SHALL equal `'lexohem'` (the class-1 paradigm default)
+
+### Requirement: verify-engine compares both voices across all supported moods/tenses
+
+`scripts/verify-engine.ts` SHALL probe the engine for `voice: 'active'` AND `voice: 'middle-passive'` for every supported (mood, tense) combination, including indicative {present, imperfect, aorist, perfect, pluperfect, future}, subjunctive {present, imperfect, perfect, pluperfect}, conditional {present, perfect}, optative present, and admirative {present, imperfect, perfect, pluperfect}. Cells where the engine raises `UnsupportedCellError` SHALL count as `missing-kaikki` rather than `mismatch`.
+
+The verifier's surface-shape filter SHALL recognize MP forms behind mood particles `të`, `do të`, and `do` so that subjunctive-, conditional-, and future-MP forms in Kaikki/Husić caches successfully match against engine output.
+
+#### Scenario: indicative aorist MP probe lands
+
+- **GIVEN** the corpus contains a verb whose Husić-direct cache has `{"form": "u bë", "tags": ["aorist", "indicative", "middle-passive", "singular", "third-person"]}`
+- **WHEN** `verify-engine.ts` runs against that verb
+- **THEN** the cell `indicative/aorist/middle-passive/3sg` SHALL be probed
+- **AND** if the engine emits `'u bë'`, the outcome SHALL be `match` with `matchSource: 'h'`
+
+#### Scenario: subjunctive present MP form is recognized
+
+- **GIVEN** Kaikki has a form `'të lexohem'` tagged `[first-person, present, singular, subjunctive]`
+- **WHEN** the verifier asks for `subjunctive.present.middle-passive.1sg`
+- **THEN** `formMatchesVoice('të lexohem', 'middle-passive', { mood: 'subjunctive', tense: 'present' })` SHALL return `true`
+- **AND** the form SHALL be available to match against engine output
+
+#### Scenario: conditional present MP form is recognized
+
+- **GIVEN** Kaikki has a form `'do të lexohem'` tagged `[conditional, first-person, imperfect, singular]` (Kaikki uses imperfect-shape tag for conditional present)
+- **WHEN** the verifier asks for `conditional.present.middle-passive.1sg`
+- **THEN** `formMatchesVoice('do të lexohem', 'middle-passive', { mood: 'conditional', tense: 'present' })` SHALL return `true`
+
+#### Scenario: active form is not falsely flagged as MP
+
+- **GIVEN** an active subjunctive form `'të lexoj'`
+- **WHEN** voice='active' is requested
+- **THEN** `formMatchesVoice('të lexoj', 'active', { mood: 'subjunctive', tense: 'present' })` SHALL return `true` (peeling `të ` leaves `lexoj`, which has no MP shape)
+
+### Requirement: Verbs flagged noMiddlePassive have no middle-passive voice
+
+When `entry.flags?.noMiddlePassive === true`, the engine SHALL refuse to produce middle-passive cells for that verb. `conjugate()` SHALL raise `UnsupportedCellError` for any request with `voice: 'middle-passive'` regardless of mood, tense, person, or number. `table()` SHALL leave middle-passive cells as `undefined` for the affected verb.
+
+The flag is per-verb explicit lexical knowledge, not derived from class or transitivity heuristics. Setting it asserts the verb has no MP voice in standard Albanian.
+
+#### Scenario: jam MP request throws
+
+- **GIVEN** verb `jam` has `flags.noMiddlePassive: true`
+- **WHEN** `conjugate('jam', { mood: 'indicative', tense: 'present', voice: 'middle-passive', person: 1, number: 'singular', polarity: 'affirmative', modality: 'declarative' })` is invoked
+- **THEN** the engine SHALL throw `UnsupportedCellError`
+- **AND** the error message SHALL identify the cell and reference the flag
+
+#### Scenario: table() leaves MP cells undefined for flagged verb
+
+- **GIVEN** verb `iki` has `flags.noMiddlePassive: true`
+- **WHEN** `table('iki').indicative.present['1sg.middle-passive']` is read
+- **THEN** the value SHALL be `undefined`
+
+#### Scenario: flag wins over MP cellOverrides
+
+- **GIVEN** verb `vij` has `flags.noMiddlePassive: true` AND a hypothetical `cellOverrides['indicative.present.middle-passive']['1sg'] = 'XYZ'`
+- **WHEN** the MP cell is requested
+- **THEN** the engine SHALL throw `UnsupportedCellError` (the flag takes precedence over override lookups)
+
+#### Scenario: Active voice unaffected
+
+- **GIVEN** verb `jam` has `flags.noMiddlePassive: true`
+- **WHEN** `conjugate('jam', { mood: 'indicative', tense: 'present', voice: 'active', person: 1, number: 'singular', ... })` is invoked
+- **THEN** result.form SHALL equal `'jam'` (the standard active form)
+
+#### Scenario: Verbs without the flag retain MP behavior
+
+- **GIVEN** verb `lexoj` has no `noMiddlePassive` flag (or it is `false`)
+- **WHEN** any MP cell is requested
+- **THEN** the engine SHALL produce the form per the existing MP paradigm dispatch
+

@@ -15,10 +15,18 @@
   ],
   "flags": { "hasMutation": true, "irregularAorist": true },
   "dialect": "tosk",
-  "notes": "Stem 'pjek' palatalizes to 'piq' before consonant-cluster suffixes (present 2pl, all imperfect). Aorist stem 'poq' is pre-mutated.",
+  "notes": "Stem 'pjek' palatalizes to 'piq' before consonant-cluster suffixes (present 2pl, all imperfect, all MP). Aorist stem 'poq' is pre-mutated.",
   "cellOverrides": {
     "indicative.present": {
       "2pl": "piqni"
+    },
+    "indicative.present.middle-passive": {
+      "1sg": "piqem",
+      "2sg": "piqesh",
+      "3sg": "piqet",
+      "1pl": "piqemi",
+      "2pl": "piqeni",
+      "3pl": "piqen"
     },
     "indicative.imperfect": {
       "1sg": "piqja",
@@ -28,11 +36,16 @@
       "2pl": "piqnit",
       "3pl": "piqnin"
     },
+    "indicative.imperfect.middle-passive": {
+      "1sg": "piqesha",
+      "2sg": "piqeshe",
+      "3sg": "piqej",
+      "1pl": "piqeshim",
+      "2pl": "piqeshit",
+      "3pl": "piqeshin"
+    },
     "subjunctive.present": {
       "2pl": "të piqni"
-    },
-    "optative.present": {
-      "2pl": "pjekshit"
     },
     "imperative.present": {
       "2sg": "piq",

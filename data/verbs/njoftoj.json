@@ -17,6 +17,10 @@
     {
       "source": "manual",
       "reference": "scaffolded by ingest-kaikki-batch"
+    },
+    {
+      "source": "husic",
+      "reference": "Husić 2002 — parsed cache (.cache/husic/njoftoj.jsonl)"
     }
   ],
   "dialect": "tosk"

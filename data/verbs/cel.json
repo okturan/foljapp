@@ -19,5 +19,7 @@
       "reference": "scaffolded by ingest-kaikki-batch"
     }
   ],
-  "dialect": "tosk"
+  "dialect": "tosk",
+  "englishForms": { "base": "open" },
+  "notes": "Multi-sense translationEn 'to open; bloom' uses ';' separator that the gloss first-sense picker doesn't split — explicit override picks 'open' as the primary English sense."
 }

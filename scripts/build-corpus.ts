@@ -22,6 +22,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
 const VERBS_DIR = join(REPO_ROOT, 'data', 'verbs');
 
+/**
+ * Bump this constant when the corpus shape changes (additive or
+ * breaking). The same value is written to `data/verbs/version.json`
+ * and consumed by both the server-side and client-side corpus loaders.
+ */
+const CORPUS_VERSION = '0.1.5';
+
 interface BuildOptions {
   frozenTime: boolean;
 }
@@ -39,7 +46,8 @@ function loadVerbFiles(): { id: string; entry: VerbEntry; file: string }[] {
         f.endsWith('.json') &&
         f !== 'index.json' &&
         f !== 'version.json' &&
-        f !== 'frequency.json',
+        f !== 'frequency.json' &&
+        f !== '_corpus.client.json',
     )
     .sort();
 
@@ -119,6 +127,18 @@ function roundTripGate(entries: { entry: VerbEntry }[]): void {
   }
 }
 
+function emitClientBundle(entries: { entry: VerbEntry }[]): void {
+  const payload = entries
+    .map(({ entry }) => entry)
+    .sort((a, b) => a.id.localeCompare(b.id));
+
+  writeFileSync(
+    join(VERBS_DIR, '_corpus.client.json'),
+    JSON.stringify(payload, null, 2) + '\n',
+    'utf8',
+  );
+}
+
 function emitIndex(entries: { entry: VerbEntry }[]): void {
   const index = entries
     .map(({ entry }) => ({
@@ -146,7 +166,7 @@ function emitVersion(opts: BuildOptions): void {
     join(VERBS_DIR, 'version.json'),
     JSON.stringify(
       {
-        version: '0.1.0',
+        version: CORPUS_VERSION,
         generatedAt,
         engineVersion: ENGINE_VERSION,
       },
@@ -172,6 +192,10 @@ function main(): void {
   roundTripGate(entries);
   console.log('  ok');
 
+  console.log('▶ Emitting _corpus.client.json...');
+  emitClientBundle(entries);
+  console.log(`  ok (${entries.length} entries)`);
+
   console.log('▶ Emitting index.json...');
   emitIndex(entries);
   console.log('  ok');
@@ -180,7 +204,7 @@ function main(): void {
   emitVersion(opts);
   console.log('  ok');
 
-  console.log(`✓ Build complete — ${entries.length} verbs corpus version 0.1.0`);
+  console.log(`✓ Build complete — ${entries.length} verbs corpus version ${CORPUS_VERSION}`);
 }
 
 main();

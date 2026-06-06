@@ -15,10 +15,18 @@
   ],
   "flags": { "hasMutation": true, "irregularAorist": true },
   "dialect": "tosk",
-  "notes": "Stem 'djeg' palatalizes to 'digj' before consonant-cluster suffixes (present 2pl, all imperfect). Aorist stem 'dogj' is pre-mutated.",
+  "notes": "Stem 'djeg' palatalizes to 'digj' before consonant-cluster suffixes (present 2pl, all imperfect, all MP). Aorist stem 'dogj' is pre-mutated.",
   "cellOverrides": {
     "indicative.present": {
       "2pl": "digjni"
+    },
+    "indicative.present.middle-passive": {
+      "1sg": "digjem",
+      "2sg": "digjesh",
+      "3sg": "digjet",
+      "1pl": "digjemi",
+      "2pl": "digjeni",
+      "3pl": "digjen"
     },
     "indicative.imperfect": {
       "1sg": "digjja",
@@ -28,11 +36,16 @@
       "2pl": "digjnit",
       "3pl": "digjnin"
     },
+    "indicative.imperfect.middle-passive": {
+      "1sg": "digjesha",
+      "2sg": "digjeshe",
+      "3sg": "digjej",
+      "1pl": "digjeshim",
+      "2pl": "digjeshit",
+      "3pl": "digjeshin"
+    },
     "subjunctive.present": {
       "2pl": "të digjni"
-    },
-    "optative.present": {
-      "2pl": "djegshit"
     },
     "imperative.present": {
       "2sg": "digj",

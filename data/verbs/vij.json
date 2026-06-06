@@ -12,7 +12,7 @@
   "sources": [
     { "source": "husic", "reference": "Irregular — vij" }
   ],
-  "flags": { "isSuppletive": true, "irregularAorist": true },
+  "flags": { "isSuppletive": true, "irregularAorist": true, "noMiddlePassive": true },
   "dialect": "tosk",
-  "notes": "Suppletive across tenses; corpus auxiliary 'kam' chosen per Husić."
+  "notes": "Suppletive across tenses; corpus auxiliary 'kam' chosen per Husić. Intransitive — no MP voice (vihem belongs to vë 'to put', a different verb)."
 }

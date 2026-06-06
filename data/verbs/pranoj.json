@@ -17,6 +17,10 @@
     {
       "source": "manual",
       "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
+    },
+    {
+      "source": "husic",
+      "reference": "Husić 2002 — parsed cache (.cache/husic/pranoj.jsonl)"
     }
   ],
   "dialect": "tosk"

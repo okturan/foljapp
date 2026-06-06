@@ -19,25 +19,62 @@ implementing the conjugation engine. Source-priority order is set by
    morphological analyzer. Cross-checked for paradigm structure and
    suppletive forms.
 
-## v0.1.0 — Kaikki verification baseline
+## Verification baseline (engine 0.1.0, corpus 0.1.5)
 
 Run `npx tsx scripts/verify-engine.ts` to compare engine output against
 Kaikki/Wiktionary's tagged conjugation tables for every corpus verb.
+The verifier probes both active and middle-passive voice across every
+supported mood/tense combination since `verify-engine-voice-coverage`
+(2026-04-28).
 
-| Match rate | 15905 / 15909 cells across 204 verbs | 99.97% |
-|            | (14002 Kaikki + 257 Husić-direct +    |        |
-|            | 1362 Husić-derived via glossary       |        |
-|            | cross-resolution + ~284 net new tier-3 |       |
-|            | verifications via Husić cross-res)    |        |
-|            | 4 documented Kaikki↔Husić-style       |        |
-|            | disagreements (djeg, pjek, bitis,     |        |
-|            | hekuros — Kaikki anomalies)           |        |
+| Match rate | 19100 / 19109 cells across 204 verbs | 99.95% |
+|            | (15467 Kaikki + 539 Husić-direct +    |        |
+|            | 2482 Husić-derived + 306 from         |        |
+|            | engine-throws-with-no-source under    |        |
+|            | `noMiddlePassive` flag for jam/iki/   |        |
+|            | vij). 9 documented Kaikki anomalies   |        |
+|            | (engine matches standard Albanian,   |        |
+|            | Kaikki has the typo). See the next    |        |
+|            | section.                              |        |
+
+### Documented anomalies (engine correct, source disagrees)
+
+The 9 surfaced mismatches are all cases where Kaikki disagrees with both
+the engine and Husić-direct paradigm models. The engine's output matches
+standard Albanian (Newmark/Hubbard/Prifti 1982 + Husić 2002):
+
+1. **`hekuros` indicative aorist 3sg** — Kaikki: `hekuroshekuros` (clear typo, the lemma typed twice). Engine: `hekurosi` (correct).
+2. **`bej` indicative aorist MP 3sg** — Kaikki: `u bëri` (Kaikki applies the 3sg active ending, same buggy pattern the engine had pre-`fix-mp-aorist-3sg`). Engine: `u bë` (correct, matches Husić-direct).
+3. **`laj` indicative aorist MP 3sg** — Kaikki: `u lau` (same Kaikki bug as #2). Engine: `u la` (correct).
+4-8. **`bitis`/`djeg`/`gudulis`/`laj`/`pjek` active optative 2pl** — Kaikki: `-shit` (extra `t`). Engine: `-shi` (correct, paradigm default per Newmark + Husić).
+9. **`laj` MP optative 2pl** — Kaikki: `u lafshit` (mirrors #8). Engine: `u lafshi`.
 | Verified   | v0.1 seed (20) + tier-1 (30 -oj) +    |        |
 |            | tier-2 (50) + tier-3 (104: 100 Class 1 |       |
 |            | -oj continuation + 4 Class 2 hand-fixed) | 204/204 |
 | Husić cache | 99 of 204 verbs with Husić data      |        |
 |            | via paradigm-model + glossary cross-  |        |
 |            | resolution                            |        |
+
+Corpus 0.1.1 (2026-04-25) adds the optional `englishForms` field on
+`VerbEntry` (additive, non-breaking) and per-verb overrides on six
+verbs (`jam`, `lind`, `mund`, `duhet`, `çel`, `shqipëroj`) consumed by
+the english-gloss capability. No paradigm changes; engine stays at 0.1.0.
+The +1060 match-rate delta vs. the prior baseline reflects earlier
+corpus growth that hadn't been recorded here, not the english-gloss work.
+
+Corpus 0.1.2 (2026-04-26) adds `husic` source citations to 41 verbs
+that had a `.cache/husic/<id>.jsonl` file but lacked the citation in
+their `sources` field. The change is data-only: 41 verb JSONs each
+gain one source entry of shape `{ source: 'husic', reference: 'Husić
+2002 — parsed cache (.cache/husic/<id>.jsonl)' }`. After this fix the
+breakdown is: 100 cache files exist; 55 corpus verbs explicitly cite
+Husić (14 hand-curated paradigm-model entries from the seed era + 41
+parsed-cache entries from this change); 99 corpus verbs have
+verifiable Husić data (the 55 above plus 44 cross-resolved via
+paradigm + glossary lookup without a direct cache file — those are
+candidates for a follow-up citation pass). A CI test in
+`apps/web/lib/corpus-husic-citations.test.ts` enforces the
+cache-↔-citation invariant going forward.
 
 The 1824 baseline includes both active and middle-passive admirative
 across all 4 tenses. Verify-engine probes both voices; for MP cells,
@@ -153,7 +190,7 @@ that the engine consults before paradigm dispatch. Specifically:
   `pakam`/etc. in `packages/engine/src/suppletion.ts`.
 
 `scripts/verify-engine.ts` is the canonical regression check. Any
-corpus or engine change must keep the match-rate at 15905/15909 or
+corpus or engine change must keep the match-rate at 19100/19109 or
 explicitly justify the regression in its OpenSpec change.
 
 ## Suppletive paradigm references

@@ -1,0 +1,171 @@
+## Context
+
+`packages/engine/src/conjugate.ts` `buildIndicative` for the aorist case currently:
+
+```ts
+case 'aorist':
+  if (voice === 'active') {
+    return buildSimpleCell(entry, 'aoristActive', person, number);
+  }
+  // Middle-passive aorist: prepend "u" particle to active aorist form
+  const activeAorist = buildSimpleCell(entry, 'aoristActive', person, number);
+  return {
+    surface: `u ${activeAorist.surface}`,
+    segments: [
+      buildSegment({ surface: 'u', role: 'voice-marker', particleName: 'u' }),
+      ...activeAorist.segments,
+    ],
+  };
+```
+
+This produces the right output for 1sg/2sg/1pl/2pl/3pl but the wrong output for 3sg. Standard Albanian's MP aorist 3sg drops the active-only ending and surfaces the bare aorist stem with the `u` voice-marker — confirmed by:
+
+- **Newmark, Hubbard, Prifti (1982)** §10.4.2 — MP aorist paradigm tables.
+- **Husić, Albanian Verb Dictionary and Manual (2002)** — direct paradigm-model cache files: `u bë` (bëj), `u buar` (bjerr), `u ça` (çaj), `u djeg` (djeg), all parsed from the printed manual.
+- **The Albanian phrase pattern** `Libri u lexua` ("the book was read") with `u + aorist-stem`, idiomatic.
+
+The active-3sg endings the engine appends are class-dependent:
+- Class 1 `-oj`: `-i` (giving `lexoi`, `punoi`)
+- Class 1 `-aj`/`-ej` (laj-style): `-u` (giving `lau`, `bëri`)
+- Class 2 (consonant-final): `-i` (giving `hapi`, `bjerri`)
+- Class 3 (vowel-final): `-u` (giving `piu`)
+
+The MP 3sg drops these endings and uses `entry.principalParts.aorist` directly. For class-aware verbs that means:
+- Class 1 -oj: aorist stem is `<root>ua` (`lexua`, `punua`)
+- Class 1B -aj/-ej: aorist stem is `<root>` (`la`, `bë`)
+- Class 2: aorist stem (often equal to present stem for regular verbs)
+- Class 3: aorist stem
+
+Across all classes, `u + entry.principalParts.aorist` is the correct surface.
+
+## Goals / Non-Goals
+
+**Goals:**
+
+- Correct MP aorist 3sg surface for every regular verb in the corpus.
+- Match the existing Husić-direct cache annotations.
+- Preserve all other engine behavior unchanged (compound tenses, other persons, other moods).
+- Keep the per-verb override mechanism (`cellOverrides['indicative.aorist.middle-passive']['3sg']`) for any irregular that needs a different form.
+
+**Non-Goals:**
+
+- Generalize to a class-wide MP aorist paradigm table. The 3sg deviation is the only place where MP differs from `u + active-form`; a one-line dispatch is simpler than a new paradigm sub-table.
+- Audit other tenses for similar bugs. (Spot-checks of the existing direct cache vs engine output for non-aorist tenses match — no other systematic divergence found.)
+
+## Decisions
+
+### D1. Targeted dispatch, not a new paradigm table
+
+In `buildIndicative` for aorist + MP, branch on `(person, number)`:
+
+```ts
+case 'aorist':
+  if (voice === 'active') {
+    return buildSimpleCell(entry, 'aoristActive', person, number);
+  }
+  // Middle-passive aorist:
+  if (person === 3 && number === 'singular') {
+    // 3sg uses bare aorist stem (Husić §1A and standard Albanian).
+    // Honor cell-level override first — overrides hold the full surface
+    // form (matching the convention in buildSimpleCell / imperative MP /
+    // orchestrator override paths) and reduce decomposition to a single
+    // `stem` segment.
+    const override =
+      entry.cellOverrides?.['indicative.aorist.middle-passive']?.['3sg'];
+    if (override !== undefined) {
+      return {
+        surface: override,
+        segments: [buildSegment({ surface: override, role: 'stem' })],
+      };
+    }
+    const stem = entry.principalParts.aorist;
+    return {
+      surface: `u ${stem}`,
+      segments: [
+        buildSegment({ surface: 'u', role: 'voice-marker', particleName: 'u' }),
+        buildSegment({ surface: stem, role: 'stem' }),
+      ],
+    };
+  }
+  // 1sg/2sg/1pl/2pl/3pl: u + active form (as today)
+  const activeAorist = buildSimpleCell(entry, 'aoristActive', person, number);
+  return {
+    surface: `u ${activeAorist.surface}`,
+    segments: [
+      buildSegment({ surface: 'u', role: 'voice-marker', particleName: 'u' }),
+      ...activeAorist.segments,
+    ],
+  };
+```
+
+**Rejected alternative:** add `middlePassiveAorist` to each class's `ClassParadigm` table. More structure, but the only deviation is 3sg — over-engineering.
+
+### D2. Decomposition
+
+The decomposition for MP 3sg has two segments: `u` (voice-marker) and the bare aorist stem (role `stem`). For the active 1sg/2sg/etc paths the existing decomposition is preserved.
+
+The role-coded display on the verb page already handles `voice-marker` + `stem` segments per `morphClass`; no UI changes needed.
+
+### D3. cellOverride precedence
+
+If `entry.cellOverrides['indicative.aorist.middle-passive']['3sg']` is set, it wins. Currently no corpus verb has this override (audited 0 hits). After the fix lands, irregular verbs whose MP 3sg differs from the principal-parts aorist stem can be added via override.
+
+### D4. Cache regeneration
+
+The 40 Husić-derived cache files (generated by `scripts/husic-glossary-cross-resolve.ts`) currently store `u <active-form>` for 3sg cells because they were emitted by the buggy engine. After the engine fix, re-running the cross-resolve script will rewrite them with `u <aorist-stem>`. This is mechanical — not a content change in the cache's semantics; it's just resyncing the derivation with the corrected paradigm.
+
+For the 60 Husić-direct cache files, no regeneration is needed — they were parsed from the printed manual and already have the correct forms (`u bë`, `u buar`, `u ça`, etc.).
+
+### D5. verify-engine impact
+
+After the fix:
+
+- **Husić-direct matches**: should INCREASE. Previously, direct cache cells like `u bë` did NOT match the engine's `u bëri`, but were counted as "missing" not "mismatch" because Kaikki had no ground truth for the cell. After the fix, they match.
+- **Husić-derived matches**: same count after regeneration (matches are tautological — derived from the engine).
+- **Kaikki matches**: unchanged — Kaikki doesn't tag MP cells separately.
+- **Mismatches**: unchanged (still 4 documented Kaikki anomalies for djeg/pjek/bitis/hekuros).
+
+Net: the baseline number should rise modestly (estimated +20 to +60 cells matching newly via Husić-direct). Updated in `packages/engine/docs/sources.md` after running.
+
+### D6. Test coverage
+
+New file `packages/engine/test/mp-aorist-3sg.test.ts` with cases:
+
+| Verb    | Class       | Expected MP 3sg |
+|---------|-------------|-----------------|
+| `lexoj` | 1A (-oj)    | `u lexua`       |
+| `punoj` | 1A (-oj)    | `u punua`       |
+| `kerkoj`| 1A (-oj)    | `u kërkua`      |
+| `bej`   | 1B (-ëj)    | `u bë`          |
+| `laj`   | 1B (-aj)    | `u la`          |
+| `hap`   | 2           | `u hap`         |
+| `pi`    | 3           | `u pi`          |
+
+Plus a sanity check that `cellOverrides` win over the default.
+
+Existing `audit-mp-coverage.test.ts` continues to pass (it checks u-prefix existence, not specific stem form).
+
+### D7. Engine version
+
+This is a paradigm-correctness fix, not an API change. Engine version stays at 0.1.0. The corpus version bumps to 0.1.2 → 0.1.3 because the derived cache files regenerate (data side-effect).
+
+Per the existing version constant in `scripts/build-corpus.ts`, change `CORPUS_VERSION = '0.1.2'` to `'0.1.3'`.
+
+### D8. Suppletive verbs not affected
+
+`jam`, `jap`, `shoh`, `vij`, `them` use the suppletion table (`packages/engine/src/suppletion.ts`) and don't route through `buildIndicative`'s aorist path. Their MP aorist 3sg forms remain unchanged. Verified by inspection.
+
+## Tradeoffs
+
+- **Targeted dispatch vs. paradigm-table generalization.** Targeted wins; one place to read the rule, fewer files touched.
+- **Cache regeneration is mechanical but visible.** 40 cache files updated. Diff is large but uniform; a reviewer can spot-check a few entries and trust the rest.
+- **No backward compatibility for the buggy form.** The fix is a correctness change, not a feature flag. Any consumer relying on `u lexoi` was relying on a bug.
+
+## Resolved Questions
+
+None.
+
+## Open Questions
+
+- **Q1.** Should we add a Husić-direct paradigm-model cache file for `punoj` (currently absent)? Out of scope; this change uses the existing direct cache files for verification.
+- **Q2.** Are there other tenses with similar 3sg-only deviations? Spot-check (random sample of 10 cells across other tenses comparing direct cache vs engine) shows no other systematic mismatch. Confirmed by the existing 16965/16969 verify-engine baseline (which would be lower if there were similar bugs).

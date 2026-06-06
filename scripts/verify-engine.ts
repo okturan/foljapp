@@ -61,7 +61,8 @@ function loadCorpus(): VerbEntry[] {
       f.endsWith('.json') &&
       f !== 'index.json' &&
       f !== 'version.json' &&
-      f !== 'frequency.json',
+      f !== 'frequency.json' &&
+      f !== '_corpus.client.json',
   );
   return files.map((f) =>
     JSON.parse(readFileSync(join(VERBS_DIR, f), 'utf8')) as VerbEntry,
@@ -189,9 +190,20 @@ function tagsFor(spec: CellSpec): Set<string> {
  *                            ishe, ...).
  */
 function formMatchesVoice(form: string, voice: 'active' | 'middle-passive', spec: CellSpec): boolean {
-  const isUPrefixed = form.startsWith('u ');
-  const isJamAdmir = /^qenk(am|e|a|emi|eni|an|ësha|ëshe|ësh|ëshim|ëshit|ëshin)\b/.test(form);
-  const isJamIndicCompound = /^(jam|je|është|jemi|jeni|janë|isha|ishe|ishte|ishim|ishit|ishin|qe(shë)?|qemë|qetë|qenë)\b/.test(form);
+  // Peel mood-particle prefixes so MP-shape regexes can see the inner stem.
+  // Subjunctive uses `të X`; conditional/future use `do të X`; raw `do ` is
+  // less common but appears in some tagged forms.
+  let inner = form;
+  if (inner.startsWith('do të ')) inner = inner.slice(6);
+  else if (inner.startsWith('do ')) inner = inner.slice(3);
+  if (inner.startsWith('të ')) inner = inner.slice(3);
+
+  const isUPrefixed = inner.startsWith('u ');
+  // Jam-paradigm prefixes count as MP only when followed by a participle
+  // (i.e., compound form). Bare `jam`, `qenkam`, etc. are jam's own active
+  // forms and must not match MP voice for non-jam verbs.
+  const isJamAdmir = /^qenk(am|e|a|emi|eni|an|ësha|ëshe|ësh|ëshim|ëshit|ëshin)\s+\S/.test(inner);
+  const isJamIndicCompound = /^(jam|je|është|jemi|jeni|janë|isha|ishe|ishte|ishim|ishit|ishin|qe(shë)?|qemë|qetë|qenë)\s+\S/.test(inner);
 
   if (voice === 'middle-passive') {
     if (spec.mood === 'admirative') {
@@ -237,6 +249,12 @@ function findKaikkiForm(
       // vs pluperfect (perfect doesn't want past, pluperfect does), and is
       // correct for conditional perfect (which wants past, so it's not skipped).
       if (!wanted.has('past') && ftags.has('past')) continue;
+      // Same shape for `perfect`: a form tagged `perfect` is a compound tense
+      // (perfect/pluperfect/future-perfect/conditional-perfect). If the spec
+      // asks for a non-perfect tense (e.g., indicative.future MP), skip the
+      // compound form so we don't compare `do të jemi bërë` (future perfect)
+      // against engine's `do të bëhemi` (future simple MP).
+      if (!wanted.has('perfect') && ftags.has('perfect')) continue;
       const raw = f.form;
       if (raw === '-' || raw === 'u —') return null;
       // Voice filter — Kaikki has no explicit MP tag, so we differentiate
@@ -261,7 +279,8 @@ const PERSON_NUMBERS: Array<{ person: 1 | 2 | 3; number: 'singular' | 'plural' }
   { person: 3, number: 'plural' },
 ];
 
-const FINITE_TENSE_KEYS: Array<{ mood: Mood; tense: Tense }> = [
+const FINITE_TENSE_KEYS: Array<{ mood: Mood; tense: Tense; voice?: 'middle-passive' }> = [
+  // Active — every mood/tense the engine produces
   { mood: 'indicative', tense: 'present' },
   { mood: 'indicative', tense: 'imperfect' },
   { mood: 'indicative', tense: 'aorist' },
@@ -279,8 +298,21 @@ const FINITE_TENSE_KEYS: Array<{ mood: Mood; tense: Tense }> = [
   { mood: 'admirative', tense: 'perfect' },
   { mood: 'admirative', tense: 'pluperfect' },
   { mood: 'optative', tense: 'present' },
+  // Middle-passive — full coverage so Husić-direct (and any voice-disambiguable
+  // Kaikki entry) can compare against engine output.
+  { mood: 'indicative', tense: 'present', voice: 'middle-passive' },
+  { mood: 'indicative', tense: 'imperfect', voice: 'middle-passive' },
+  { mood: 'indicative', tense: 'aorist', voice: 'middle-passive' },
+  { mood: 'indicative', tense: 'perfect', voice: 'middle-passive' },
+  { mood: 'indicative', tense: 'pluperfect', voice: 'middle-passive' },
+  { mood: 'indicative', tense: 'future', voice: 'middle-passive' },
+  { mood: 'subjunctive', tense: 'present', voice: 'middle-passive' },
+  { mood: 'subjunctive', tense: 'imperfect', voice: 'middle-passive' },
+  { mood: 'subjunctive', tense: 'perfect', voice: 'middle-passive' },
+  { mood: 'subjunctive', tense: 'pluperfect', voice: 'middle-passive' },
+  { mood: 'conditional', tense: 'present', voice: 'middle-passive' },
+  { mood: 'conditional', tense: 'perfect', voice: 'middle-passive' },
   { mood: 'optative', tense: 'present', voice: 'middle-passive' },
-  // MP voice — admirative across all 4 tenses
   { mood: 'admirative', tense: 'present', voice: 'middle-passive' },
   { mood: 'admirative', tense: 'imperfect', voice: 'middle-passive' },
   { mood: 'admirative', tense: 'perfect', voice: 'middle-passive' },
@@ -340,6 +372,7 @@ function findHusicFormWithProvenance(forms: HusicForm[], spec: CellSpec): { form
     if (wantMood && fMood && wantMood !== fMood) continue;
     if (spec.mood === 'indicative' && spec.tense === 'present' && ftags.has('future')) continue;
     if (!wanted.has('past') && ftags.has('past')) continue;
+    if (!wanted.has('perfect') && ftags.has('perfect')) continue;
     const raw = f.form;
     if (raw === '-' || raw === 'u —') return { form: null, derived: !!f.derived };
     if (!formMatchesVoice(raw, voice, spec)) continue;

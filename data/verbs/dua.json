@@ -24,6 +24,14 @@
       "2pl": "doni",
       "3pl": "duan"
     },
+    "indicative.present.middle-passive": {
+      "1sg": "duhem",
+      "2sg": "duhesh",
+      "3sg": "duhet",
+      "1pl": "duhemi",
+      "2pl": "duheni",
+      "3pl": "duhen"
+    },
     "indicative.imperfect": {
       "1sg": "doja",
       "2sg": "doje",
@@ -31,6 +39,14 @@
       "1pl": "donim",
       "2pl": "donit",
       "3pl": "donin"
+    },
+    "indicative.imperfect.middle-passive": {
+      "1sg": "duhesha",
+      "2sg": "duheshe",
+      "3sg": "duhej",
+      "1pl": "duheshim",
+      "2pl": "duheshit",
+      "3pl": "duheshin"
     },
     "indicative.aorist": {
       "1sg": "desha",

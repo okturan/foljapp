@@ -61,6 +61,7 @@ export type {
   VerbEntry,
   VerbEntrySource,
   VerbEntryFlags,
+  EnglishForms,
   VerbTable,
   TenseCells,
 } from './types.js';

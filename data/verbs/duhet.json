@@ -14,5 +14,11 @@
   ],
   "flags": { "irregularAorist": true },
   "dialect": "tosk",
-  "notes": "Defective: in practice only 3sg/3pl forms are used. Engine produces all cells; consumers should respect impersonal usage."
+  "englishForms": {
+    "base": "must",
+    "past": "had to",
+    "participle": "had to",
+    "gerund": "having to"
+  },
+  "notes": "Defective: in practice only 3sg/3pl forms are used. englishForms uses defective 'must' for present and 'had to' periphrasis for past/perfect (the only English equivalent that conjugates across tenses)."
 }

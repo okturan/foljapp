@@ -21,7 +21,7 @@ const WORD_ROLES = new Set(['particle', 'auxiliary', 'voice-marker']);
 export function DecomposedForm({ segments }: Props) {
   return (
     <TooltipProvider delayDuration={150}>
-      <span className="font-mono text-base">
+      <span className="font-mono text-inherit">
         {segments.map((seg, i) => {
           const prev = segments[i - 1];
           const needsSpace =

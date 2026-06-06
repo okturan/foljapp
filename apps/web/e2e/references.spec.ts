@@ -13,7 +13,7 @@ test('Cite foljapp section contains a @software BibTeX entry', async ({ page }) 
   await page.goto('/references');
   await expect(page.getByRole('heading', { name: 'Cite foljapp' })).toBeVisible();
   await expect(page.locator('main')).toContainText('@software');
-  await expect(page.locator('main')).toContainText(/engine-0\.1\.0 corpus-0\.1\.0/);
+  await expect(page.locator('main')).toContainText(/engine-0\.1\.0 corpus-0\.1\.\d+/);
 });
 
 test('BibTeX details are expandable for each source', async ({ page }) => {

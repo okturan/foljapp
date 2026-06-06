@@ -21,7 +21,8 @@ beforeAll(() => {
       f.endsWith('.json') &&
       f !== 'index.json' &&
       f !== 'version.json' &&
-      f !== 'frequency.json',
+      f !== 'frequency.json' &&
+          f !== '_corpus.client.json',
   );
   const corpus = files.map((f) =>
     JSON.parse(readFileSync(join(VERBS_DIR, f), 'utf8')),

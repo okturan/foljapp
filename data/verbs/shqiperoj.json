@@ -19,5 +19,7 @@
       "reference": "scaffolded by ingest-kaikki-batch"
     }
   ],
-  "dialect": "tosk"
+  "dialect": "tosk",
+  "englishForms": { "base": "translate" },
+  "notes": "translationEn 'to translate to Albanian' is verbose for the gloss grid; override 'translate' yields the cleaner gloss line ('I translate', 'I translated', etc.)."
 }

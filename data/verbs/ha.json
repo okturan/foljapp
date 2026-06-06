@@ -25,6 +25,9 @@
       "2pl": "hëngrët",
       "3pl": "hëngrën"
     },
+    "indicative.aorist.middle-passive": {
+      "3sg": "u hëngër"
+    },
     "subjunctive.present": {
       "3sg": "të haje"
     },

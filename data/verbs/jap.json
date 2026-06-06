@@ -13,5 +13,19 @@
     { "source": "husic", "reference": "Irregular — jap" }
   ],
   "flags": { "isSuppletive": true, "irregularAorist": true },
-  "dialect": "tosk"
+  "dialect": "tosk",
+  "notes": "Suppletive aorist (dhash). MP present alternates stem to 'jep' before MP endings.",
+  "cellOverrides": {
+    "indicative.present.middle-passive": {
+      "1sg": "jepem",
+      "2sg": "jepesh",
+      "3sg": "jepet",
+      "1pl": "jepemi",
+      "2pl": "jepeni",
+      "3pl": "jepen"
+    },
+    "indicative.aorist.middle-passive": {
+      "3sg": "u dha"
+    }
+  }
 }

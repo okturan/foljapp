@@ -1,0 +1,380 @@
+[
+  {
+    "base": "be",
+    "past": "was",
+    "participle": "been",
+    "gerund": "being",
+    "source": "Huddleston & Pullum, Cambridge Grammar of the English Language (CGEL) §3.1.5; OED 'be, v.'"
+  },
+  {
+    "base": "have",
+    "past": "had",
+    "participle": "had",
+    "gerund": "having",
+    "source": "CGEL §3.1.5; OED 'have, v.'"
+  },
+  {
+    "base": "do",
+    "past": "did",
+    "participle": "done",
+    "gerund": "doing",
+    "source": "CGEL §3.1.5; OED 'do, v.'"
+  },
+  {
+    "base": "go",
+    "past": "went",
+    "participle": "gone",
+    "gerund": "going",
+    "source": "CGEL §3.1.5 (suppletive); OED 'go, v.'"
+  },
+  {
+    "base": "come",
+    "past": "came",
+    "participle": "come",
+    "gerund": "coming",
+    "source": "CGEL §3.1.5; OED 'come, v.'"
+  },
+  {
+    "base": "see",
+    "past": "saw",
+    "participle": "seen",
+    "gerund": "seeing",
+    "source": "CGEL §3.1.5; OED 'see, v.'"
+  },
+  {
+    "base": "give",
+    "past": "gave",
+    "participle": "given",
+    "gerund": "giving",
+    "source": "CGEL §3.1.5; OED 'give, v.'"
+  },
+  {
+    "base": "take",
+    "past": "took",
+    "participle": "taken",
+    "gerund": "taking",
+    "source": "CGEL §3.1.5; OED 'take, v.'"
+  },
+  {
+    "base": "make",
+    "past": "made",
+    "participle": "made",
+    "gerund": "making",
+    "source": "CGEL §3.1.5; OED 'make, v.'"
+  },
+  {
+    "base": "say",
+    "past": "said",
+    "participle": "said",
+    "gerund": "saying",
+    "source": "CGEL §3.1.5; OED 'say, v.'"
+  },
+  {
+    "base": "eat",
+    "past": "ate",
+    "participle": "eaten",
+    "gerund": "eating",
+    "source": "CGEL §3.1.5; OED 'eat, v.'"
+  },
+  {
+    "base": "drink",
+    "past": "drank",
+    "participle": "drunk",
+    "gerund": "drinking",
+    "source": "CGEL §3.1.5; OED 'drink, v.'"
+  },
+  {
+    "base": "sleep",
+    "past": "slept",
+    "participle": "slept",
+    "gerund": "sleeping",
+    "source": "CGEL §3.1.5; OED 'sleep, v.'"
+  },
+  {
+    "base": "write",
+    "past": "wrote",
+    "participle": "written",
+    "gerund": "writing",
+    "source": "CGEL §3.1.5; OED 'write, v.'"
+  },
+  {
+    "base": "read",
+    "past": "read",
+    "participle": "read",
+    "gerund": "reading",
+    "source": "CGEL §3.1.5 (homograph past/participle, pronounced /rɛd/); OED 'read, v.'"
+  },
+  {
+    "base": "find",
+    "past": "found",
+    "participle": "found",
+    "gerund": "finding",
+    "source": "CGEL §3.1.5; OED 'find, v.'"
+  },
+  {
+    "base": "hold",
+    "past": "held",
+    "participle": "held",
+    "gerund": "holding",
+    "source": "CGEL §3.1.5; OED 'hold, v.'"
+  },
+  {
+    "base": "leave",
+    "past": "left",
+    "participle": "left",
+    "gerund": "leaving",
+    "source": "CGEL §3.1.5; OED 'leave, v.'"
+  },
+  {
+    "base": "win",
+    "past": "won",
+    "participle": "won",
+    "gerund": "winning",
+    "source": "CGEL §3.1.5; OED 'win, v.'"
+  },
+  {
+    "base": "sell",
+    "past": "sold",
+    "participle": "sold",
+    "gerund": "selling",
+    "source": "CGEL §3.1.5; OED 'sell, v.'"
+  },
+  {
+    "base": "buy",
+    "past": "bought",
+    "participle": "bought",
+    "gerund": "buying",
+    "source": "CGEL §3.1.5; OED 'buy, v.'"
+  },
+  {
+    "base": "hear",
+    "past": "heard",
+    "participle": "heard",
+    "gerund": "hearing",
+    "source": "CGEL §3.1.5; OED 'hear, v.'"
+  },
+  {
+    "base": "learn",
+    "past": "learned",
+    "participle": "learned",
+    "gerund": "learning",
+    "source": "CGEL §3.1.5 (American 'learned' standard; British 'learnt' variant)"
+  },
+  {
+    "base": "teach",
+    "past": "taught",
+    "participle": "taught",
+    "gerund": "teaching",
+    "source": "CGEL §3.1.5; OED 'teach, v.'"
+  },
+  {
+    "base": "think",
+    "past": "thought",
+    "participle": "thought",
+    "gerund": "thinking",
+    "source": "CGEL §3.1.5; OED 'think, v.'"
+  },
+  {
+    "base": "know",
+    "past": "knew",
+    "participle": "known",
+    "gerund": "knowing",
+    "source": "CGEL §3.1.5; OED 'know, v.'"
+  },
+  {
+    "base": "become",
+    "past": "became",
+    "participle": "become",
+    "gerund": "becoming",
+    "source": "CGEL §3.1.5; OED 'become, v.'"
+  },
+  {
+    "base": "understand",
+    "past": "understood",
+    "participle": "understood",
+    "gerund": "understanding",
+    "source": "CGEL §3.1.5; OED 'understand, v.'"
+  },
+  {
+    "base": "bring",
+    "past": "brought",
+    "participle": "brought",
+    "gerund": "bringing",
+    "source": "CGEL §3.1.5; OED 'bring, v.'"
+  },
+  {
+    "base": "forget",
+    "past": "forgot",
+    "participle": "forgotten",
+    "gerund": "forgetting",
+    "source": "CGEL §3.1.5; OED 'forget, v.'"
+  },
+  {
+    "base": "begin",
+    "past": "began",
+    "participle": "begun",
+    "gerund": "beginning",
+    "source": "CGEL §3.1.5; OED 'begin, v.'"
+  },
+  {
+    "base": "bite",
+    "past": "bit",
+    "participle": "bitten",
+    "gerund": "biting",
+    "source": "CGEL §3.1.5; OED 'bite, v.'"
+  },
+  {
+    "base": "catch",
+    "past": "caught",
+    "participle": "caught",
+    "gerund": "catching",
+    "source": "CGEL §3.1.5; OED 'catch, v.'"
+  },
+  {
+    "base": "dig",
+    "past": "dug",
+    "participle": "dug",
+    "gerund": "digging",
+    "source": "CGEL §3.1.5; OED 'dig, v.'"
+  },
+  {
+    "base": "lose",
+    "past": "lost",
+    "participle": "lost",
+    "gerund": "losing",
+    "source": "CGEL §3.1.5; OED 'lose, v.'"
+  },
+  {
+    "base": "meet",
+    "past": "met",
+    "participle": "met",
+    "gerund": "meeting",
+    "source": "CGEL §3.1.5; OED 'meet, v.'"
+  },
+  {
+    "base": "sing",
+    "past": "sang",
+    "participle": "sung",
+    "gerund": "singing",
+    "source": "CGEL §3.1.5; OED 'sing, v.'"
+  },
+  {
+    "base": "speak",
+    "past": "spoke",
+    "participle": "spoken",
+    "gerund": "speaking",
+    "source": "CGEL §3.1.5; OED 'speak, v.'"
+  },
+  {
+    "base": "tear",
+    "past": "tore",
+    "participle": "torn",
+    "gerund": "tearing",
+    "source": "CGEL §3.1.5; OED 'tear, v.'"
+  },
+  {
+    "base": "forge",
+    "past": "forged",
+    "participle": "forged",
+    "gerund": "forging",
+    "source": "CGEL §3.1.5 (regular -e final → ed/ing; included for explicitness given silent-e rule)"
+  },
+  {
+    "base": "tell",
+    "past": "told",
+    "participle": "told",
+    "gerund": "telling",
+    "source": "CGEL §3.1.5; OED 'tell, v.'"
+  },
+  {
+    "base": "stand",
+    "past": "stood",
+    "participle": "stood",
+    "gerund": "standing",
+    "source": "CGEL §3.1.5; OED 'stand, v.'"
+  },
+  {
+    "base": "bind",
+    "past": "bound",
+    "participle": "bound",
+    "gerund": "binding",
+    "source": "CGEL §3.1.5; OED 'bind, v.'"
+  },
+  {
+    "base": "send",
+    "past": "sent",
+    "participle": "sent",
+    "gerund": "sending",
+    "source": "CGEL §3.1.5; OED 'send, v.'"
+  },
+  {
+    "base": "freeze",
+    "past": "froze",
+    "participle": "frozen",
+    "gerund": "freezing",
+    "source": "CGEL §3.1.5; OED 'freeze, v.'"
+  },
+  {
+    "base": "throw",
+    "past": "threw",
+    "participle": "thrown",
+    "gerund": "throwing",
+    "source": "CGEL §3.1.5; OED 'throw, v.'"
+  },
+  {
+    "base": "weave",
+    "past": "wove",
+    "participle": "woven",
+    "gerund": "weaving",
+    "source": "CGEL §3.1.5; OED 'weave, v.'"
+  },
+  {
+    "base": "hit",
+    "past": "hit",
+    "participle": "hit",
+    "gerund": "hitting",
+    "source": "CGEL §3.1.5 (zero-marking past/participle); OED 'hit, v.'"
+  },
+  {
+    "base": "light",
+    "past": "lit",
+    "participle": "lit",
+    "gerund": "lighting",
+    "source": "CGEL §3.1.5 (American 'lit' standard; British 'lighted' variant); OED 'light, v.'"
+  },
+  {
+    "base": "mistake",
+    "past": "mistook",
+    "participle": "mistaken",
+    "gerund": "mistaking",
+    "source": "CGEL §3.1.5; OED 'mistake, v.'"
+  },
+  {
+    "base": "forbid",
+    "past": "forbade",
+    "participle": "forbidden",
+    "gerund": "forbidding",
+    "source": "CGEL §3.1.5; OED 'forbid, v.'"
+  },
+  {
+    "base": "hurt",
+    "past": "hurt",
+    "participle": "hurt",
+    "gerund": "hurting",
+    "source": "CGEL §3.1.5 (zero-marking past/participle); OED 'hurt, v.'"
+  },
+  {
+    "base": "control",
+    "past": "controlled",
+    "participle": "controlled",
+    "gerund": "controlling",
+    "source": "CGEL §C.5.3 (polysyllabic stress-final CVC doubling: con-TROL → con-TROLLED). Regular pattern not caught by the auto-derivation's monosyllable-only heuristic."
+  },
+  {
+    "base": "permit",
+    "past": "permitted",
+    "participle": "permitted",
+    "gerund": "permitting",
+    "source": "CGEL §C.5.3 (polysyllabic stress-final CVC doubling: per-MIT → per-MITTED). Regular pattern not caught by the auto-derivation's monosyllable-only heuristic."
+  }
+]

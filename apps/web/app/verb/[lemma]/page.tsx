@@ -9,6 +9,10 @@ import { NonFiniteForms } from '@/components/non-finite-forms';
 import { ReservedActions } from '@/components/reserved-actions';
 import { VerbHeader } from '@/components/verb-header';
 import { allLemmas, corpusVersion, findEntryByLemma } from '@/lib/corpus';
+import {
+  buildGlossTable,
+  glossesForMood,
+} from '@/lib/english-gloss-table';
 
 interface RouteParams {
   lemma: string;
@@ -76,9 +80,10 @@ export default async function VerbPage({
   }
 
   const t = table(entry.id);
+  const glossTable = buildGlossTable(entry, t);
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
+    <main className="mx-auto max-w-3xl lg:max-w-5xl xl:max-w-6xl px-6 py-10">
       <nav aria-label="Breadcrumb" className="mb-6 text-sm text-stone-500">
         <ol className="flex flex-wrap items-center gap-2">
           <li>
@@ -101,30 +106,35 @@ export default async function VerbPage({
         moodKey="indicative"
         tenses={t.indicative as never}
         order={INDICATIVE_TENSES}
+        glosses={glossesForMood(glossTable, 'indicative')}
       />
       <ConjugationTable
         title="Subjunctive (Lidhore)"
         moodKey="subjunctive"
         tenses={t.subjunctive as never}
         order={SUBJUNCTIVE_TENSES}
+        glosses={glossesForMood(glossTable, 'subjunctive')}
       />
       <ConjugationTable
         title="Conditional (Kushtore)"
         moodKey="conditional"
         tenses={t.conditional as never}
         order={CONDITIONAL_TENSES}
+        glosses={glossesForMood(glossTable, 'conditional')}
       />
       <ConjugationTable
         title="Admirative (Habitore)"
         moodKey="admirative"
         tenses={t.admirative as never}
         order={ADMIRATIVE_TENSES}
+        glosses={glossesForMood(glossTable, 'admirative')}
       />
       <ConjugationTable
         title="Optative (Dëshirore)"
         moodKey="optative"
         tenses={t.optative as never}
         order={OPTATIVE_TENSES}
+        glosses={glossesForMood(glossTable, 'optative')}
       />
       <ConjugationTable
         title="Imperative (Urdhërore)"
@@ -132,9 +142,10 @@ export default async function VerbPage({
         tenses={t.imperative as never}
         order={['present']}
         imperativeOnly
+        glosses={glossesForMood(glossTable, 'imperative')}
       />
 
-      <NonFiniteForms forms={t.nonFinite as never} />
+      <NonFiniteForms forms={t.nonFinite as never} glosses={glossTable.nonFinite} />
 
       <CitationsFooter
         sources={entry.sources}

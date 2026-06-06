@@ -14,16 +14,13 @@
     { "source": "kaikki", "reference": "https://en.wiktionary.org/wiki/laj#Albanian" }
   ],
   "dialect": "tosk",
-  "notes": "Class 1B vowel-stem -j: aorist 3sg uses -u (lau, not lai), aorist plurals retain -ë (lamë/latë/lanë). Imperative 2sg restores the -j (laj). Optative 2pl ends in -t.",
+  "notes": "Class 1B vowel-stem -j: aorist 3sg uses -u (lau, not lai), aorist plurals retain -ë (lamë/latë/lanë). Imperative 2sg restores the -j (laj).",
   "cellOverrides": {
     "indicative.aorist": {
       "3sg": "lau",
       "1pl": "lamë",
       "2pl": "latë",
       "3pl": "lanë"
-    },
-    "optative.present": {
-      "2pl": "lafshit"
     },
     "imperative.present": {
       "2sg": "laj"

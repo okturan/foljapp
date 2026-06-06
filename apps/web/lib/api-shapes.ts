@@ -14,12 +14,25 @@ export interface ApiVerbListResponse {
   verbs: CorpusIndexEntry[];
 }
 
+/**
+ * English compositional glosses for the verb's full table. The `cells`
+ * map is keyed by `${mood}.${tense}.${cellLabel}.${voice}`, e.g.,
+ * "indicative.perfect.1sg.active". The `nonFinite` map is keyed by
+ * NonFiniteForm.
+ */
+export interface ApiEnglishGlosses {
+  cells: Record<string, string>;
+  nonFinite: Record<string, string>;
+}
+
 export interface ApiVerbDetailResponse {
   engineVersion: string;
   corpusVersion: string;
   cite: string;
   entry: VerbEntry;
   table: VerbTable;
+  /** Compositional English glosses keyed alongside table cells. */
+  englishGlosses: ApiEnglishGlosses;
   ipa: {
     lemma: string;
     principalParts: {

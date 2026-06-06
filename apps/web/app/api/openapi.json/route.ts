@@ -102,13 +102,39 @@ const document = {
       },
       ApiVerbDetailResponse: {
         type: 'object',
-        required: ['engineVersion', 'corpusVersion', 'cite', 'entry', 'table'],
+        required: [
+          'engineVersion',
+          'corpusVersion',
+          'cite',
+          'entry',
+          'table',
+          'englishGlosses',
+        ],
         properties: {
           engineVersion: { type: 'string' },
           corpusVersion: { type: 'string' },
           cite: { type: 'string' },
           entry: { type: 'object' },
           table: { type: 'object' },
+          englishGlosses: {
+            type: 'object',
+            description:
+              'Compositional English glosses keyed alongside table cells.',
+            required: ['cells', 'nonFinite'],
+            properties: {
+              cells: {
+                type: 'object',
+                additionalProperties: { type: 'string' },
+                description:
+                  'Keyed by ${mood}.${tense}.${cellLabel}.${voice}, e.g., "indicative.perfect.1sg.active".',
+              },
+              nonFinite: {
+                type: 'object',
+                additionalProperties: { type: 'string' },
+                description: 'Keyed by NonFiniteForm.',
+              },
+            },
+          },
         },
       },
       ApiErrorResponse: {

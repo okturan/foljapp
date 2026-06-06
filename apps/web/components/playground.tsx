@@ -2,6 +2,7 @@
 
 import {
   conjugate,
+  table as engineTable,
   trace,
   UnsupportedCellError,
   type ConjugateOptions,
@@ -15,8 +16,9 @@ import { useCallback, useEffect, useMemo } from 'react';
 
 import { PlaygroundResult } from '@/components/playground-result';
 import { VerbPicker } from '@/components/verb-picker';
-import '@/lib/corpus-client';
+import { findClientEntry } from '@/lib/corpus-client';
 import { findIndexByLemma } from '@/lib/corpus-index';
+import { englishGloss } from '@/lib/english-gloss';
 
 const MOODS: Mood[] = [
   'indicative',
@@ -173,14 +175,102 @@ export function Playground() {
   }
   if (config.form) opts.form = config.form;
 
+  // The engine indexes entries by `id` (ASCII kebab-case), but the URL
+  // and verb-picker carry the `lemma` (which may include diacritics:
+  // kërkoj, qëndroj, bëj). Resolve lemma → id before calling the engine.
+  const indexEntry = findIndexByLemma(config.verb);
+  const clientEntry = findClientEntry(config.verb);
+  const verbId = clientEntry?.id ?? config.verb;
+
+  // Per-verb feasibility map derived from engine.table(verbId). Used to
+  // grey out controls whose selection would yield UnsupportedCellError.
+  // See grey-unsupported-controls/design.md D1.
+  const feasibility = useMemo(() => {
+    type FiniteMood = Exclude<Mood, 'non-finite'>;
+    const moods = new Set<Mood>();
+    const byMood = new Map<
+      FiniteMood,
+      { tenses: Set<Tense>; cells: Set<string> }
+    >();
+    const nonFinite = new Set<NonFiniteForm>();
+    try {
+      const t = engineTable(verbId);
+      for (const mood of [
+        'indicative',
+        'subjunctive',
+        'conditional',
+        'admirative',
+        'optative',
+        'imperative',
+      ] as const) {
+        const moodTable = t[mood] as Record<string, Record<string, unknown>>;
+        if (!moodTable) continue;
+        const tenses = new Set<Tense>();
+        const cells = new Set<string>();
+        for (const [tense, tenseCells] of Object.entries(moodTable)) {
+          if (!tenseCells || Object.keys(tenseCells).length === 0) continue;
+          tenses.add(tense as Tense);
+          for (const cellKey of Object.keys(tenseCells)) {
+            cells.add(`${tense}.${cellKey}`);
+          }
+        }
+        if (tenses.size > 0) {
+          moods.add(mood);
+          byMood.set(mood, { tenses, cells });
+        }
+      }
+      for (const form of [
+        'participle',
+        'infinitive',
+        'gerund',
+        'privative',
+        'temporal',
+      ] as const) {
+        if (t.nonFinite[form]) nonFinite.add(form);
+      }
+      if (nonFinite.size > 0) moods.add('non-finite');
+    } catch {
+      // Unknown verb (mid-edit) — leave feasibility empty.
+    }
+    return { moods, byMood, nonFinite };
+  }, [verbId]);
+
+  function cellExists(
+    mood: Exclude<Mood, 'non-finite'>,
+    tense: Tense,
+    voice: 'active' | 'middle-passive',
+    person: 1 | 2 | 3,
+    number: 'singular' | 'plural',
+  ): boolean {
+    const m = feasibility.byMood.get(mood);
+    if (!m) return false;
+    const label = `${person}${number === 'singular' ? 'sg' : 'pl'}`;
+    return m.cells.has(`${tense}.${label}.${voice}`);
+  }
+
+  function voiceHasAny(
+    mood: Exclude<Mood, 'non-finite'>,
+    tense: Tense,
+    voice: 'active' | 'middle-passive',
+  ): boolean {
+    const m = feasibility.byMood.get(mood);
+    if (!m) return false;
+    for (const cell of m.cells) {
+      if (cell.startsWith(`${tense}.`) && cell.endsWith(`.${voice}`)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   let result: ReturnType<typeof conjugate> | null = null;
   let traceSteps: TraceStep[] = [];
   let unsupported = false;
   let errorMsg: string | null = null;
   try {
-    result = conjugate(config.verb, opts);
+    result = conjugate(verbId, opts);
     try {
-      traceSteps = trace(config.verb, opts);
+      traceSteps = trace(verbId, opts);
     } catch {
       traceSteps = [];
     }
@@ -191,8 +281,10 @@ export function Playground() {
       errorMsg = (err as Error).message;
     }
   }
-
-  const indexEntry = findIndexByLemma(config.verb);
+  const gloss =
+    clientEntry && result && !unsupported
+      ? englishGloss(clientEntry, opts)
+      : null;
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-6 lg:py-10 lg:grid lg:grid-cols-[3fr_2fr] lg:gap-12 lg:items-start">
@@ -213,6 +305,7 @@ export function Playground() {
           unsupported={unsupported}
           errorMsg={errorMsg}
           verb={config.verb}
+          gloss={gloss}
         />
       </aside>
 
@@ -238,7 +331,11 @@ export function Playground() {
         <RadioGroup
           label="Mood"
           name="mood"
-          options={MOODS.map((m) => ({ value: m, label: m }))}
+          options={MOODS.map((m) => ({
+            value: m,
+            label: m,
+            disabled: !feasibility.moods.has(m),
+          }))}
           value={config.mood}
           onChange={(v) => update({ mood: v as Mood })}
         />
@@ -247,7 +344,13 @@ export function Playground() {
           <RadioGroup
             label="Tense"
             name="tense"
-            options={tenseOptions.map((t) => ({ value: t, label: t.replace(/-/g, ' ') }))}
+            options={tenseOptions.map((t) => ({
+              value: t,
+              label: t.replace(/-/g, ' '),
+              disabled:
+                config.mood !== 'non-finite' &&
+                !feasibility.byMood.get(config.mood)?.tenses.has(t),
+            }))}
             value={config.tense ?? tenseOptions[0]!}
             onChange={(v) => update({ tense: v as Tense })}
           />
@@ -257,21 +360,33 @@ export function Playground() {
           <RadioGroup
             label="Form"
             name="form"
-            options={NON_FINITE_FORMS.map((f) => ({ value: f, label: f }))}
+            options={NON_FINITE_FORMS.map((f) => ({
+              value: f,
+              label: f,
+              disabled: !feasibility.nonFinite.has(f),
+            }))}
             value={config.form ?? 'participle'}
             onChange={(v) => update({ form: v as NonFiniteForm })}
           />
         ) : null}
 
         {config.mood !== 'non-finite' ? (
-          <>
+          <div
+            data-testid="compact-group-grid"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6"
+          >
             <RadioGroup
               label="Voice"
               name="voice"
-              options={[
-                { value: 'active', label: 'active' },
-                { value: 'middle-passive', label: 'middle-passive' },
-              ]}
+              options={(['active', 'middle-passive'] as const).map((v) => ({
+                value: v,
+                label: v,
+                disabled: !voiceHasAny(
+                  config.mood as Exclude<Mood, 'non-finite'>,
+                  (config.tense ?? 'present') as Tense,
+                  v,
+                ),
+              }))}
               value={config.voice}
               onChange={(v) => update({ voice: v as 'active' | 'middle-passive' })}
             />
@@ -302,18 +417,38 @@ export function Playground() {
             <RadioGroup
               label="Person"
               name="person"
-              options={PERSONS.map((p) => ({ value: String(p), label: String(p) }))}
+              options={PERSONS.map((p) => ({
+                value: String(p),
+                label: String(p),
+                disabled: !cellExists(
+                  config.mood as Exclude<Mood, 'non-finite'>,
+                  (config.tense ?? 'present') as Tense,
+                  config.voice,
+                  p,
+                  config.number,
+                ),
+              }))}
               value={String(config.person)}
               onChange={(v) => update({ person: Number(v) as 1 | 2 | 3 })}
             />
             <RadioGroup
               label="Number"
               name="number"
-              options={NUMBERS.map((n) => ({ value: n, label: n === 'singular' ? 'sg' : 'pl' }))}
+              options={NUMBERS.map((n) => ({
+                value: n,
+                label: n === 'singular' ? 'sg' : 'pl',
+                disabled: !cellExists(
+                  config.mood as Exclude<Mood, 'non-finite'>,
+                  (config.tense ?? 'present') as Tense,
+                  config.voice,
+                  config.person,
+                  n,
+                ),
+              }))}
               value={config.number}
               onChange={(v) => update({ number: v as 'singular' | 'plural' })}
             />
-          </>
+          </div>
         ) : null}
       </div>
     </main>
@@ -323,32 +458,53 @@ export function Playground() {
 interface RadioGroupProps {
   label: string;
   name: string;
-  options: Array<{ value: string; label: string }>;
+  options: Array<{ value: string; label: string; disabled?: boolean }>;
   value: string;
   onChange: (value: string) => void;
 }
 
 function RadioGroup({ label, name, options, value, onChange }: RadioGroupProps) {
+  // Density rule per design D1 of improve-playground-option-grid:
+  //   ≤3 options → flex single-row natural-width pills
+  //   ≥4 options → CSS Grid 2 cols / 3 cols at lg, equal-width cells
+  const isGrid = options.length >= 4;
+  const containerClass = isGrid
+    ? 'mt-2 grid grid-cols-2 lg:grid-cols-3 gap-2'
+    : 'mt-2 flex flex-wrap gap-2';
   return (
     <fieldset className="mt-6">
       <legend className="text-sm text-stone-500">{label}</legend>
-      <div className="mt-2 flex flex-wrap gap-2">
+      <div className={containerClass} data-testid={`option-group-${name}`}>
         {options.map((opt) => {
           const checked = opt.value === value;
+          const disabled = opt.disabled === true;
+          let stateClasses: string;
+          if (disabled) {
+            stateClasses =
+              'cursor-not-allowed border-stone-100 bg-stone-50 text-stone-300';
+          } else if (checked) {
+            stateClasses =
+              'cursor-pointer border-stone-900 bg-stone-900 text-stone-50 focus-within:ring-2 focus-within:ring-offset-1 focus-within:ring-stone-900';
+          } else {
+            stateClasses =
+              'cursor-pointer border-stone-200 bg-white text-stone-700 hover:bg-stone-50 focus-within:ring-2 focus-within:ring-offset-1 focus-within:ring-stone-900';
+          }
           return (
             <label
               key={opt.value}
-              className={`cursor-pointer rounded-md border px-3 py-1.5 text-sm transition-colors ${
-                checked
-                  ? 'border-stone-900 bg-stone-900 text-stone-50'
-                  : 'border-stone-200 bg-white text-stone-700 hover:bg-stone-50'
-              }`}
+              title={
+                disabled ? 'not a standard form for this verb' : undefined
+              }
+              className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
+                isGrid ? 'text-center' : ''
+              } ${stateClasses}`}
             >
               <input
                 type="radio"
                 name={name}
                 value={opt.value}
                 checked={checked}
+                disabled={disabled}
                 onChange={(e) => onChange(e.target.value)}
                 className="sr-only"
               />

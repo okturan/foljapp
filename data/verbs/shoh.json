@@ -14,7 +14,24 @@
   ],
   "flags": { "isSuppletive": true, "irregularAorist": true },
   "dialect": "tosk",
+  "notes": "Suppletive active paradigm. MP cells alternate stem to 'shih' before MP endings.",
   "cellOverrides": {
+    "indicative.present.middle-passive": {
+      "1sg": "shihem",
+      "2sg": "shihesh",
+      "3sg": "shihet",
+      "1pl": "shihemi",
+      "2pl": "shiheni",
+      "3pl": "shihen"
+    },
+    "indicative.imperfect.middle-passive": {
+      "1sg": "shihesha",
+      "2sg": "shiheshe",
+      "3sg": "shihej",
+      "1pl": "shiheshim",
+      "2pl": "shiheshit",
+      "3pl": "shiheshin"
+    },
     "imperative.present.middle-passive": {
       "2sg": "shihu",
       "2pl": "shihuni"

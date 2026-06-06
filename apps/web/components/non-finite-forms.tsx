@@ -4,6 +4,7 @@ import { DecomposedForm } from '@/components/decomposed-form';
 
 interface Props {
   forms: Record<string, ConjugationResult>;
+  glosses?: Record<string, string>;
 }
 
 const LABELS: Record<string, { en: string; sq: string }> = {
@@ -16,7 +17,7 @@ const LABELS: Record<string, { en: string; sq: string }> = {
 
 const ORDER = ['participle', 'infinitive', 'gerund', 'privative', 'temporal'];
 
-export function NonFiniteForms({ forms }: Props) {
+export function NonFiniteForms({ forms, glosses }: Props) {
   return (
     <section className="mt-12">
       <h2 className="text-xl font-semibold tracking-tight text-stone-900">
@@ -27,11 +28,13 @@ export function NonFiniteForms({ forms }: Props) {
           const label = LABELS[key];
           const result = forms[key];
           if (!label || !result) return null;
+          const gloss = glosses?.[key];
           return (
             <div
               key={key}
               id={`non-finite-${key}`}
               className="grid scroll-mt-20 grid-cols-1 gap-2 py-3 sm:grid-cols-[200px_1fr]"
+              title={gloss ? `English: "${gloss}"` : undefined}
             >
               <dt className="text-sm text-stone-500">
                 {label.en}{' '}
@@ -39,6 +42,11 @@ export function NonFiniteForms({ forms }: Props) {
               </dt>
               <dd>
                 <DecomposedForm segments={result.decomposition} />
+                {gloss ? (
+                  <span className="ml-3 text-xs italic text-stone-500">
+                    &ldquo;{gloss}&rdquo;
+                  </span>
+                ) : null}
               </dd>
             </div>
           );

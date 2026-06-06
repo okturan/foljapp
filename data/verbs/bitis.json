@@ -19,10 +19,5 @@
       "reference": "scaffolded by ingest-kaikki-batch"
     }
   ],
-  "dialect": "tosk",
-  "cellOverrides": {
-    "optative.present": {
-      "2pl": "bitisshit"
-    }
-  }
+  "dialect": "tosk"
 }

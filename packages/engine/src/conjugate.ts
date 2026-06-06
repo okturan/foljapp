@@ -97,11 +97,12 @@ const SIMPLE_TENSE_OVERRIDE_KEY: Record<SimpleTenseKey, string | null> = {
   admirativePresentActive: 'admirative.present',
   admirativeImperfectActive: 'admirative.imperfect',
   optativePresentActive: 'optative.present',
-  // Middle-passive cells share a key with active — overrides on the
-  // active form would falsely apply. Skip overrides for MP cells; users
-  // who need MP overrides can add a voice-axis later.
-  middlePassivePresent: null,
-  middlePassiveImperfect: null,
+  // MP simple-tense cells use a voice-suffixed key so an `indicative.present`
+  // override (active) doesn't bleed into MP. Cascades naturally through
+  // every dependent path: subjunctive present/imperfect MP and conditional
+  // present MP all reuse these inner cells.
+  middlePassivePresent: 'indicative.present.middle-passive',
+  middlePassiveImperfect: 'indicative.imperfect.middle-passive',
 };
 
 function buildSimpleCell(
@@ -274,7 +275,31 @@ function buildIndicative(
       if (voice === 'active') {
         return buildSimpleCell(entry, 'aoristActive', person, number);
       }
-      // Middle-passive aorist: prepend "u" particle to active aorist form
+      // Middle-passive aorist 3sg drops the active ending and surfaces the
+      // bare aorist stem (Newmark/Hubbard/Prifti 1982 §10.4.2; Husić §1A).
+      // Other persons share active endings under a `u` voice-marker.
+      if (person === 3 && number === 'singular') {
+        const override =
+          entry.cellOverrides?.['indicative.aorist.middle-passive']?.['3sg'];
+        if (override !== undefined) {
+          return {
+            surface: override,
+            segments: [buildSegment({ surface: override, role: 'stem', person, number })],
+          };
+        }
+        const stem = entry.principalParts.aorist;
+        return {
+          surface: `u ${stem}`,
+          segments: [
+            buildSegment({
+              surface: 'u',
+              role: 'voice-marker',
+              particleName: 'u',
+            }),
+            buildSegment({ surface: stem, role: 'stem', person, number }),
+          ],
+        };
+      }
       const activeAorist = buildSimpleCell(
         entry,
         'aoristActive',
@@ -762,6 +787,16 @@ export function conjugate(
   const voice = options.voice ?? 'active';
   const person = (options.person ?? 2) as Person;
   const number = options.number ?? 'singular';
+
+  // Verbs flagged noMiddlePassive (copula `jam`, intransitive `iki`/`vij`)
+  // have no MP voice in standard Albanian. Refuse before paradigm dispatch
+  // so the engine never fabricates forms like `jamem`/`ikem`/`vihem`.
+  if (voice === 'middle-passive' && entry.flags?.noMiddlePassive) {
+    throw new UnsupportedCellError(
+      `${cellLabel(person, number)}/${options.mood}/middle-passive`,
+      `${entry.id} has no middle-passive voice (flag noMiddlePassive)`,
+    );
+  }
 
   // Per-verb cell-level escape hatch. Consulted before paradigm dispatch
   // for active-voice finite cells. Multi-word forms (compound tenses,

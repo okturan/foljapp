@@ -19,5 +19,12 @@
       "reference": "scaffolded by ingest-kaikki-batch"
     }
   ],
-  "dialect": "tosk"
+  "dialect": "tosk",
+  "englishForms": {
+    "base": "be born",
+    "past": "was born",
+    "participle": "been born",
+    "gerund": "being born"
+  },
+  "notes": "Albanian intransitive 'be born'. englishForms override gives the be-compound that english-gloss.ts virtualizes for correct simple-tense agreement (we were born, am I born?, etc.)."
 }

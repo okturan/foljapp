@@ -134,6 +134,8 @@ export interface VerbEntryFlags {
   isSuppletive?: boolean;
   hasMutation?: boolean;
   irregularAorist?: boolean;
+  /** Verb has no middle-passive voice (copula `jam`, intransitive `iki`/`vij`). */
+  noMiddlePassive?: boolean;
 }
 
 /**
@@ -142,6 +144,22 @@ export interface VerbEntryFlags {
  * suppletion-table escape hatch but at single-cell granularity.
  */
 export type CellOverrides = Record<string, Partial<Record<CellLabel, string>>>;
+
+/**
+ * Optional per-verb English principal parts, used by the english-gloss
+ * capability when auto-derivation from `translationEn` would produce
+ * the wrong form (suppletives like jam→be/was/been, multi-sense lemmas
+ * like dua "to want / to love" where the first sense should differ).
+ *
+ * Partial overrides allowed: only specified fields override; others
+ * fall through to the irregulars registry / auto-rules.
+ */
+export interface EnglishForms {
+  base: string;
+  past?: string;
+  participle?: string;
+  gerund?: string;
+}
 
 export interface VerbEntry {
   id: string;
@@ -159,6 +177,7 @@ export interface VerbEntry {
   dialect?: 'tosk' | 'geg';
   notes?: string;
   cellOverrides?: CellOverrides;
+  englishForms?: EnglishForms;
 }
 
 export interface MoodTable {

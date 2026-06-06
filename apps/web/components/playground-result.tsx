@@ -16,6 +16,8 @@ interface Props {
   errorMsg: string | null;
   /** Verb lemma — used by the "See full table" link. */
   verb: string;
+  /** English compositional gloss for the current cell, or null when unavailable. */
+  gloss: string | null;
 }
 
 /**
@@ -31,6 +33,7 @@ export function PlaygroundResult({
   unsupported,
   errorMsg,
   verb,
+  gloss,
 }: Props) {
   const [copied, setCopied] = useState(false);
 
@@ -56,6 +59,14 @@ export function PlaygroundResult({
           <p className="mt-1 font-mono text-sm text-stone-500">
             {toIpaBracketed(result.form)}
           </p>
+          {gloss ? (
+            <p
+              data-testid="english-gloss"
+              className="mt-1 text-sm italic text-stone-500"
+            >
+              &ldquo;{gloss}&rdquo;
+            </p>
+          ) : null}
           <DerivationPanel steps={traceSteps} />
         </>
       ) : unsupported ? (
