@@ -38,8 +38,8 @@ export default function ReferencesPage() {
       <h1 className="text-3xl font-bold tracking-tight">References</h1>
       <p className="mt-2 text-stone-600">
         Authoritative sources foljapp draws on. Every paradigm rule, every
-        suppletive form, every cellOverride traces back to one of these. Each
-        entry includes a BibTeX block you can copy directly.
+        suppletive form, and every attested exception traces back to one of
+        these. Each entry includes a BibTeX block you can copy directly.
       </p>
 
       <ul className="mt-10 space-y-8 list-none p-0">
