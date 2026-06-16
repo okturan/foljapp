@@ -25,7 +25,7 @@ interface ExampleProps {
   voice?: 'active' | 'middle-passive';
 }
 
-export function Example({
+function buildExampleResult({
   verbId,
   mood,
   tense,
@@ -42,11 +42,24 @@ export function Example({
   if (tense) opts.tense = tense;
   if (person) opts.person = person;
   if (number) opts.number = number;
-  const result = conjugate(verbId, opts);
+  return conjugate(verbId, opts);
+}
+
+export function Example(props: ExampleProps) {
+  const result = buildExampleResult(props);
   return (
-    <span className="inline-block rounded bg-stone-50 px-2 py-0.5">
+    <span className="article-example-token">
       <DecomposedForm segments={result.decomposition} />
     </span>
+  );
+}
+
+export function ExampleBlock(props: ExampleProps) {
+  const result = buildExampleResult(props);
+  return (
+    <div className="article-example-block">
+      <DecomposedForm segments={result.decomposition} />
+    </div>
   );
 }
 
@@ -90,6 +103,7 @@ export function SourceNote({ children }: { children: ReactNode }) {
 
 export const articleMdxComponents = {
   Example,
+  ExampleBlock,
   VerbLink,
   MoodBadge,
   SourceNote,
