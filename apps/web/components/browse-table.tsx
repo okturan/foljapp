@@ -4,11 +4,6 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
 import type { CorpusIndexEntry } from '@/lib/corpus-index';
-import {
-  getFrequency,
-  tierRank,
-  type FrequencyTier,
-} from '@/lib/frequency';
 import { cn } from '@/lib/utils';
 import { verbHref } from '@/lib/verb-route';
 
@@ -18,7 +13,7 @@ interface Props {
 
 type ClassFilter = 'all' | 1 | 2 | 3;
 type AuxFilter = 'all' | 'kam' | 'jam';
-type SortKey = 'lemma' | 'translationEn' | 'class' | 'auxiliary' | 'frequency';
+type SortKey = 'lemma' | 'translationEn' | 'class' | 'auxiliary';
 
 export function BrowseTable({ entries }: Props) {
   const [classFilter, setClassFilter] = useState<ClassFilter>('all');
@@ -33,19 +28,8 @@ export function BrowseTable({ entries }: Props) {
       return true;
     });
     list.sort((a, b) => {
-      let av: number | string;
-      let bv: number | string;
-      if (sortKey === 'frequency') {
-        av = tierRank(
-          (getFrequency(a.id)?.tier ?? 'rare') as FrequencyTier,
-        );
-        bv = tierRank(
-          (getFrequency(b.id)?.tier ?? 'rare') as FrequencyTier,
-        );
-      } else {
-        av = a[sortKey];
-        bv = b[sortKey];
-      }
+      const av = a[sortKey];
+      const bv = b[sortKey];
       if (av < bv) return sortAsc ? -1 : 1;
       if (av > bv) return sortAsc ? 1 : -1;
       return 0;
@@ -102,7 +86,7 @@ export function BrowseTable({ entries }: Props) {
         <thead>
           <tr className="border-b border-stone-200 text-left text-xs uppercase tracking-wider text-stone-500">
             {(
-              ['lemma', 'translationEn', 'class', 'auxiliary', 'frequency'] as const
+              ['lemma', 'translationEn', 'class', 'auxiliary'] as const
             ).map((key) => (
               <th
                 key={key}
@@ -126,34 +110,28 @@ export function BrowseTable({ entries }: Props) {
           </tr>
         </thead>
         <tbody>
-          {filtered.map((e) => {
-            const f = getFrequency(e.id);
-            return (
-              <tr
-                key={e.id}
-                className="border-b border-stone-100 hover:bg-stone-50"
-              >
-                <td className="py-3 pr-4">
-                  <Link
-                    href={verbHref(e)}
-                    className="font-mono font-medium text-stone-900 underline-offset-2 hover:underline"
-                  >
-                    {e.lemma}
-                  </Link>
-                </td>
-                <td className="py-3 pr-4 text-stone-600">{e.translationEn}</td>
-                <td className="py-3 pr-4 text-stone-700">
-                  Zgjedhimi {e.class}
-                </td>
-                <td className="py-3 pr-4 font-mono text-stone-700">
-                  {e.auxiliary}
-                </td>
-                <td className="py-3 pr-4 text-stone-700">
-                  {f ? f.tier : '—'}
-                </td>
-              </tr>
-            );
-          })}
+          {filtered.map((e) => (
+            <tr
+              key={e.id}
+              className="border-b border-stone-100 hover:bg-stone-50"
+            >
+              <td className="py-3 pr-4">
+                <Link
+                  href={verbHref(e)}
+                  className="font-mono font-medium text-stone-900 underline-offset-2 hover:underline"
+                >
+                  {e.lemma}
+                </Link>
+              </td>
+              <td className="py-3 pr-4 text-stone-600">{e.translationEn}</td>
+              <td className="py-3 pr-4 text-stone-700">
+                Zgjedhimi {e.class}
+              </td>
+              <td className="py-3 pr-4 font-mono text-stone-700">
+                {e.auxiliary}
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>

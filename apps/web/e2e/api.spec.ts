@@ -27,6 +27,7 @@ test('GET /api/verbs/punoj returns the full conjugation table as JSON', async ({
   expect(body.table.indicative.present['1sg.active'].form).toBe('punoj');
   expect(body.table.admirative.present['1sg.active'].form).toBe('punuakam');
   expect(body.cite).toContain('punoj');
+  expect(body.frequency).toBeUndefined();
 });
 
 test('GET /api/verbs/mesoj resolves the diacritic lemma by id slug', async ({

@@ -40,6 +40,7 @@ test('English-translation search finds laj for "wash"', async ({ page }) => {
 test('browse page lists all 20 verbs', async ({ page }) => {
   await page.goto('/browse');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Browse');
+  await expect(page.getByRole('columnheader', { name: 'frequency' })).toHaveCount(0);
   for (const lemma of ['punoj', 'jam', 'pjek', 'laj', 'iki']) {
     await expect(page.getByRole('cell', { name: lemma, exact: true })).toBeVisible();
   }

@@ -96,7 +96,7 @@ test('unknown verb returns 404 with the requested lemma in body', async ({ page 
   await expect(page.getByText('notarealverb')).toBeVisible();
 });
 
-test('reserved actions row exposes Download / Practice / Cite / Frequency, all enabled', async ({ page }) => {
+test('reserved actions row exposes sourced actions only', async ({ page }) => {
   await page.goto('/verb/punoj');
   // Download is enabled (add-igt-export)
   const downloadBtn = page.getByRole('button', { name: /Download/ }).first();
@@ -106,8 +106,7 @@ test('reserved actions row exposes Download / Practice / Cite / Frequency, all e
   await expect(practiceLink).toBeVisible();
   // Cite is enabled (add-bibliographic-citations)
   await expect(page.getByRole('button', { name: /^Cite/ }).first()).toBeEnabled();
-  // Frequency is enabled with a tier (add-corpus-frequency-overlay)
-  await expect(page.getByText(/Frequency: (core|common|uncommon|rare)/).first()).toBeVisible();
+  await expect(page.getByText(/Frequency:/)).toHaveCount(0);
 });
 
 test('verb pages render without javascript', async ({ browser }) => {

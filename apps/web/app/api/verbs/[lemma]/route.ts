@@ -12,7 +12,6 @@ import {
   findBundledEntryBySlug,
 } from '@/lib/corpus-bundle';
 import { buildGlossTable } from '@/lib/english-gloss-table';
-import { getFrequency } from '@/lib/frequency';
 import { formatConllu, formatIgtTable } from '@/lib/igt';
 import { toIpa } from '@/lib/ipa';
 
@@ -68,7 +67,6 @@ export async function GET(
         participle: toIpa(entry.principalParts.participle),
       },
     },
-    frequency: getFrequency(entry.id) ?? null,
   };
   return NextResponse.json(body);
 }
