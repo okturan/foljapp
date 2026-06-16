@@ -9,6 +9,7 @@ import {
   type Tense,
 } from '@foljapp/engine';
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 
 import { DecomposedForm } from '@/components/decomposed-form';
 import { findEntryByLemma } from '@/lib/corpus';
@@ -83,8 +84,13 @@ export function MoodBadge({ name }: { name: string }) {
   );
 }
 
+export function SourceNote({ children }: { children: ReactNode }) {
+  return <aside className="article-source-note">{children}</aside>;
+}
+
 export const articleMdxComponents = {
   Example,
   VerbLink,
   MoodBadge,
+  SourceNote,
 };

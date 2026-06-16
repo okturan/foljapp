@@ -22,6 +22,9 @@ test('verb-classes article renders with engine examples', async ({ page }) => {
   await expect(
     page.getByRole('heading', { name: /Class 3.*vowel/ }),
   ).toBeVisible();
+  await expect(
+    page.getByText(/Original foljapp explanatory prose/),
+  ).toBeVisible();
   // The <Example> components produce role-tagged forms
   await expect(page.locator('main')).toContainText('punoj');
   await expect(page.locator('main')).toContainText('hap');
@@ -33,6 +36,9 @@ test('admirative-mood article renders with multiple examples', async ({ page }) 
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(
     /The Admirative Mood/,
   );
+  await expect(
+    page.getByText(/Original foljapp explanatory prose/),
+  ).toBeVisible();
   // Examples appear inline
   await expect(page.locator('main')).toContainText('punuakam');
   await expect(page.locator('main')).toContainText('hapkam');

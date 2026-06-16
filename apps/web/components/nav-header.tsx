@@ -19,11 +19,11 @@ export function NavHeader() {
   const pathname = usePathname() ?? '/';
   return (
     <nav className="border-b border-stone-200 bg-white">
-      <div className="mx-auto flex max-w-3xl items-center gap-6 px-6 py-3 text-sm">
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-6 py-3 text-sm">
         <Link href="/" className="font-mono font-semibold text-stone-900">
           foljapp
         </Link>
-        <ul className="flex items-center gap-4">
+        <ul className="flex flex-wrap items-center gap-x-4 gap-y-2">
           {ITEMS.map((it) => {
             const active =
               it.href === '/' ? pathname === '/' : pathname.startsWith(it.href);
