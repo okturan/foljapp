@@ -12,12 +12,6 @@ export const metadata = {
 
 # Albanian Verb Classes
 
-<SourceNote>
-Original foljapp explanatory prose, synthesized from the app's corpus and engine
-rules plus the references listed at the end. It is not imported from a remote
-article feed or copied from a single external page.
-</SourceNote>
-
 Standard Albanian organizes verbs into three conjugation classes — *zgjedhimet*. Whether a verb is Class 1, 2, or 3 determines its endings across every mood and tense, so identifying the class is the very first step in conjugating any verb you encounter.
 
 The diagnostic is mechanical: look at the 1st-person singular present form (the dictionary form) and check what it ends in.
@@ -50,12 +44,24 @@ Class 3 verbs have a 1sg present that ends in a vowel — usually `-i`, `-a`, or
 
 <VerbLink lemma="pi" /> in 1pl present uses the class-3 ending `-më` to give `pimë`. Class 3 verbs are typically monosyllabic and tend toward irregularity in the aorist (<VerbLink lemma="dua" /> → aorist stem `desh`; <VerbLink lemma="ha" /> → aorist stem `hëngr`).
 
-## How the engine uses class
+## Class is only the starting point
 
-The engine's paradigm files (`packages/engine/src/paradigms/class-{1,2,3}.ts`) implement the regular forms for each class. Per-verb deviations are encoded as `cellOverrides` on the corpus entry. The full Kaikki/Wiktionary verification (1406 / 1406 cells matched) lives in `packages/engine/docs/sources.md`.
+Once you know the class, you know the verb's default pattern. That is enough for many present-tense forms, but it is not the whole verb. Albanian verbs often carry a second piece of information: a stem change, an aorist stem, or a participle that must be learned with the lemma.
+
+So the useful learner habit is two-step:
+
+- First, identify the class from the 1sg present.
+- Then, check the principal parts: present stem, aorist stem, and participle.
+
+For regular verbs, the class does most of the work. For high-frequency verbs like <VerbLink lemma="jam" />, <VerbLink lemma="kam" />, <VerbLink lemma="bëj" />, and <VerbLink lemma="vij" />, the class label is still useful, but the individual verb has to be learned on its own.
 
 ## References
 
 - Husić, *Albanian Verb Dictionary and Manual*, §§1A, 2A, 3A.
 - Kadriu, *Computational Modeling of Morphology in Albanian* (ICT4LL 2015).
 - [Wikipedia: Albanian morphology](https://en.wikipedia.org/wiki/Albanian_morphology).
+
+<SourceNote>
+Editorial note: this is original foljapp prose based on the references above
+and examples from the app's verb corpus.
+</SourceNote>
