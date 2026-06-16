@@ -22,6 +22,21 @@ test('jam verb page renders suppletive forms', async ({ page }) => {
   await expect(page.locator('#indicative-aorist-1sg')).toContainText('qeshë');
 });
 
+test('diacritic lemma page resolves from stable corpus id slug', async ({ page }) => {
+  await page.goto('/verb/mesoj');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('mësoj');
+  await expect(page.getByText('to learn / to teach').first()).toBeVisible();
+  await expect(page.locator('#indicative-present-1sg')).toContainText('mësoj');
+});
+
+test('diacritic lemma alias still resolves when pasted from an old link', async ({
+  page,
+}) => {
+  await page.goto('/verb/m%C3%ABsoj');
+  await expect(page).toHaveURL(/\/verb\/m%C3%ABsoj$/);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('mësoj');
+});
+
 test('pjek verb page renders mutated aorist', async ({ page }) => {
   await page.goto('/verb/pjek');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('pjek');

@@ -11,7 +11,7 @@ import {
 } from '@/lib/english-gloss-table';
 
 interface Props {
-  lemma: string;
+  slug: string;
 }
 
 const INDICATIVE_TENSES = [
@@ -32,8 +32,8 @@ const CONDITIONAL_TENSES = ['present', 'perfect'];
 const ADMIRATIVE_TENSES = ['present', 'imperfect', 'perfect', 'pluperfect'];
 const OPTATIVE_TENSES = ['present', 'perfect'];
 
-export function VerbTablesInner({ lemma }: Props) {
-  const entry = findClientEntry(lemma);
+export function VerbTablesInner({ slug }: Props) {
+  const entry = findClientEntry(slug);
 
   if (!entry) {
     return null;

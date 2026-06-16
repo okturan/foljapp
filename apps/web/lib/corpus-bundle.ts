@@ -11,6 +11,8 @@ import { configure, type VerbEntry } from '@foljapp/engine';
 import corpusData from '../../../data/verbs/_corpus.client.json';
 import versionData from '../../../data/verbs/version.json';
 
+import { decodeVerbSlug } from './verb-route';
+
 interface CorpusVersion {
   version: string;
   generatedAt: string;
@@ -33,6 +35,11 @@ ensureBundledCorpusConfigured();
 
 export function findBundledEntryByLemma(lemma: string): VerbEntry | undefined {
   return bundledCorpus.find((e) => e.lemma === lemma);
+}
+
+export function findBundledEntryBySlug(slug: string): VerbEntry | undefined {
+  const decoded = decodeVerbSlug(slug);
+  return bundledCorpus.find((e) => e.id === decoded || e.lemma === decoded);
 }
 
 export function allBundledLemmas(): string[] {

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { corpusIndex, type CorpusIndexEntry } from '@/lib/corpus-index';
+import { verbHref } from '@/lib/verb-route';
 
 const MAX_SUGGESTIONS = 8;
 
@@ -71,7 +72,7 @@ export function SearchInput() {
           {suggestions.map((s) => (
             <li key={s.id} role="option" aria-selected={false}>
               <Link
-                href={`/verb/${encodeURIComponent(s.lemma)}`}
+                href={verbHref(s)}
                 className="flex items-baseline gap-3 px-4 py-2 text-sm hover:bg-stone-50"
               >
                 <span className="font-mono font-medium text-stone-900">

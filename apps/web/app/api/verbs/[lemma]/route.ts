@@ -9,7 +9,7 @@ import {
 } from '@/lib/api-shapes';
 import {
   bundledCorpusVersion,
-  findBundledEntryByLemma,
+  findBundledEntryBySlug,
 } from '@/lib/corpus-bundle';
 import { buildGlossTable } from '@/lib/english-gloss-table';
 import { getFrequency } from '@/lib/frequency';
@@ -27,7 +27,7 @@ export async function GET(
 ) {
   const { lemma: rawLemma } = await params;
   const lemma = decodeURIComponent(rawLemma);
-  const entry = findBundledEntryByLemma(lemma);
+  const entry = findBundledEntryBySlug(rawLemma);
 
   if (!entry) {
     const body: ApiErrorResponse = { error: 'unknown verb', lemma };
@@ -56,7 +56,7 @@ export async function GET(
   const body: ApiVerbDetailResponse = {
     engineVersion: VERSION,
     corpusVersion: bundledCorpusVersion.version,
-    cite: citationFor(`/api/verbs/${entry.lemma}`),
+    cite: citationFor(`/api/verbs/${entry.id}`),
     entry,
     table: verbTable,
     englishGlosses: glossTable,

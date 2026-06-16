@@ -10,6 +10,8 @@ import { fileURLToPath } from 'node:url';
 
 import { configure, type VerbEntry } from '@foljapp/engine';
 
+import { decodeVerbSlug } from './verb-route';
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CORPUS_DIR = join(__dirname, '..', '..', '..', 'data', 'verbs');
 
@@ -52,6 +54,21 @@ export function findEntryByLemma(lemma: string): VerbEntry | undefined {
   return corpus.find((e) => e.lemma === lemma);
 }
 
+export function findEntryBySlug(slug: string): VerbEntry | undefined {
+  const decoded = decodeVerbSlug(slug);
+  return corpus.find((e) => e.id === decoded || e.lemma === decoded);
+}
+
 export function allLemmas(): string[] {
   return corpus.map((e) => e.lemma).sort();
+}
+
+export function allVerbRouteSlugs(): string[] {
+  return Array.from(
+    new Set(
+      corpus.flatMap((e) =>
+        e.id === e.lemma ? [e.id] : [e.id, e.lemma, encodeURIComponent(e.lemma)],
+      ),
+    ),
+  ).sort();
 }

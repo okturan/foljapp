@@ -9,6 +9,7 @@ import {
   bibtexForVerb,
   plainForVerb,
 } from '@/lib/bibliography';
+import { verbHref } from '@/lib/verb-route';
 
 interface Props {
   entry: VerbEntry;
@@ -18,10 +19,11 @@ export function CiteButton({ entry }: Props) {
   const [open, setOpen] = useState(false);
   // Build URL at click-time so it matches the deploy domain. Fall back to
   // a relative URL during SSR / first paint.
+  const href = verbHref(entry);
   const url =
     typeof window !== 'undefined'
-      ? `${window.location.origin}/verb/${encodeURIComponent(entry.lemma)}`
-      : `/verb/${encodeURIComponent(entry.lemma)}`;
+      ? `${window.location.origin}${href}`
+      : href;
 
   return (
     <div className="relative">

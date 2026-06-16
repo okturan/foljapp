@@ -10,7 +10,7 @@
 
 import {
   ensureBundledCorpusConfigured,
-  findBundledEntryByLemma,
+  findBundledEntryBySlug,
 } from './corpus-bundle';
 
 export function ensureClientConfigured(): void {
@@ -21,5 +21,5 @@ export function ensureClientConfigured(): void {
 ensureClientConfigured();
 
 export function findClientEntry(lemma: string) {
-  return findBundledEntryByLemma(lemma);
+  return findBundledEntryBySlug(lemma);
 }

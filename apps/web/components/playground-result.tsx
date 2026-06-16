@@ -14,8 +14,8 @@ interface Props {
   traceSteps: TraceStep[];
   unsupported: boolean;
   errorMsg: string | null;
-  /** Verb lemma — used by the "See full table" link. */
-  verb: string;
+  /** Canonical URL slug for the verb. */
+  verbSlug: string;
   /** English compositional gloss for the current cell, or null when unavailable. */
   gloss: string | null;
 }
@@ -32,7 +32,7 @@ export function PlaygroundResult({
   traceSteps,
   unsupported,
   errorMsg,
-  verb,
+  verbSlug,
   gloss,
 }: Props) {
   const [copied, setCopied] = useState(false);
@@ -88,10 +88,10 @@ export function PlaygroundResult({
           {copied ? 'Copied' : 'Copy link'}
         </button>
         <Link
-          href={`/verb/${encodeURIComponent(verb)}`}
+          href={`/verb/${encodeURIComponent(verbSlug)}`}
           className="text-stone-600 underline underline-offset-2 hover:text-stone-900"
         >
-          See full table → /verb/{verb}
+          See full table → /verb/{verbSlug}
         </Link>
       </div>
     </>

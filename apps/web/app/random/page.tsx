@@ -6,7 +6,7 @@ import { corpusIndex } from '@/lib/corpus-index';
  * Pick a verb deterministically from the build-time epoch so the page
  * is statically renderable. Each deploy picks a fresh verb.
  */
-function pickRandomLemma(): string {
+function pickRandomSlug(): string {
   const epoch = process.env.SOURCE_DATE_EPOCH
     ? Number(process.env.SOURCE_DATE_EPOCH)
     : Math.floor(Date.now() / 1000);
@@ -15,11 +15,11 @@ function pickRandomLemma(): string {
   if (!entry) {
     throw new Error('corpus index is empty');
   }
-  return entry.lemma;
+  return entry.id;
 }
 
-const TARGET_LEMMA = pickRandomLemma();
+const TARGET_SLUG = pickRandomSlug();
 
 export default function RandomPage(): never {
-  redirect(`/verb/${encodeURIComponent(TARGET_LEMMA)}`);
+  redirect(`/verb/${encodeURIComponent(TARGET_SLUG)}`);
 }

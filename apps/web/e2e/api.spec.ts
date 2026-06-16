@@ -29,6 +29,27 @@ test('GET /api/verbs/punoj returns the full conjugation table as JSON', async ({
   expect(body.cite).toContain('punoj');
 });
 
+test('GET /api/verbs/mesoj resolves the diacritic lemma by id slug', async ({
+  request,
+}) => {
+  const res = await request.get('/api/verbs/mesoj');
+  expect(res.status()).toBe(200);
+  const body = await res.json();
+  expect(body.entry.id).toBe('mesoj');
+  expect(body.entry.lemma).toBe('mësoj');
+  expect(body.cite).toContain('/api/verbs/mesoj');
+});
+
+test('GET /api/verbs/mësoj remains accepted as a lemma alias', async ({
+  request,
+}) => {
+  const res = await request.get('/api/verbs/m%C3%ABsoj');
+  expect(res.status()).toBe(200);
+  const body = await res.json();
+  expect(body.entry.id).toBe('mesoj');
+  expect(body.entry.lemma).toBe('mësoj');
+});
+
 test('GET /api/verbs/punoj?format=igt returns plain-text IGT', async ({ request }) => {
   const res = await request.get('/api/verbs/punoj?format=igt');
   expect(res.status()).toBe(200);

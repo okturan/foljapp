@@ -7,6 +7,8 @@
 
 import indexData from '../../../data/verbs/index.json';
 
+import { decodeVerbSlug } from './verb-route';
+
 export interface CorpusIndexEntry {
   id: string;
   lemma: string;
@@ -19,4 +21,9 @@ export const corpusIndex = indexData as CorpusIndexEntry[];
 
 export function findIndexByLemma(lemma: string): CorpusIndexEntry | undefined {
   return corpusIndex.find((e) => e.lemma === lemma);
+}
+
+export function findIndexBySlug(slug: string): CorpusIndexEntry | undefined {
+  const decoded = decodeVerbSlug(slug);
+  return corpusIndex.find((e) => e.id === decoded || e.lemma === decoded);
 }

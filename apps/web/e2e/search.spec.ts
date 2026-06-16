@@ -13,6 +13,20 @@ test('home page renders search input and finds punoj', async ({ page }) => {
   await expect(page).toHaveURL(/\/verb\/punoj$/);
 });
 
+test('home search links diacritic lemmas through stable id slugs', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page
+    .getByLabel('Search verbs by lemma or English translation')
+    .fill('mës');
+  const option = page.getByRole('option').filter({ hasText: 'mësoj' });
+  await expect(option).toBeVisible();
+  await option.click();
+  await expect(page).toHaveURL(/\/verb\/mesoj$/);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('mësoj');
+});
+
 test('English-translation search finds laj for "wash"', async ({ page }) => {
   await page.goto('/');
   await page
@@ -29,6 +43,17 @@ test('browse page lists all 20 verbs', async ({ page }) => {
   for (const lemma of ['punoj', 'jam', 'pjek', 'laj', 'iki']) {
     await expect(page.getByRole('cell', { name: lemma, exact: true })).toBeVisible();
   }
+});
+
+test('browse page links diacritic lemmas through stable id slugs', async ({
+  page,
+}) => {
+  await page.goto('/browse');
+  const link = page.getByRole('link', { name: 'mësoj' });
+  await expect(link).toHaveAttribute('href', '/verb/mesoj');
+  await link.click();
+  await expect(page).toHaveURL(/\/verb\/mesoj$/);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('mësoj');
 });
 
 test('browse class-1 filter narrows the table', async ({ page }) => {

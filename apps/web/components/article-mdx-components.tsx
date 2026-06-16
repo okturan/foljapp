@@ -13,6 +13,7 @@ import type { ReactNode } from 'react';
 
 import { DecomposedForm } from '@/components/decomposed-form';
 import { findEntryByLemma } from '@/lib/corpus';
+import { verbHref } from '@/lib/verb-route';
 
 import '@/lib/corpus'; // ensures the engine is configured at import time
 
@@ -67,7 +68,7 @@ export function VerbLink({ lemma }: { lemma: string }) {
   const entry = findEntryByLemma(lemma);
   return (
     <Link
-      href={`/verb/${encodeURIComponent(lemma)}`}
+      href={entry ? verbHref(entry) : `/verb/${encodeURIComponent(lemma)}`}
       className="font-mono text-stone-900 underline-offset-2 hover:underline"
     >
       {lemma}

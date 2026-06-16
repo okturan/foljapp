@@ -10,6 +10,7 @@ import {
   type FrequencyTier,
 } from '@/lib/frequency';
 import { cn } from '@/lib/utils';
+import { verbHref } from '@/lib/verb-route';
 
 interface Props {
   entries: CorpusIndexEntry[];
@@ -134,7 +135,7 @@ export function BrowseTable({ entries }: Props) {
               >
                 <td className="py-3 pr-4">
                   <Link
-                    href={`/verb/${encodeURIComponent(e.lemma)}`}
+                    href={verbHref(e)}
                     className="font-mono font-medium text-stone-900 underline-offset-2 hover:underline"
                   >
                     {e.lemma}

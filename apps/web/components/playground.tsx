@@ -17,7 +17,7 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { PlaygroundResult } from '@/components/playground-result';
 import { VerbPicker } from '@/components/verb-picker';
 import { findClientEntry } from '@/lib/corpus-client';
-import { findIndexByLemma } from '@/lib/corpus-index';
+import { findIndexBySlug } from '@/lib/corpus-index';
 import { englishGloss } from '@/lib/english-gloss';
 
 const MOODS: Mood[] = [
@@ -175,10 +175,9 @@ export function Playground() {
   }
   if (config.form) opts.form = config.form;
 
-  // The engine indexes entries by `id` (ASCII kebab-case), but the URL
-  // and verb-picker carry the `lemma` (which may include diacritics:
-  // kërkoj, qëndroj, bëj). Resolve lemma → id before calling the engine.
-  const indexEntry = findIndexByLemma(config.verb);
+  // The engine indexes entries by `id`, while the picker and query string may
+  // carry either the display lemma or the id slug. Resolve before calling it.
+  const indexEntry = findIndexBySlug(config.verb);
   const clientEntry = findClientEntry(config.verb);
   const verbId = clientEntry?.id ?? config.verb;
 
@@ -304,7 +303,7 @@ export function Playground() {
           traceSteps={traceSteps}
           unsupported={unsupported}
           errorMsg={errorMsg}
-          verb={config.verb}
+          verbSlug={clientEntry?.id ?? config.verb}
           gloss={gloss}
         />
       </aside>

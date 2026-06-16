@@ -15,9 +15,9 @@ const VerbTablesInner = dynamic(
 );
 
 interface Props {
-  lemma: string;
+  slug: string;
 }
 
-export function VerbTablesClient({ lemma }: Props) {
-  return <VerbTablesInner lemma={lemma} />;
+export function VerbTablesClient({ slug }: Props) {
+  return <VerbTablesInner slug={slug} />;
 }

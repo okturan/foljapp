@@ -7,14 +7,14 @@ import { CitationsFooter } from '@/components/citations-footer';
 import { ReservedActions } from '@/components/reserved-actions';
 import { VerbHeader } from '@/components/verb-header';
 import { VerbTablesClient } from '@/components/verb-tables-client';
-import { allLemmas, corpusVersion, findEntryByLemma } from '@/lib/corpus';
+import { allVerbRouteSlugs, corpusVersion, findEntryBySlug } from '@/lib/corpus';
 
 interface RouteParams {
   lemma: string;
 }
 
 export function generateStaticParams(): RouteParams[] {
-  return allLemmas().map((lemma) => ({ lemma }));
+  return allVerbRouteSlugs().map((lemma) => ({ lemma }));
 }
 
 export async function generateMetadata({
@@ -23,10 +23,10 @@ export async function generateMetadata({
   params: Promise<RouteParams>;
 }): Promise<Metadata> {
   const { lemma: rawLemma } = await params;
-  const lemma = decodeURIComponent(rawLemma);
-  const entry = findEntryByLemma(lemma);
+  const entry = findEntryBySlug(rawLemma);
 
   if (!entry) {
+    const lemma = decodeURIComponent(rawLemma);
     return {
       title: `${lemma} — not found — foljapp`,
     };
@@ -49,8 +49,7 @@ export default async function VerbPage({
   params: Promise<RouteParams>;
 }) {
   const { lemma: rawLemma } = await params;
-  const lemma = decodeURIComponent(rawLemma);
-  const entry = findEntryByLemma(lemma);
+  const entry = findEntryBySlug(rawLemma);
 
   if (!entry) {
     notFound();
@@ -75,7 +74,7 @@ export default async function VerbPage({
       <VerbHeader entry={entry} />
       <ReservedActions entry={entry} />
 
-      <VerbTablesClient lemma={entry.lemma} />
+      <VerbTablesClient slug={entry.id} />
 
       <CitationsFooter
         sources={entry.sources}
