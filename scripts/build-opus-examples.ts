@@ -1,0 +1,380 @@
+/**
+ * Build a compact OPUS example index for generated Albanian verb forms.
+ *
+ * The script uses OPUS' metadata API to locate zipped Moses files for
+ * Albanian-English corpora, scans the Albanian side for exact generated forms,
+ * and writes a small JSON lookup table consumed by the playground.
+ *
+ * Run:
+ *   npm run build:opus-examples -- --forms=punoj,punon,punojnë,punuar,punuake
+ */
+
+import { execFileSync } from 'node:child_process';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { configure, table, type VerbEntry } from '@foljapp/engine';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = resolve(__dirname, '..');
+const CACHE_DIR = join(REPO_ROOT, '.cache', 'opus');
+const OUT_PATH = join(REPO_ROOT, 'data', 'opus', 'examples.json');
+const VERB_BUNDLE_PATH = join(
+  REPO_ROOT,
+  'data',
+  'verbs',
+  '_corpus.client.json',
+);
+const VERB_VERSION_PATH = join(REPO_ROOT, 'data', 'verbs', 'version.json');
+
+const DEFAULT_CORPORA = ['Tatoeba', 'GlobalVoices', 'GNOME'];
+const DEFAULT_MAX_PER_FORM = 4;
+
+const STOP_TOKENS = new Set([
+  'dhe',
+  'jam',
+  'je',
+  'jemi',
+  'jeni',
+  'janë',
+  'kam',
+  'ke',
+  'kemi',
+  'keni',
+  'kanë',
+  'mos',
+  'nuk',
+  'për',
+  'të',
+]);
+
+interface Args {
+  corpora: string[];
+  forms: Set<string> | null;
+  frozenTime: boolean;
+  maxPerForm: number;
+  refresh: boolean;
+}
+
+interface OpusApiCorpus {
+  alignment_pairs: number;
+  corpus: string;
+  latest: string;
+  preprocessing: string;
+  size: number;
+  source: string;
+  source_tokens: number;
+  target: string;
+  target_tokens: number;
+  url: string;
+  version: string;
+}
+
+interface OpusApiResponse {
+  corpora?: OpusApiCorpus[];
+}
+
+interface CorpusMetadata {
+  corpus: string;
+  version: string;
+  preprocessing: string;
+  sentencePairs: number;
+  sourceLanguage: string;
+  targetLanguage: string;
+  opusUrl: string;
+  downloadUrl: string;
+}
+
+interface OpusExample {
+  corpus: string;
+  version: string;
+  sentenceNumber: number;
+  sq: string;
+  en: string;
+  opusUrl: string;
+}
+
+interface Output {
+  generatedAt: string;
+  source: 'OPUS';
+  sourceUrl: string;
+  apiUrl: string;
+  languagePair: { source: 'sq'; target: 'en' };
+  formFilter: string[] | null;
+  corpora: CorpusMetadata[];
+  examples: Record<string, OpusExample[]>;
+}
+
+function valueAfter(prefix: string): string | undefined {
+  const found = process.argv.find((arg) => arg.startsWith(prefix));
+  return found?.slice(prefix.length);
+}
+
+function parseArgs(): Args {
+  const corpora =
+    valueAfter('--corpora=')
+      ?.split(',')
+      .map((s) => s.trim())
+      .filter(Boolean) ?? DEFAULT_CORPORA;
+
+  const formValues = valueAfter('--forms=')
+    ?.split(',')
+    .map(normalizeToken)
+    .filter(Boolean);
+
+  const maxRaw = valueAfter('--max-per-form=');
+  const maxPerForm = maxRaw ? Number(maxRaw) : DEFAULT_MAX_PER_FORM;
+  if (!Number.isInteger(maxPerForm) || maxPerForm < 1) {
+    throw new Error('--max-per-form must be a positive integer');
+  }
+
+  return {
+    corpora,
+    forms: formValues && formValues.length > 0 ? new Set(formValues) : null,
+    frozenTime: process.argv.includes('--frozen-time'),
+    maxPerForm,
+    refresh: process.argv.includes('--refresh'),
+  };
+}
+
+function normalizeToken(token: string): string {
+  return token.normalize('NFC').toLocaleLowerCase('sq-AL').trim();
+}
+
+function sentenceTokens(text: string): string[] {
+  return (text.match(/\p{L}+/gu) ?? []).map(normalizeToken);
+}
+
+function loadGeneratedForms(): Set<string> {
+  const rawCorpus = readFileSync(VERB_BUNDLE_PATH, 'utf8');
+  const rawVersion = readFileSync(VERB_VERSION_PATH, 'utf8');
+  const corpus = JSON.parse(rawCorpus) as VerbEntry[];
+  const version = JSON.parse(rawVersion) as { version: string };
+  configure(corpus, version.version);
+
+  const forms = new Set<string>();
+  for (const entry of corpus) {
+    collectForms(table(entry.id), forms);
+  }
+  return forms;
+}
+
+function collectForms(value: unknown, forms: Set<string>): void {
+  if (Array.isArray(value)) {
+    for (const item of value) collectForms(item, forms);
+    return;
+  }
+  if (!value || typeof value !== 'object') return;
+
+  const record = value as Record<string, unknown>;
+  if (typeof record.form === 'string') {
+    for (const token of sentenceTokens(record.form)) {
+      if (token.length >= 3 && !STOP_TOKENS.has(token)) {
+        forms.add(token);
+      }
+    }
+  }
+
+  for (const child of Object.values(record)) {
+    collectForms(child, forms);
+  }
+}
+
+async function fetchCorpusMetadata(corpus: string): Promise<CorpusMetadata> {
+  const apiUrl = new URL('https://opus.nlpl.eu/opusapi');
+  apiUrl.searchParams.set('corpus', corpus);
+  apiUrl.searchParams.set('source', 'sq');
+  apiUrl.searchParams.set('target', 'en');
+  apiUrl.searchParams.set('preprocessing', 'moses');
+  apiUrl.searchParams.set('version', 'latest');
+
+  const response = await fetch(apiUrl);
+  if (!response.ok) {
+    throw new Error(`OPUS API ${response.status} for ${corpus}`);
+  }
+
+  const payload = (await response.json()) as OpusApiResponse;
+  const row = payload.corpora?.[0];
+  if (!row) {
+    throw new Error(`No OPUS moses sq/en corpus found for ${corpus}`);
+  }
+
+  return {
+    corpus: row.corpus,
+    version: row.version,
+    preprocessing: row.preprocessing,
+    sentencePairs: row.alignment_pairs,
+    sourceLanguage: row.source,
+    targetLanguage: row.target,
+    opusUrl: `https://opus.nlpl.eu/datasets/${encodeURIComponent(row.corpus)}`,
+    downloadUrl: row.url,
+  };
+}
+
+async function downloadZip(
+  meta: CorpusMetadata,
+  refresh: boolean,
+): Promise<string> {
+  mkdirSync(CACHE_DIR, { recursive: true });
+  const safeName = meta.corpus.replace(/[^a-z0-9_-]+/gi, '_');
+  const zipPath = join(CACHE_DIR, `${safeName}-${meta.version}.zip`);
+  if (existsSync(zipPath) && !refresh) return zipPath;
+
+  const response = await fetch(meta.downloadUrl);
+  if (!response.ok) {
+    throw new Error(`download failed ${response.status}: ${meta.downloadUrl}`);
+  }
+  writeFileSync(zipPath, Buffer.from(await response.arrayBuffer()));
+  return zipPath;
+}
+
+function zipEntries(zipPath: string): string[] {
+  return execFileSync('unzip', ['-Z', '-1', zipPath], {
+    encoding: 'utf8',
+    maxBuffer: 1024 * 1024,
+  })
+    .split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function readZipEntry(zipPath: string, entryName: string): string {
+  return execFileSync('unzip', ['-p', zipPath, entryName], {
+    encoding: 'utf8',
+    maxBuffer: 512 * 1024 * 1024,
+  });
+}
+
+function alignedTextFiles(zipPath: string): { sq: string; en: string } {
+  const entries = zipEntries(zipPath);
+  const sq = entries.find((entry) => entry.endsWith('.sq'));
+  const en = entries.find((entry) => entry.endsWith('.en'));
+  if (!sq || !en) {
+    throw new Error(`Could not find .sq and .en files in ${zipPath}`);
+  }
+  return { sq, en };
+}
+
+function keepSentence(sq: string, en: string): boolean {
+  return (
+    sq.length > 0 &&
+    en.length > 0 &&
+    sq.length <= 260 &&
+    en.length <= 260 &&
+    !sq.includes('<') &&
+    !en.includes('<')
+  );
+}
+
+function scanCorpus(
+  meta: CorpusMetadata,
+  zipPath: string,
+  targetForms: Set<string>,
+  examples: Map<string, OpusExample[]>,
+  maxPerForm: number,
+): number {
+  const files = alignedTextFiles(zipPath);
+  const sqLines = readZipEntry(zipPath, files.sq).split('\n');
+  const enLines = readZipEntry(zipPath, files.en).split('\n');
+  const total = Math.min(sqLines.length, enLines.length);
+  let added = 0;
+
+  for (let index = 0; index < total; index++) {
+    const sq = sqLines[index]?.trim() ?? '';
+    const en = enLines[index]?.trim() ?? '';
+    if (!keepSentence(sq, en)) continue;
+
+    const matchedForms = new Set(
+      sentenceTokens(sq).filter((token) => targetForms.has(token)),
+    );
+
+    for (const form of matchedForms) {
+      const bucket = examples.get(form) ?? [];
+      if (bucket.length >= maxPerForm) continue;
+      if (bucket.some((example) => example.corpus === meta.corpus)) continue;
+      bucket.push({
+        corpus: meta.corpus,
+        version: meta.version,
+        sentenceNumber: index + 1,
+        sq,
+        en,
+        opusUrl: meta.opusUrl,
+      });
+      examples.set(form, bucket);
+      added++;
+    }
+  }
+
+  return added;
+}
+
+function emitOutput(
+  args: Args,
+  corpora: CorpusMetadata[],
+  examples: Map<string, OpusExample[]>,
+): void {
+  mkdirSync(dirname(OUT_PATH), { recursive: true });
+  const sortedExamples = Object.fromEntries(
+    [...examples.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([form, rows]) => [
+        form,
+        rows.sort((a, b) =>
+          a.corpus === b.corpus
+            ? a.sentenceNumber - b.sentenceNumber
+            : a.corpus.localeCompare(b.corpus),
+        ),
+      ]),
+  );
+
+  const output: Output = {
+    generatedAt: args.frozenTime
+      ? '2026-06-16T00:00:00.000Z'
+      : new Date().toISOString(),
+    source: 'OPUS',
+    sourceUrl: 'https://opus.nlpl.eu/',
+    apiUrl: 'https://opus.nlpl.eu/opusapi',
+    languagePair: { source: 'sq', target: 'en' },
+    formFilter: args.forms
+      ? [...args.forms].sort((a, b) => a.localeCompare(b))
+      : null,
+    corpora,
+    examples: sortedExamples,
+  };
+
+  writeFileSync(OUT_PATH, JSON.stringify(output, null, 2) + '\n', 'utf8');
+}
+
+async function main(): Promise<void> {
+  const args = parseArgs();
+  const generatedForms = args.forms ?? loadGeneratedForms();
+  const examples = new Map<string, OpusExample[]>();
+  const corpora: CorpusMetadata[] = [];
+
+  console.log(
+    `Indexing ${generatedForms.size} form(s) from ${args.corpora.length} OPUS corpora`,
+  );
+
+  for (const corpus of args.corpora) {
+    const meta = await fetchCorpusMetadata(corpus);
+    corpora.push(meta);
+    const zipPath = await downloadZip(meta, args.refresh);
+    const added = scanCorpus(
+      meta,
+      zipPath,
+      generatedForms,
+      examples,
+      args.maxPerForm,
+    );
+    console.log(`  ${meta.corpus} ${meta.version}: ${added} example(s)`);
+  }
+
+  emitOutput(args, corpora, examples);
+  console.log(`Wrote ${OUT_PATH}`);
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

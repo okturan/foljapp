@@ -1,0 +1,180 @@
+{
+  "generatedAt": "2026-06-16T00:00:00.000Z",
+  "source": "OPUS",
+  "sourceUrl": "https://opus.nlpl.eu/",
+  "apiUrl": "https://opus.nlpl.eu/opusapi",
+  "languagePair": {
+    "source": "sq",
+    "target": "en"
+  },
+  "formFilter": [
+    "mësoj",
+    "mëson",
+    "punoj",
+    "punojnë",
+    "punon",
+    "punonte",
+    "punuake",
+    "punuar"
+  ],
+  "corpora": [
+    {
+      "corpus": "Tatoeba",
+      "version": "v2023-04-12",
+      "preprocessing": "moses",
+      "sentencePairs": 1094,
+      "sourceLanguage": "en",
+      "targetLanguage": "sq",
+      "opusUrl": "https://opus.nlpl.eu/datasets/Tatoeba",
+      "downloadUrl": "https://object.pouta.csc.fi/OPUS-Tatoeba/v2023-04-12/moses/en-sq.txt.zip"
+    },
+    {
+      "corpus": "GlobalVoices",
+      "version": "v2018q4",
+      "preprocessing": "moses",
+      "sentencePairs": 6078,
+      "sourceLanguage": "en",
+      "targetLanguage": "sq",
+      "opusUrl": "https://opus.nlpl.eu/datasets/GlobalVoices",
+      "downloadUrl": "https://object.pouta.csc.fi/OPUS-GlobalVoices/v2018q4/moses/en-sq.txt.zip"
+    },
+    {
+      "corpus": "GNOME",
+      "version": "v1",
+      "preprocessing": "moses",
+      "sentencePairs": 151012,
+      "sourceLanguage": "en",
+      "targetLanguage": "sq",
+      "opusUrl": "https://opus.nlpl.eu/datasets/GNOME",
+      "downloadUrl": "https://object.pouta.csc.fi/OPUS-GNOME/v1/moses/en-sq.txt.zip"
+    }
+  ],
+  "examples": {
+    "mësoj": [
+      {
+        "corpus": "GlobalVoices",
+        "version": "v2018q4",
+        "sentenceNumber": 1825,
+        "sq": "Më duket jashtëzakonisht vështirë të kuptoj dhe mësoj anglisht dhe prandaj nuk e përdor shumë për të shkruar.",
+        "en": "I find it extremely difficult to understand and learn English and this is why I don't use it a lot in writing.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/GlobalVoices"
+      },
+      {
+        "corpus": "Tatoeba",
+        "version": "v2023-04-12",
+        "sentenceNumber": 418,
+        "sq": "Mua më pëlqen të mësoj gjuhë.",
+        "en": "I like learning languages.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/Tatoeba"
+      }
+    ],
+    "mëson": [
+      {
+        "corpus": "Tatoeba",
+        "version": "v2023-04-12",
+        "sentenceNumber": 277,
+        "sq": "Kush ju mëson?",
+        "en": "Who teaches you?",
+        "opusUrl": "https://opus.nlpl.eu/datasets/Tatoeba"
+      }
+    ],
+    "punoj": [
+      {
+        "corpus": "GlobalVoices",
+        "version": "v2018q4",
+        "sentenceNumber": 1594,
+        "sq": "Për mua, kjo është gazeta për të cilën nuk më lejohet të punoj.",
+        "en": "For me, this is the magazine I'm not allowed to work for.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/GlobalVoices"
+      },
+      {
+        "corpus": "Tatoeba",
+        "version": "v2023-04-12",
+        "sentenceNumber": 266,
+        "sq": "Punoj për McDonald's.",
+        "en": "I work for McDonald's.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/Tatoeba"
+      }
+    ],
+    "punojnë": [
+      {
+        "corpus": "GlobalVoices",
+        "version": "v2018q4",
+        "sentenceNumber": 1170,
+        "sq": "Për ne është me rëndësi që të punojnë stacionet matëse dhe qytetarët të mund t'i marrin informatat për kualitetin e ajrit nga ekranet e pajisjeve,\" tha Kërstevski.",
+        "en": "For us the important thing is that the measuring stations work and that the citizens can get air quality info from displays on the devices,\" Krstevski said.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/GlobalVoices"
+      },
+      {
+        "corpus": "Tatoeba",
+        "version": "v2023-04-12",
+        "sentenceNumber": 105,
+        "sq": "Ata të dy po punojnë tek dyqani i kafshëve shtëpiake.",
+        "en": "They are both working at the pet store.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/Tatoeba"
+      }
+    ],
+    "punon": [
+      {
+        "corpus": "GlobalVoices",
+        "version": "v2018q4",
+        "sentenceNumber": 1160,
+        "sq": "Ueb-faqja \"Shkupi merr frymë\", në të cilën, deri para Kërshëndellave, drejtpërsëdrejti publikoheshin të dhënat, akoma nuk punon, dhe sipas të gjitha gjasave as që do të punojë në të ardhmen.",
+        "en": "The website \"Skopje Breathing,\" which published a live data feed until Christmas , is still not working, and most likely will not work in the future.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/GlobalVoices"
+      },
+      {
+        "corpus": "GNOME",
+        "version": "v1",
+        "sentenceNumber": 32398,
+        "sq": "Sigurohu që lidhja juaj Internet është aktivizuar dhe punon me korrektësi.",
+        "en": "Please ensure that your Internet connection is active and working correctly.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/GNOME"
+      },
+      {
+        "corpus": "Tatoeba",
+        "version": "v2023-04-12",
+        "sentenceNumber": 388,
+        "sq": "Punon.",
+        "en": "It works.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/Tatoeba"
+      }
+    ],
+    "punonte": [
+      {
+        "corpus": "GlobalVoices",
+        "version": "v2018q4",
+        "sentenceNumber": 1567,
+        "sq": "Përderisa punonte si mësues i gjuhës angleze e më vonë edhe si inzhenjer për IT, duke garruar në karaoke, u zbulua nga një shtëpi diskografike dhe u bë i famshëm në Japoni.",
+        "en": "While working as an English teacher and later as an IT engineer, through performances at local karaoke competitions, he was discovered by a record label and eventually rose to fame in Japan.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/GlobalVoices"
+      }
+    ],
+    "punuar": [
+      {
+        "corpus": "GlobalVoices",
+        "version": "v2018q4",
+        "sentenceNumber": 1369,
+        "sq": "Megjithatë, duket se forcat me mbështetje më të fuqishme janë duke punuar për nxitje trazirash.",
+        "en": "However, it seems that forces with powerful backing are working on stirring unrest.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/GlobalVoices"
+      },
+      {
+        "corpus": "GNOME",
+        "version": "v1",
+        "sentenceNumber": 56093,
+        "sq": "Duke punuar në mënyrën prezantim",
+        "en": "Running in presentation mode",
+        "opusUrl": "https://opus.nlpl.eu/datasets/GNOME"
+      },
+      {
+        "corpus": "Tatoeba",
+        "version": "v2023-04-12",
+        "sentenceNumber": 1067,
+        "sq": "Shqiptarët lexojnë Kuran kur nuk janë duke punuar.",
+        "en": "Albanians read Quran when they are not working.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/Tatoeba"
+      }
+    ]
+  }
+}
