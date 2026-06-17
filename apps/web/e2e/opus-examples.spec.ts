@@ -11,14 +11,15 @@ test('playground shows indexed examples for a generated form', async ({
   await expect(examples.getByTestId('examples-summary')).toContainText(
     'Examples',
   );
-  await expect(examples.locator('table')).toBeHidden();
-
-  await examples.getByTestId('examples-summary').click();
+  await expect(examples.locator('table')).toBeVisible();
   await expect(examples).toContainText('Indexed form: punoj');
   await expect(
     examples.getByRole('columnheader', { name: 'Corpus' }),
   ).toBeVisible();
   await expect(examples).toContainText('punoj');
+
+  await examples.getByTestId('examples-summary').click();
+  await expect(examples.locator('table')).toBeHidden();
 });
 
 test('playground shows phrase-level examples for multiword forms', async ({
@@ -29,7 +30,6 @@ test('playground shows phrase-level examples for multiword forms', async ({
   );
 
   const examples = page.getByTestId('opus-examples');
-  await examples.getByTestId('examples-summary').click();
   await expect(examples).toContainText('Indexed form: të punoj');
   await expect(examples).toContainText('Tatoeba');
   await expect(examples).toContainText('Unë nuk dua të punoj në këto kushte.');
@@ -46,7 +46,6 @@ test('rare generated forms can show a corpus-backed example', async ({
   );
 
   const examples = page.getByTestId('opus-examples');
-  await examples.getByTestId('examples-summary').click();
   await expect(examples).toContainText('Indexed form: punuake');
   await expect(examples).toContainText('OpenSubtitles');
   await expect(examples).toContainText('Më nuk punuake në dhomën e ngrënies.');

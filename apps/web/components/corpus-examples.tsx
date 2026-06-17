@@ -15,7 +15,7 @@ export function CorpusExamples({ form }: Props) {
       data-testid="opus-examples"
       className="mt-6 border-t border-stone-200 pt-5"
     >
-      <details className="group">
+      <details className="group" open>
         <summary
           data-testid="examples-summary"
           className="flex cursor-pointer list-none items-center justify-between gap-3 text-xs tracking-wider text-stone-400 uppercase select-none marker:hidden"
