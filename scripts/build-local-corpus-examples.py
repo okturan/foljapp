@@ -141,6 +141,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Append to an existing DB instead of replacing it.",
     )
+    parser.add_argument(
+        "--sentences-only",
+        action="store_true",
+        help="Build only the sentence/FTS index; materialize targets in a second step.",
+    )
     return parser.parse_args()
 
 
@@ -720,7 +725,9 @@ def all_satisfied(counts: dict[str, int], targets: list[Target], max_per_target:
 
 def build_index(args: argparse.Namespace) -> None:
     targets_path = Path(args.targets)
-    if not targets_path.exists():
+    if args.sentences_only and args.matched_only:
+        raise SystemExit("--matched-only requires targets; omit --sentences-only")
+    if not args.sentences_only and not targets_path.exists():
         raise SystemExit(
             f"Missing target file: {targets_path}\n"
             "Run: npx tsx scripts/build-corpus-example-targets.ts"
@@ -737,8 +744,8 @@ def build_index(args: argparse.Namespace) -> None:
     if missing:
         print(f"Skipping missing resources: {', '.join(missing)}", file=sys.stderr)
 
-    targets = load_targets(targets_path)
-    if not targets:
+    targets = [] if args.sentences_only else load_targets(targets_path)
+    if not args.sentences_only and not targets:
         raise SystemExit(f"No targets in {targets_path}")
 
     db_path = Path(args.out)
@@ -783,7 +790,11 @@ def build_index(args: argparse.Namespace) -> None:
                 if not keep_sentence(candidate.flags):
                     continue
 
-                matches = target_matches(candidate.normalized.split(), by_first)
+                matches = (
+                    []
+                    if args.sentences_only
+                    else target_matches(candidate.normalized.split(), by_first)
+                )
                 viable_matches = [
                     match
                     for match in matches
@@ -813,8 +824,10 @@ def build_index(args: argparse.Namespace) -> None:
                     and inserted_for_source >= args.max_sentences_per_source
                 ):
                     break
-                if args.stop_when_satisfied and all_satisfied(
-                    counts, targets, args.max_per_target
+                if (
+                    not args.sentences_only
+                    and args.stop_when_satisfied
+                    and all_satisfied(counts, targets, args.max_per_target)
                 ):
                     break
         print(
