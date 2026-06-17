@@ -31,7 +31,7 @@ The machine-readable inventory is in `resources.json`.
 
 ## Local example index
 
-The playground can read a local SQLite FTS5 index from `.cache/corpus-examples.sqlite`. This is for local development only; raw corpora and the SQLite DB are not committed or deployed to Cloudflare Pages.
+The playground can read a local SQLite FTS5 index from `.cache/corpus-examples.sqlite`. This is for local development only; raw corpora and the SQLite DB are not committed or deployed to Cloudflare Pages. Local corpus scanning runs through the Rust indexer in `tools/corpus-indexer` and requires Cargo.
 
 The fast path is two-phase:
 
