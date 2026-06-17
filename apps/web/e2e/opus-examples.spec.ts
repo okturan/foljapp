@@ -16,7 +16,7 @@ test('playground shows indexed OPUS examples for a generated form', async ({
   await expect(examples).toContainText('punoj');
 });
 
-test('rare generated forms show no indexed OPUS example yet', async ({
+test('rare generated forms can show a corpus-backed OPUS example', async ({
   page,
 }) => {
   await page.goto(
@@ -25,7 +25,9 @@ test('rare generated forms show no indexed OPUS example yet', async ({
 
   const examples = page.getByTestId('opus-examples');
   await expect(examples).toContainText('Indexed token: punuake');
-  await expect(page.getByTestId('opus-empty-state')).toContainText(
-    'No OPUS sentence examples indexed for punuake yet.',
+  await expect(examples).toContainText('OpenSubtitles');
+  await expect(examples).toContainText('Më nuk punuake në dhomën e ngrënies.');
+  await expect(examples).toContainText(
+    "You don't work in the dining room anymore.",
   );
 });

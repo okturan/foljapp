@@ -17,6 +17,7 @@
     "test:e2e": "npm run test:e2e --workspace=apps/web",
     "build:corpus": "tsx scripts/build-corpus.ts",
     "build:opus-examples": "tsx scripts/build-opus-examples.ts",
+    "build:opus-examples:local": "tsx scripts/build-opus-examples.ts --from-local-cache",
     "download:opus": "tsx scripts/download-opus-corpora.ts",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint .",

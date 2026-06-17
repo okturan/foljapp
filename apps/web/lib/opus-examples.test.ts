@@ -17,10 +17,21 @@ describe('opus examples lookup', () => {
     );
   });
 
-  it('returns an honest empty state for unindexed rare forms', () => {
+  it('finds the OpenSubtitles corpus example for a rare generated form', () => {
     const lookup = lookupOpusExamples('punuake');
 
     expect(lookup.lookupForm).toBe('punuake');
+    expect(lookup.examples[0]).toMatchObject({
+      corpus: 'OpenSubtitles',
+      sq: 'Më nuk punuake në dhomën e ngrënies.',
+      en: "You don't work in the dining room anymore.",
+    });
+  });
+
+  it('returns an honest empty state for unindexed forms', () => {
+    const lookup = lookupOpusExamples('notindexed');
+
+    expect(lookup.lookupForm).toBe('notindexed');
     expect(lookup.examples).toEqual([]);
   });
 });

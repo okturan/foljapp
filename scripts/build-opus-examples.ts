@@ -9,9 +9,10 @@
  *   npm run build:opus-examples -- --forms=punoj,punon,punojnë,punuar,punuake
  */
 
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
+import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
 
 import { configure, table, type VerbEntry } from '@foljapp/engine';
@@ -19,6 +20,16 @@ import { configure, table, type VerbEntry } from '@foljapp/engine';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
 const CACHE_DIR = join(REPO_ROOT, '.cache', 'opus');
+const LOCAL_MANIFEST_PATH = join(
+  REPO_ROOT,
+  '.cache',
+  'datasets',
+  'opus',
+  'en-sq',
+  'moses',
+  'latest',
+  'manifest.json',
+);
 const OUT_PATH = join(REPO_ROOT, 'data', 'opus', 'examples.json');
 const VERB_BUNDLE_PATH = join(
   REPO_ROOT,
@@ -30,6 +41,36 @@ const VERB_VERSION_PATH = join(REPO_ROOT, 'data', 'verbs', 'version.json');
 
 const DEFAULT_CORPORA = ['Tatoeba', 'GlobalVoices', 'GNOME'];
 const DEFAULT_MAX_PER_FORM = 4;
+
+const CORPUS_PRIORITY = [
+  'Tatoeba',
+  'GlobalVoices',
+  'wikimedia',
+  'WikiMatrix',
+  'SETIMES',
+  'GNOME',
+  'ELRC-3052-wikipedia_health',
+  'ELRC-wikipedia_health',
+  'ELRC_2922',
+  'ELRC-5067-SciPar',
+  'EUbookshop',
+  'TildeMODEL',
+  'Ubuntu',
+  'TED2020',
+  'NeuLab-TedTalks',
+  'QED',
+  'bible-uedin',
+  'Tanzil',
+  'MaCoCu',
+  'MultiMaCoCu',
+  'XLEnt',
+  'OpenSubtitles',
+  'CCAligned',
+  'HPLT',
+  'MultiHPLT',
+  'CCMatrix',
+  'NLLB',
+];
 
 const STOP_TOKENS = new Set([
   'dhe',
@@ -52,7 +93,9 @@ const STOP_TOKENS = new Set([
 interface Args {
   corpora: string[];
   forms: Set<string> | null;
+  fromLocalCache: boolean;
   frozenTime: boolean;
+  manifestPath: string;
   maxPerForm: number;
   refresh: boolean;
 }
@@ -106,17 +149,37 @@ interface Output {
   examples: Record<string, OpusExample[]>;
 }
 
+interface LocalDownloadRecord extends OpusApiCorpus {
+  localPath: string;
+  status: 'pending' | 'downloaded';
+}
+
+interface LocalManifest {
+  apiUrl: string;
+  corpora: LocalDownloadRecord[];
+}
+
+interface CorpusSource {
+  meta: CorpusMetadata;
+  zipPath: string;
+}
+
 function valueAfter(prefix: string): string | undefined {
   const found = process.argv.find((arg) => arg.startsWith(prefix));
   return found?.slice(prefix.length);
 }
 
 function parseArgs(): Args {
-  const corpora =
-    valueAfter('--corpora=')
-      ?.split(',')
-      .map((s) => s.trim())
-      .filter(Boolean) ?? DEFAULT_CORPORA;
+  const fromLocalCache = process.argv.includes('--from-local-cache');
+  const corporaArg = valueAfter('--corpora=');
+  const corpora = corporaArg
+    ? corporaArg
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : fromLocalCache
+      ? []
+      : DEFAULT_CORPORA;
 
   const formValues = valueAfter('--forms=')
     ?.split(',')
@@ -132,7 +195,9 @@ function parseArgs(): Args {
   return {
     corpora,
     forms: formValues && formValues.length > 0 ? new Set(formValues) : null,
+    fromLocalCache,
     frozenTime: process.argv.includes('--frozen-time'),
+    manifestPath: valueAfter('--manifest=') ?? LOCAL_MANIFEST_PATH,
     maxPerForm,
     refresh: process.argv.includes('--refresh'),
   };
@@ -229,6 +294,65 @@ async function downloadZip(
   return zipPath;
 }
 
+function corpusRank(corpus: string): number {
+  const rank = CORPUS_PRIORITY.indexOf(corpus);
+  return rank === -1 ? CORPUS_PRIORITY.length : rank;
+}
+
+function sortCorpusSources(sources: CorpusSource[]): CorpusSource[] {
+  return sources.sort((a, b) => {
+    const rank = corpusRank(a.meta.corpus) - corpusRank(b.meta.corpus);
+    if (rank !== 0) return rank;
+    return a.meta.corpus.localeCompare(b.meta.corpus);
+  });
+}
+
+function loadLocalCorpusSources(args: Args): CorpusSource[] {
+  if (!existsSync(args.manifestPath)) {
+    throw new Error(`Local OPUS manifest does not exist: ${args.manifestPath}`);
+  }
+
+  const raw = readFileSync(args.manifestPath, 'utf8');
+  const manifest = JSON.parse(raw) as LocalManifest;
+  const allowed = new Set(args.corpora);
+  const rows = manifest.corpora.filter(
+    (row) =>
+      row.status === 'downloaded' &&
+      existsSync(row.localPath) &&
+      (allowed.size === 0 || allowed.has(row.corpus)),
+  );
+
+  if (rows.length === 0) {
+    throw new Error(`No downloaded OPUS corpora matched ${args.manifestPath}`);
+  }
+
+  return sortCorpusSources(
+    rows.map((row) => ({
+      meta: {
+        corpus: row.corpus,
+        version: row.version,
+        preprocessing: row.preprocessing,
+        sentencePairs: Number(row.alignment_pairs || 0),
+        sourceLanguage: row.source,
+        targetLanguage: row.target,
+        opusUrl: `https://opus.nlpl.eu/datasets/${encodeURIComponent(row.corpus)}`,
+        downloadUrl: row.url,
+      },
+      zipPath: row.localPath,
+    })),
+  );
+}
+
+async function loadRemoteCorpusSources(args: Args): Promise<CorpusSource[]> {
+  const sources: CorpusSource[] = [];
+  for (const corpus of args.corpora) {
+    const meta = await fetchCorpusMetadata(corpus);
+    const zipPath = await downloadZip(meta, args.refresh);
+    sources.push({ meta, zipPath });
+  }
+  return sortCorpusSources(sources);
+}
+
 function zipEntries(zipPath: string): string[] {
   return execFileSync('unzip', ['-Z', '-1', zipPath], {
     encoding: 'utf8',
@@ -237,13 +361,6 @@ function zipEntries(zipPath: string): string[] {
     .split('\n')
     .map((s) => s.trim())
     .filter(Boolean);
-}
-
-function readZipEntry(zipPath: string, entryName: string): string {
-  return execFileSync('unzip', ['-p', zipPath, entryName], {
-    encoding: 'utf8',
-    maxBuffer: 512 * 1024 * 1024,
-  });
 }
 
 function alignedTextFiles(zipPath: string): { sq: string; en: string } {
@@ -267,22 +384,68 @@ function keepSentence(sq: string, en: string): boolean {
   );
 }
 
-function scanCorpus(
+async function waitForProcess(
+  proc: ReturnType<typeof spawn>,
+  label: string,
+): Promise<void> {
+  let stderr = '';
+  proc.stderr?.on('data', (chunk) => {
+    stderr += String(chunk);
+  });
+
+  const code = await new Promise<number | null>((resolveProcess, reject) => {
+    proc.on('error', reject);
+    proc.on('close', resolveProcess);
+  });
+
+  if (code !== 0) {
+    throw new Error(`${label} exited ${code}: ${stderr.trim()}`);
+  }
+}
+
+async function scanCorpus(
   meta: CorpusMetadata,
   zipPath: string,
   targetForms: Set<string>,
   examples: Map<string, OpusExample[]>,
   maxPerForm: number,
-): number {
+): Promise<number> {
   const files = alignedTextFiles(zipPath);
-  const sqLines = readZipEntry(zipPath, files.sq).split('\n');
-  const enLines = readZipEntry(zipPath, files.en).split('\n');
-  const total = Math.min(sqLines.length, enLines.length);
-  let added = 0;
+  const sqProc = spawn('unzip', ['-p', zipPath, files.sq], {
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  const enProc = spawn('unzip', ['-p', zipPath, files.en], {
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  if (!sqProc.stdout || !enProc.stdout) {
+    throw new Error(`Could not stream ${zipPath}`);
+  }
 
-  for (let index = 0; index < total; index++) {
-    const sq = sqLines[index]?.trim() ?? '';
-    const en = enLines[index]?.trim() ?? '';
+  const sqWait = waitForProcess(sqProc, `${meta.corpus} ${files.sq}`);
+  const enWait = waitForProcess(enProc, `${meta.corpus} ${files.en}`);
+  const sqLines = createInterface({
+    input: sqProc.stdout,
+    crlfDelay: Infinity,
+  });
+  const enLines = createInterface({
+    input: enProc.stdout,
+    crlfDelay: Infinity,
+  });
+  const sqIterator = sqLines[Symbol.asyncIterator]();
+  const enIterator = enLines[Symbol.asyncIterator]();
+  let added = 0;
+  let index = 0;
+
+  while (true) {
+    const [sqNext, enNext] = await Promise.all([
+      sqIterator.next(),
+      enIterator.next(),
+    ]);
+    if (sqNext.done || enNext.done) break;
+
+    index++;
+    const sq = sqNext.value.trim();
+    const en = enNext.value.trim();
     if (!keepSentence(sq, en)) continue;
 
     const matchedForms = new Set(
@@ -296,7 +459,7 @@ function scanCorpus(
       bucket.push({
         corpus: meta.corpus,
         version: meta.version,
-        sentenceNumber: index + 1,
+        sentenceNumber: index,
         sq,
         en,
         opusUrl: meta.opusUrl,
@@ -304,8 +467,17 @@ function scanCorpus(
       examples.set(form, bucket);
       added++;
     }
+
+    if (index % 500_000 === 0) {
+      console.log(
+        `    ${index.toLocaleString()} aligned rows scanned, ${added} added`,
+      );
+    }
   }
 
+  sqLines.close();
+  enLines.close();
+  await Promise.all([sqWait, enWait]);
   return added;
 }
 
@@ -323,7 +495,8 @@ function emitOutput(
         rows.sort((a, b) =>
           a.corpus === b.corpus
             ? a.sentenceNumber - b.sentenceNumber
-            : a.corpus.localeCompare(b.corpus),
+            : corpusRank(a.corpus) - corpusRank(b.corpus) ||
+              a.corpus.localeCompare(b.corpus),
         ),
       ]),
   );
@@ -350,17 +523,17 @@ async function main(): Promise<void> {
   const args = parseArgs();
   const generatedForms = args.forms ?? loadGeneratedForms();
   const examples = new Map<string, OpusExample[]>();
-  const corpora: CorpusMetadata[] = [];
+  const sources = args.fromLocalCache
+    ? loadLocalCorpusSources(args)
+    : await loadRemoteCorpusSources(args);
+  const corpora = sources.map((source) => source.meta);
 
   console.log(
-    `Indexing ${generatedForms.size} form(s) from ${args.corpora.length} OPUS corpora`,
+    `Indexing ${generatedForms.size} form(s) from ${sources.length} OPUS corpora`,
   );
 
-  for (const corpus of args.corpora) {
-    const meta = await fetchCorpusMetadata(corpus);
-    corpora.push(meta);
-    const zipPath = await downloadZip(meta, args.refresh);
-    const added = scanCorpus(
+  for (const { meta, zipPath } of sources) {
+    const added = await scanCorpus(
       meta,
       zipPath,
       generatedForms,
