@@ -7,6 +7,8 @@ use std::thread;
 
 use bzip2::read::BzDecoder;
 use flate2::read::GzDecoder;
+use parquet::file::reader::{FileReader, SerializedFileReader};
+use parquet::record::{Field, Row};
 use quick_xml::events::{BytesStart, Event};
 use quick_xml::Reader as XmlReader;
 use serde_json::Value;
@@ -37,6 +39,8 @@ pub enum SourceKind {
     HpltJsonlZstDir,
     LeipzigTarGzDir,
     Mc4JsonGzDir,
+    ParquetDir,
+    WikimediaXmlBz2Dir,
     SeeUniversityTxtLines,
     OpusMosesZipDir,
     TatoebaTarBz2Dir,
@@ -125,6 +129,14 @@ pub fn open_resource(resource: &ResourceSpec) -> SourceResult<CandidateStream> {
             resource.local_path.clone(),
             resource.id.clone(),
         )),
+        SourceKind::ParquetDir => Ok(parquet_dir_with_id(
+            resource.local_path.clone(),
+            resource.id.clone(),
+        )),
+        SourceKind::WikimediaXmlBz2Dir => Ok(wikimedia_xml_bz2_dir_with_id(
+            resource.local_path.clone(),
+            resource.id.clone(),
+        )),
         SourceKind::SeeUniversityTxtLines => {
             seeuniversity_txt_lines_with_id(resource.local_path.clone(), resource.id.clone())
         }
@@ -200,6 +212,14 @@ fn leipzig_tar_gz_dir_with_id(path: PathBuf, resource_id: String) -> CandidateSt
 
 fn mc4_json_gz_dir_with_id(path: PathBuf, resource_id: String) -> CandidateStream {
     spawn_reader(move |tx| run_mc4_json_gz_dir(path, resource_id, tx))
+}
+
+fn parquet_dir_with_id(path: PathBuf, resource_id: String) -> CandidateStream {
+    spawn_reader(move |tx| run_parquet_dir(path, resource_id, tx))
+}
+
+fn wikimedia_xml_bz2_dir_with_id(path: PathBuf, resource_id: String) -> CandidateStream {
+    spawn_reader(move |tx| run_wikimedia_xml_bz2_dir(path, resource_id, tx))
 }
 
 fn opus_moses_zip_dir_with_id(path: PathBuf, resource_id: String) -> CandidateStream {
@@ -696,6 +716,153 @@ fn run_mc4_json_gz_dir(
     Ok(())
 }
 
+fn run_parquet_dir(
+    path: PathBuf,
+    resource_id: String,
+    tx: SyncSender<SourceResult<Candidate>>,
+) -> SourceResult<()> {
+    let mut parquet_paths = files_with_suffix(&path, ".parquet")?;
+    parquet_paths.sort();
+
+    for parquet_path in parquet_paths {
+        let shard_name = parquet_path
+            .strip_prefix(&path)
+            .unwrap_or(&parquet_path)
+            .to_string_lossy()
+            .into_owned();
+        let file = File::open(&parquet_path)?;
+        let reader = SerializedFileReader::new(file)?;
+        let rows = reader.get_row_iter(None)?;
+
+        for (row_idx, row) in rows.enumerate() {
+            let row = row?;
+            let mut texts = Vec::new();
+            collect_row_strings(&row, &mut texts);
+            for (field_idx, text) in texts.into_iter().enumerate() {
+                for (sentence_idx, sentence) in split_sentences(&text).into_iter().enumerate() {
+                    let candidate = Candidate {
+                        resource_id: resource_id.clone(),
+                        doc_id: format!(
+                            "{shard_name}:{}:{}#s{}",
+                            row_idx + 1,
+                            field_idx + 1,
+                            sentence_idx + 1
+                        ),
+                        title: Some(shard_name.clone()),
+                        url: None,
+                        domain: Some("huggingface.co".to_owned()),
+                        genre: Some("parquet".to_owned()),
+                        quality: None,
+                        sentence,
+                    };
+                    if tx.send(Ok(candidate)).is_err() {
+                        return Ok(());
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn run_wikimedia_xml_bz2_dir(
+    path: PathBuf,
+    resource_id: String,
+    tx: SyncSender<SourceResult<Candidate>>,
+) -> SourceResult<()> {
+    let mut dump_paths = files_with_suffix(&path, ".xml.bz2")?;
+    dump_paths.sort();
+
+    for dump_path in dump_paths {
+        let dump_name = dump_path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or("wikimedia.xml.bz2")
+            .to_owned();
+        let file = File::open(&dump_path)?;
+        let decoder = BzDecoder::new(file);
+        let mut reader = XmlReader::from_reader(BufReader::new(decoder));
+        let mut buf = Vec::new();
+        let mut title = None;
+        let mut page_id = None;
+        let mut ns = None;
+        let mut text = String::new();
+        let mut in_title = false;
+        let mut in_id = false;
+        let mut page_id_seen = false;
+        let mut in_ns = false;
+        let mut in_text = false;
+
+        loop {
+            match reader.read_event_into(&mut buf)? {
+                Event::Start(event) if event.name().as_ref() == b"page" => {
+                    title = None;
+                    page_id = None;
+                    ns = None;
+                    text.clear();
+                    page_id_seen = false;
+                }
+                Event::Start(event) if event.name().as_ref() == b"title" => in_title = true,
+                Event::Start(event) if event.name().as_ref() == b"ns" => in_ns = true,
+                Event::Start(event) if event.name().as_ref() == b"id" && !page_id_seen => {
+                    in_id = true;
+                }
+                Event::Start(event) if event.name().as_ref() == b"text" => in_text = true,
+                Event::Text(event) if in_title => {
+                    title = Some(decode_xml_bytes(&reader, event.as_ref())?);
+                }
+                Event::Text(event) if in_ns => {
+                    ns = Some(decode_xml_bytes(&reader, event.as_ref())?);
+                }
+                Event::Text(event) if in_id => {
+                    page_id = Some(decode_xml_bytes(&reader, event.as_ref())?);
+                    page_id_seen = true;
+                }
+                Event::Text(event) if in_text => {
+                    text.push_str(&decode_xml_bytes(&reader, event.as_ref())?);
+                }
+                Event::CData(event) if in_text => {
+                    text.push_str(&decode_xml_bytes(&reader, event.as_ref())?);
+                }
+                Event::End(event) if event.name().as_ref() == b"title" => in_title = false,
+                Event::End(event) if event.name().as_ref() == b"ns" => in_ns = false,
+                Event::End(event) if event.name().as_ref() == b"id" => in_id = false,
+                Event::End(event) if event.name().as_ref() == b"text" => in_text = false,
+                Event::End(event) if event.name().as_ref() == b"page" => {
+                    if ns.as_deref() == Some("0") && !text.trim().is_empty() {
+                        let clean = strip_wiki_markup(&text);
+                        let doc_id = page_id.clone().unwrap_or_else(|| "unknown-page".to_owned());
+                        for (sentence_idx, sentence) in
+                            split_sentences(&clean).into_iter().enumerate()
+                        {
+                            let candidate = Candidate {
+                                resource_id: resource_id.clone(),
+                                doc_id: format!("{dump_name}:{doc_id}#s{}", sentence_idx + 1),
+                                title: title.clone(),
+                                url: None,
+                                domain: Some("wikimedia.org".to_owned()),
+                                genre: Some("wikimedia".to_owned()),
+                                quality: None,
+                                sentence,
+                            };
+                            if tx.send(Ok(candidate)).is_err() {
+                                return Ok(());
+                            }
+                        }
+                    }
+                    text.clear();
+                }
+                Event::Eof => break,
+                _ => {}
+            }
+            buf.clear();
+        }
+    }
+
+    Ok(())
+}
+
 fn run_tatoeba_tar_bz2_dir(
     path: PathBuf,
     resource_id: String,
@@ -916,6 +1083,15 @@ fn source_kind(id: &str, format: Option<&str>) -> Option<SourceKind> {
         ("hplt-v3-als-latn", "jsonl.zst shards") => Some(SourceKind::HpltJsonlZstDir),
         ("leipzig-sqi", "tar.gz sentence archives") => Some(SourceKind::LeipzigTarGzDir),
         ("mc4-sq", "json.gz shards") => Some(SourceKind::Mc4JsonGzDir),
+        (
+            "hf-albanian-wiki-clean-lm"
+            | "hf-albanian-english-bundled"
+            | "hf-bigmind-albanian"
+            | "hf-albanian-wikiorca"
+            | "fineweb2-albanian-varieties",
+            "Parquet shards",
+        ) => Some(SourceKind::ParquetDir),
+        ("wikimedia-sq-latest", "MediaWiki XML bz2 dumps") => Some(SourceKind::WikimediaXmlBz2Dir),
         ("seeuniversity-albanian-corpora-bert", "txt") => Some(SourceKind::SeeUniversityTxtLines),
         ("opus-en-sq-moses-latest", "Moses text zip files")
         | ("opus-all-to-sq-moses-latest", "Moses text zip files") => {
@@ -927,6 +1103,124 @@ fn source_kind(id: &str, format: Option<&str>) -> Option<SourceKind> {
         }
         _ => None,
     }
+}
+
+fn files_with_suffix(path: &Path, suffix: &str) -> SourceResult<Vec<PathBuf>> {
+    let mut paths = Vec::new();
+    collect_files_with_suffix(path, suffix, &mut paths)?;
+    Ok(paths)
+}
+
+fn collect_files_with_suffix(
+    path: &Path,
+    suffix: &str,
+    paths: &mut Vec<PathBuf>,
+) -> SourceResult<()> {
+    if path.is_file() {
+        if path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .is_some_and(|name| name.ends_with(suffix))
+        {
+            paths.push(path.to_owned());
+        }
+        return Ok(());
+    }
+
+    for entry in fs::read_dir(path)? {
+        let entry = entry?;
+        collect_files_with_suffix(&entry.path(), suffix, paths)?;
+    }
+    Ok(())
+}
+
+fn collect_row_strings(row: &Row, texts: &mut Vec<String>) {
+    for (_, field) in row.get_column_iter() {
+        collect_field_strings(field, texts);
+    }
+}
+
+fn collect_field_strings(field: &Field, texts: &mut Vec<String>) {
+    match field {
+        Field::Str(value) if useful_text(value) => texts.push(value.to_owned()),
+        Field::Bytes(value) => {
+            if let Ok(text) = value.as_utf8() {
+                if useful_text(text) {
+                    texts.push(text.to_owned());
+                }
+            }
+        }
+        Field::Group(row) => collect_row_strings(row, texts),
+        Field::ListInternal(values) => {
+            for value in values.elements() {
+                collect_field_strings(value, texts);
+            }
+        }
+        Field::MapInternal(values) => {
+            for (key, value) in values.entries() {
+                collect_field_strings(key, texts);
+                collect_field_strings(value, texts);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn useful_text(value: &str) -> bool {
+    value.chars().any(char::is_alphabetic) && value.split_whitespace().count() >= 3
+}
+
+fn strip_wiki_markup(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut chars = text.chars().peekable();
+    let mut brace_depth = 0usize;
+    let mut link_depth = 0usize;
+    let mut link_text = String::new();
+
+    while let Some(ch) = chars.next() {
+        if ch == '{' && chars.peek() == Some(&'{') {
+            chars.next();
+            brace_depth += 1;
+            continue;
+        }
+        if ch == '}' && chars.peek() == Some(&'}') && brace_depth > 0 {
+            chars.next();
+            brace_depth -= 1;
+            continue;
+        }
+        if brace_depth > 0 {
+            continue;
+        }
+        if ch == '[' && chars.peek() == Some(&'[') {
+            chars.next();
+            link_depth += 1;
+            link_text.clear();
+            continue;
+        }
+        if ch == ']' && chars.peek() == Some(&']') && link_depth > 0 {
+            chars.next();
+            link_depth -= 1;
+            out.push_str(&link_text);
+            link_text.clear();
+            out.push(' ');
+            continue;
+        }
+        if link_depth > 0 {
+            if ch == '|' {
+                link_text.clear();
+            } else {
+                link_text.push(ch);
+            }
+            continue;
+        }
+        if matches!(ch, '[' | ']' | '\'' | '=') {
+            out.push(' ');
+        } else {
+            out.push(ch);
+        }
+    }
+
+    out
 }
 
 fn domain_from_url(url: &str) -> Option<String> {

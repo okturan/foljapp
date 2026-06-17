@@ -226,13 +226,13 @@
       "downloadedBytes": 241082451,
       "onDiskSize": "230M",
       "shardCount": 3,
-      "indexerSupport": "raw-download-only",
-      "provenanceGranularity": "Parquet row metadata after schema inspection.",
+      "indexerSupport": "tokenized-only-no-raw-text",
+      "provenanceGranularity": "Parquet row metadata after schema inspection; no sentence text fields present.",
       "redistributionPolicy": "Keep raw parquet local until license and schema are reviewed.",
-      "contents": "Cleaned Albanian Wikipedia language-model text.",
+      "contents": "Tokenized Albanian Wikipedia language-model rows with input_ids, attention_mask, and labels only.",
       "cautions": [
-        "Not wired into the Rust example index yet.",
-        "Schema and license need review before public examples are derived."
+        "The downloaded shards do not contain raw text, so exact sentence search needs the original tokenizer or source text.",
+        "Included in source accounting, but it currently emits zero searchable examples."
       ]
     },
     {
@@ -247,12 +247,12 @@
       "onDiskSize": "232M",
       "shardCount": 2,
       "license": "GPL-3.0",
-      "indexerSupport": "raw-download-only",
+      "indexerSupport": "rust-generic-parquet-text-reader",
       "provenanceGranularity": "Parquet row metadata after schema inspection.",
       "redistributionPolicy": "Keep raw parquet local; review GPL implications before derived public use.",
       "contents": "Public Albanian-English bundled data for translation/fill-mask tasks.",
       "cautions": [
-        "Not wired into the Rust example index yet.",
+        "Wired into the Rust example index through generic parquet text-field extraction.",
         "Task-format rows may not be natural standalone sentence examples."
       ]
     },
@@ -267,13 +267,13 @@
       "downloadedBytes": 1038555570,
       "onDiskSize": "991M",
       "shardCount": 3,
-      "indexerSupport": "raw-download-only",
+      "indexerSupport": "rust-generic-parquet-text-reader",
       "provenanceGranularity": "Parquet row metadata after schema inspection.",
       "redistributionPolicy": "Keep raw parquet local until license and generation provenance are reviewed.",
       "contents": "Large public Albanian instruction-style dataset.",
       "cautions": [
         "Likely synthetic or instruction-tuned content; do not treat as corpus evidence without review.",
-        "Not wired into the Rust example index yet."
+        "Wired into the Rust example index through generic parquet text-field extraction."
       ]
     },
     {
@@ -287,13 +287,13 @@
       "downloadedBytes": 230612313,
       "onDiskSize": "220M",
       "shardCount": 3,
-      "indexerSupport": "raw-download-only",
+      "indexerSupport": "rust-generic-parquet-text-reader",
       "provenanceGranularity": "Parquet row metadata after schema inspection.",
       "redistributionPolicy": "Keep raw parquet local until license and generation provenance are reviewed.",
       "contents": "Public Albanian WikiOrca question/response data.",
       "cautions": [
         "Question-answer rows are not direct corpus attestations.",
-        "Not wired into the Rust example index yet."
+        "Wired into the Rust example index through generic parquet text-field extraction."
       ]
     },
     {
@@ -309,12 +309,12 @@
       "shardCount": 5,
       "languages": ["als_Latn", "aln_Latn"],
       "license": "ODC-BY",
-      "indexerSupport": "raw-download-only",
+      "indexerSupport": "rust-generic-parquet-text-reader",
       "provenanceGranularity": "Parquet row metadata after schema inspection.",
       "redistributionPolicy": "Keep raw parquet local until extraction and license attribution are reviewed.",
       "contents": "FineWeb2 Albanian-language variety shards for Tosk/standard and Gheg-style language codes.",
       "cautions": [
-        "Not wired into the Rust example index yet.",
+        "Wired into the Rust example index through generic parquet text-field extraction.",
         "Likely overlaps with other Common Crawl-derived corpora."
       ]
     },
@@ -395,13 +395,13 @@
       "onDiskSize": "167M",
       "dumpCount": 5,
       "license": "CC-BY-SA/GFDL depending on project content; check Wikimedia project terms.",
-      "indexerSupport": "raw-download-only",
+      "indexerSupport": "rust-mediawiki-xml-bz2-reader",
       "provenanceGranularity": "Article title/page metadata after XML extraction.",
       "redistributionPolicy": "Keep raw dumps local; derived examples need Wikimedia attribution and license handling.",
       "contents": "Latest Albanian article dumps for sqwiki, sqwiktionary, sqwikiquote, sqwikibooks, and sqwikinews.",
       "cautions": [
-        "Not wired into the Rust example index yet.",
-        "Requires MediaWiki markup extraction before sentence indexing."
+        "Wired into the Rust example index with lightweight namespace-0 MediaWiki extraction.",
+        "Markup extraction is intentionally simple and should not be treated as publication-quality wiki rendering."
       ]
     },
     {
