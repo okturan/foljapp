@@ -15,7 +15,8 @@
     "punon",
     "punonte",
     "punuake",
-    "punuar"
+    "punuar",
+    "të punoj"
   ],
   "corpora": [
     {
@@ -355,6 +356,40 @@
         "sentenceNumber": 598,
         "sq": "Serbia ka caktuar roje dhe agjentët doganore për të punuar në kufi.",
         "en": "Serbia has appointed guards and customs agents to work at the border.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/WikiMatrix"
+      }
+    ],
+    "të punoj": [
+      {
+        "corpus": "Tatoeba",
+        "version": "v2023-04-12",
+        "sentenceNumber": 574,
+        "sq": "Unë nuk dua të punoj në këto kushte.",
+        "en": "I don't want to work under these conditions.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/Tatoeba"
+      },
+      {
+        "corpus": "GlobalVoices",
+        "version": "v2018q4",
+        "sentenceNumber": 1594,
+        "sq": "Për mua, kjo është gazeta për të cilën nuk më lejohet të punoj.",
+        "en": "For me, this is the magazine I'm not allowed to work for.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/GlobalVoices"
+      },
+      {
+        "corpus": "wikimedia",
+        "version": "v20230407",
+        "sentenceNumber": 1005,
+        "sq": "Cray nuk i pëlqente të punoj makina të 'zakonshme', të detyruara të projektoheshin me ndërtim me kosto të ulët, ashtu që CDC të mund të shesë shumë prej tyre.",
+        "en": "Cray did not enjoy working on such 'mundane' machines, constrained to design for low-cost construction, so CDC could sell lots of them.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/wikimedia"
+      },
+      {
+        "corpus": "WikiMatrix",
+        "version": "v1",
+        "sentenceNumber": 7634,
+        "sq": "Unë shpresoj të punoj fortë, të stërvitem mirë, dhe të përjetojnë shumë gëzim këtu.",
+        "en": "I hope to work hard, to train well, and to experience a lot of joy here.",
         "opusUrl": "https://opus.nlpl.eu/datasets/WikiMatrix"
       }
     ]

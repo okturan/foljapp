@@ -17,6 +17,24 @@ describe('opus examples lookup', () => {
     );
   });
 
+  it('finds indexed examples for a generated phrase', () => {
+    const lookup = lookupOpusExamples('të punoj');
+
+    expect(lookup.lookupForm).toBe('të punoj');
+    expect(lookup.examples[0]).toMatchObject({
+      corpus: 'Tatoeba',
+      sq: 'Unë nuk dua të punoj në këto kushte.',
+      en: "I don't want to work under these conditions.",
+    });
+  });
+
+  it('does not collapse unindexed phrases to a single token', () => {
+    const lookup = lookupOpusExamples('mos punoj');
+
+    expect(lookup.lookupForm).toBe('mos punoj');
+    expect(lookup.examples).toEqual([]);
+  });
+
   it('finds the OpenSubtitles corpus example for a rare generated form', () => {
     const lookup = lookupOpusExamples('punuake');
 

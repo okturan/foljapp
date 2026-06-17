@@ -71,16 +71,26 @@ function tokensForLookup(form: string): string[] {
   return (form.match(/\p{L}+/gu) ?? []).map(normalizeOpusToken);
 }
 
+function formKeyForLookup(form: string): string | null {
+  return tokensForLookup(form).join(' ') || null;
+}
+
 export function lookupOpusExamples(
   form: string | null | undefined,
 ): OpusExampleLookup {
   if (!form) return { lookupForm: null, examples: [] };
 
-  const normalized = normalizeOpusToken(form);
+  const normalized = formKeyForLookup(form);
+  if (!normalized) return { lookupForm: null, examples: [] };
+
   const exact = data.examples[normalized];
   if (exact) return { lookupForm: normalized, examples: exact };
 
   const tokens = tokensForLookup(form);
+  if (tokens.length > 1) {
+    return { lookupForm: normalized, examples: [] };
+  }
+
   const indexedToken = tokens.find((token) => data.examples[token]);
   if (indexedToken) {
     return {

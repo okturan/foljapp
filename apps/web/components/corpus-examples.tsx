@@ -27,7 +27,7 @@ export function CorpusExamples({ form }: Props) {
         </a>
       </div>
       <p className="mt-2 text-xs text-stone-500">
-        Indexed token:{' '}
+        Indexed form:{' '}
         <span className="font-mono text-stone-700">{lookup.lookupForm}</span>
       </p>
 

@@ -2,8 +2,9 @@
  * Build a compact OPUS example index for generated Albanian verb forms.
  *
  * The script uses OPUS' metadata API to locate zipped Moses files for
- * Albanian-English corpora, scans the Albanian side for exact generated forms,
- * and writes a small JSON lookup table consumed by the playground.
+ * Albanian-English corpora, scans the Albanian side for exact generated forms
+ * and contiguous generated phrases, then writes a small JSON lookup table
+ * consumed by the playground.
  *
  * Run:
  *   npm run build:opus-examples -- --forms=punoj,punon,punojnë,punuar,punuake
@@ -164,6 +165,16 @@ interface CorpusSource {
   zipPath: string;
 }
 
+interface PhraseTarget {
+  form: string;
+  tokens: string[];
+}
+
+interface SearchTargets {
+  phraseTargetsByFirstToken: Map<string, PhraseTarget[]>;
+  tokenTargets: Set<string>;
+}
+
 function valueAfter(prefix: string): string | undefined {
   const found = process.argv.find((arg) => arg.startsWith(prefix));
   return found?.slice(prefix.length);
@@ -183,7 +194,7 @@ function parseArgs(): Args {
 
   const formValues = valueAfter('--forms=')
     ?.split(',')
-    .map(normalizeToken)
+    .map(normalizeFormKey)
     .filter(Boolean);
 
   const maxRaw = valueAfter('--max-per-form=');
@@ -204,11 +215,19 @@ function parseArgs(): Args {
 }
 
 function normalizeToken(token: string): string {
-  return token.normalize('NFC').toLocaleLowerCase('sq-AL').trim();
+  return token
+    .normalize('NFC')
+    .toLocaleLowerCase('sq-AL')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function sentenceTokens(text: string): string[] {
   return (text.match(/\p{L}+/gu) ?? []).map(normalizeToken);
+}
+
+function normalizeFormKey(form: string): string {
+  return sentenceTokens(form).join(' ');
 }
 
 function loadGeneratedForms(): Set<string> {
@@ -234,7 +253,11 @@ function collectForms(value: unknown, forms: Set<string>): void {
 
   const record = value as Record<string, unknown>;
   if (typeof record.form === 'string') {
-    for (const token of sentenceTokens(record.form)) {
+    const tokens = sentenceTokens(record.form);
+    if (tokens.length > 1) {
+      forms.add(tokens.join(' '));
+    }
+    for (const token of tokens) {
       if (token.length >= 3 && !STOP_TOKENS.has(token)) {
         forms.add(token);
       }
@@ -384,6 +407,65 @@ function keepSentence(sq: string, en: string): boolean {
   );
 }
 
+function compileSearchTargets(targetForms: Set<string>): SearchTargets {
+  const tokenTargets = new Set<string>();
+  const phraseTargetsByFirstToken = new Map<string, PhraseTarget[]>();
+
+  for (const form of targetForms) {
+    const tokens = sentenceTokens(form);
+    if (tokens.length === 0) continue;
+
+    if (tokens.length === 1) {
+      tokenTargets.add(tokens[0]);
+      continue;
+    }
+
+    const phraseTarget = { form: tokens.join(' '), tokens };
+    const firstToken = tokens[0];
+    const bucket = phraseTargetsByFirstToken.get(firstToken) ?? [];
+    bucket.push(phraseTarget);
+    phraseTargetsByFirstToken.set(firstToken, bucket);
+  }
+
+  return { phraseTargetsByFirstToken, tokenTargets };
+}
+
+function phraseMatchesAt(
+  sentenceTokenList: string[],
+  start: number,
+  phraseTokens: string[],
+): boolean {
+  if (start + phraseTokens.length > sentenceTokenList.length) return false;
+  return phraseTokens.every(
+    (token, offset) => sentenceTokenList[start + offset] === token,
+  );
+}
+
+function matchedFormsInSentence(
+  sentenceTokenList: string[],
+  targets: SearchTargets,
+): Set<string> {
+  const matchedForms = new Set<string>();
+
+  for (let index = 0; index < sentenceTokenList.length; index++) {
+    const token = sentenceTokenList[index];
+    if (targets.tokenTargets.has(token)) {
+      matchedForms.add(token);
+    }
+
+    const phraseTargets = targets.phraseTargetsByFirstToken.get(token);
+    if (!phraseTargets) continue;
+
+    for (const target of phraseTargets) {
+      if (phraseMatchesAt(sentenceTokenList, index, target.tokens)) {
+        matchedForms.add(target.form);
+      }
+    }
+  }
+
+  return matchedForms;
+}
+
 async function waitForProcess(
   proc: ReturnType<typeof spawn>,
   label: string,
@@ -433,6 +515,7 @@ async function scanCorpus(
   });
   const sqIterator = sqLines[Symbol.asyncIterator]();
   const enIterator = enLines[Symbol.asyncIterator]();
+  const targets = compileSearchTargets(targetForms);
   let added = 0;
   let index = 0;
 
@@ -448,9 +531,7 @@ async function scanCorpus(
     const en = enNext.value.trim();
     if (!keepSentence(sq, en)) continue;
 
-    const matchedForms = new Set(
-      sentenceTokens(sq).filter((token) => targetForms.has(token)),
-    );
+    const matchedForms = matchedFormsInSentence(sentenceTokens(sq), targets);
 
     for (const form of matchedForms) {
       const bucket = examples.get(form) ?? [];
