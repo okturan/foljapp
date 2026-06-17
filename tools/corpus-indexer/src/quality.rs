@@ -28,6 +28,9 @@ const REFERENCE_PROSE_HINTS: &[&str] = &[
     "first-person",
     "grammar",
     "indicative",
+    "lidhor",
+    "morfologjik",
+    "paskajor",
     "participle",
     "subjunctive",
     "veta e",
@@ -38,6 +41,7 @@ const REFERENCE_PROSE_HINTS: &[&str] = &[
     "e caktuar",
     "e pacaktuar",
     "e tashmja",
+    "format e së ardhmes",
 ];
 
 pub fn quality_flags(sentence: &str, normalized: &str, quality: Option<&str>) -> Vec<String> {
@@ -72,6 +76,9 @@ pub fn quality_flags(sentence: &str, normalized: &str, quality: Option<&str>) ->
     }
     let token_count = tokens_for(normalized).len();
     if sentence.matches(',').count() >= 3 && token_count <= 18 {
+        flags.push("inflection_list".to_string());
+    }
+    if dense_inflection_list(sentence, &lower) {
         flags.push("inflection_list".to_string());
     }
     if repeated_future_marker(&lower) {
@@ -110,4 +117,37 @@ fn repeated_future_marker(lower: &str) -> bool {
     tokens.windows(5).any(|window| {
         window[0] == "do" && window[1] == "të" && window[3] == "do" && window[4] == "të"
     })
+}
+
+fn dense_inflection_list(sentence: &str, lower: &str) -> bool {
+    lower.contains("e kështu me radhë")
+        && sentence.matches(',').count() >= 3
+        && sentence.matches(';').count() >= 1
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::text::tokens_for;
+
+    use super::{keep_sentence, quality_flags};
+
+    #[test]
+    fn rejects_dense_inflection_list_prose() {
+        let sentence = "qenkam, qenkësha; paskam qenë, paskësha qenë; punuekam a punuakam, punuekësha a punuakësha e kështu me radhë.";
+        let normalized = tokens_for(sentence).join(" ");
+        let flags = quality_flags(sentence, &normalized, Some("good"));
+
+        assert!(flags.iter().any(|flag| flag == "inflection_list"));
+        assert!(!keep_sentence(&flags));
+    }
+
+    #[test]
+    fn rejects_grammar_reference_prose() {
+        let sentence = "Në sistemin morfologjik, dialekti i veriut ka formën e paskajores së tipit me punue, kurse toskërishtja në vend të saj, përdor lidhoren të punoj.";
+        let normalized = tokens_for(sentence).join(" ");
+        let flags = quality_flags(sentence, &normalized, Some("good"));
+
+        assert!(flags.iter().any(|flag| flag == "reference_prose"));
+        assert!(!keep_sentence(&flags));
+    }
 }

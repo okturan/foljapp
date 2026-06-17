@@ -152,7 +152,16 @@ function localExamples(
   const publicExampleWhere = `
     s.flags_json NOT LIKE '%reference_prose%' AND
     s.flags_json NOT LIKE '%inflection_list%' AND
-    s.flags_json NOT LIKE '%adult_or_spam%'
+    s.flags_json NOT LIKE '%adult_or_spam%' AND
+    s.sentence NOT LIKE '%morfologjik%' AND
+    s.sentence NOT LIKE '%paskajor%' AND
+    s.sentence NOT LIKE '%lidhor%' AND
+    s.sentence NOT LIKE '%format e së ardhmes%' AND
+    NOT (
+      s.sentence LIKE '%e kështu me radhë%' AND
+      (length(s.sentence) - length(replace(s.sentence, ',', ''))) >= 3 AND
+      (length(s.sentence) - length(replace(s.sentence, ';', ''))) >= 1
+    )
   `;
   const exactSql = `
     ${baseSelect}
