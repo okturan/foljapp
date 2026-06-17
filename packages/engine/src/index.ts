@@ -67,3 +67,17 @@ export type {
 } from './types.js';
 
 export { cellLabel } from './types.js';
+
+export {
+  ancTagQueryForOptions,
+  cellDisplayLabel,
+  cellLabelFromSignature,
+  cellSignature,
+  cellSignatureFromCell,
+  generatedSearchTarget,
+  normalizeSearchKey,
+  normalizeSearchToken,
+  searchTokens,
+} from './corpus-tags.js';
+
+export type { AncTagQuery, GeneratedSearchTarget } from './corpus-tags.js';

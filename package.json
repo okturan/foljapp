@@ -18,6 +18,8 @@
     "build:corpus": "tsx scripts/build-corpus.ts",
     "build:opus-examples": "tsx scripts/build-opus-examples.ts",
     "build:opus-examples:local": "tsx scripts/build-opus-examples.ts --from-local-cache",
+    "build:example-targets": "tsx scripts/build-corpus-example-targets.ts",
+    "build:local-examples": "python3 scripts/build-local-corpus-examples.py",
     "download:opus": "tsx scripts/download-opus-corpora.ts",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint .",

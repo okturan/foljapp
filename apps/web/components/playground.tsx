@@ -30,7 +30,10 @@ const MOODS: Mood[] = [
   'non-finite',
 ];
 
-const MOOD_TENSES: Record<Exclude<Mood, 'non-finite' | 'imperative'>, Tense[]> = {
+const MOOD_TENSES: Record<
+  Exclude<Mood, 'non-finite' | 'imperative'>,
+  Tense[]
+> = {
   indicative: [
     'present',
     'imperfect',
@@ -88,15 +91,22 @@ function readParams(params: URLSearchParams): Config {
   const config: Config = {
     verb: params.get('verb') ?? DEFAULTS.verb,
     mood,
-    voice: (params.get('voice') ?? DEFAULTS.voice) as 'active' | 'middle-passive',
+    voice: (params.get('voice') ?? DEFAULTS.voice) as
+      | 'active'
+      | 'middle-passive',
     person: (Number(params.get('person')) || DEFAULTS.person) as 1 | 2 | 3,
     number: (params.get('number') ?? DEFAULTS.number) as 'singular' | 'plural',
-    polarity: (params.get('polarity') ?? DEFAULTS.polarity) as 'affirmative' | 'negative',
-    modality: (params.get('modality') ?? DEFAULTS.modality) as 'declarative' | 'interrogative',
+    polarity: (params.get('polarity') ?? DEFAULTS.polarity) as
+      | 'affirmative'
+      | 'negative',
+    modality: (params.get('modality') ?? DEFAULTS.modality) as
+      | 'declarative'
+      | 'interrogative',
   };
   const tense = params.get('tense');
   if (tense) config.tense = tense as Tense;
-  else if (mood !== 'non-finite' && mood !== 'imperative') config.tense = 'present';
+  else if (mood !== 'non-finite' && mood !== 'imperative')
+    config.tense = 'present';
   const form = params.get('form');
   if (form) config.form = form as NonFiniteForm;
   else if (mood === 'non-finite') config.form = 'participle';
@@ -121,7 +131,10 @@ export function Playground() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const config = useMemo<Config>(() => readParams(searchParams ?? new URLSearchParams()), [searchParams]);
+  const config = useMemo<Config>(
+    () => readParams(searchParams ?? new URLSearchParams()),
+    [searchParams],
+  );
 
   // Write defaults to URL on first mount so the link is always shareable
   useEffect(() => {
@@ -152,7 +165,9 @@ export function Playground() {
           delete next.form;
         }
       }
-      router.replace(`/playground?${configToParams(next).toString()}`, { scroll: false });
+      router.replace(`/playground?${configToParams(next).toString()}`, {
+        scroll: false,
+      });
     },
     [config, router],
   );
@@ -286,21 +301,15 @@ export function Playground() {
       : null;
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-6 lg:py-10 lg:grid lg:grid-cols-[3fr_2fr] lg:gap-12 lg:items-start">
+    <main className="mx-auto max-w-6xl px-6 py-6 lg:grid lg:grid-cols-[3fr_2fr] lg:items-start lg:gap-12 lg:py-10">
       <aside
         aria-label="Conjugated form"
-        className="
-          sticky top-0 z-10 -mx-6 mb-6 px-6 py-4
-          bg-stone-50/95 backdrop-blur border-b border-stone-200
-
-          lg:order-2 lg:top-8 lg:self-start lg:z-0
-          lg:mx-0 lg:mb-0 lg:px-6 lg:py-6
-          lg:bg-white lg:border lg:border-stone-200 lg:rounded-lg lg:backdrop-blur-none
-        "
+        className="sticky top-0 z-10 -mx-6 mb-6 border-b border-stone-200 bg-stone-50/95 px-6 py-4 backdrop-blur lg:top-8 lg:z-0 lg:order-2 lg:mx-0 lg:mb-0 lg:self-start lg:rounded-lg lg:border lg:border-stone-200 lg:bg-white lg:px-6 lg:py-6 lg:backdrop-blur-none"
       >
         <PlaygroundResult
           result={result}
           traceSteps={traceSteps}
+          options={opts}
           unsupported={unsupported}
           errorMsg={errorMsg}
           verbSlug={clientEntry?.id ?? config.verb}
@@ -318,11 +327,15 @@ export function Playground() {
         <div className="mt-8">
           <label className="text-sm text-stone-500">Verb</label>
           <div className="mt-1">
-            <VerbPicker value={config.verb} onSelect={(lemma) => update({ verb: lemma })} />
+            <VerbPicker
+              value={config.verb}
+              onSelect={(lemma) => update({ verb: lemma })}
+            />
           </div>
           {indexEntry ? (
             <p className="mt-2 text-xs text-stone-400">
-              {indexEntry.translationEn} · Zgjedhimi {indexEntry.class} · auxiliary {indexEntry.auxiliary}
+              {indexEntry.translationEn} · Zgjedhimi {indexEntry.class} ·
+              auxiliary {indexEntry.auxiliary}
             </p>
           ) : null}
         </div>
@@ -372,7 +385,7 @@ export function Playground() {
         {config.mood !== 'non-finite' ? (
           <div
             data-testid="compact-group-grid"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6"
+            className="grid grid-cols-1 gap-x-6 sm:grid-cols-2 lg:grid-cols-3"
           >
             <RadioGroup
               label="Voice"
@@ -387,7 +400,9 @@ export function Playground() {
                 ),
               }))}
               value={config.voice}
-              onChange={(v) => update({ voice: v as 'active' | 'middle-passive' })}
+              onChange={(v) =>
+                update({ voice: v as 'active' | 'middle-passive' })
+              }
             />
             <RadioGroup
               label="Polarity"
@@ -462,7 +477,13 @@ interface RadioGroupProps {
   onChange: (value: string) => void;
 }
 
-function RadioGroup({ label, name, options, value, onChange }: RadioGroupProps) {
+function RadioGroup({
+  label,
+  name,
+  options,
+  value,
+  onChange,
+}: RadioGroupProps) {
   // Density rule per design D1 of improve-playground-option-grid:
   //   ≤3 options → flex single-row natural-width pills
   //   ≥4 options → CSS Grid 2 cols / 3 cols at lg, equal-width cells
@@ -491,9 +512,7 @@ function RadioGroup({ label, name, options, value, onChange }: RadioGroupProps) 
           return (
             <label
               key={opt.value}
-              title={
-                disabled ? 'not a standard form for this verb' : undefined
-              }
+              title={disabled ? 'not a standard form for this verb' : undefined}
               className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
                 isGrid ? 'text-center' : ''
               } ${stateClasses}`}

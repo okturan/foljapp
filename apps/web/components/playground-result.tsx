@@ -1,6 +1,6 @@
 'use client';
 
-import type { TraceStep } from '@foljapp/engine';
+import type { ConjugateOptions, TraceStep } from '@foljapp/engine';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -16,6 +16,7 @@ interface Props {
     form: string;
   } | null;
   traceSteps: TraceStep[];
+  options: ConjugateOptions;
   unsupported: boolean;
   errorMsg: string | null;
   /** Canonical URL slug for the verb. */
@@ -34,6 +35,7 @@ interface Props {
 export function PlaygroundResult({
   result,
   traceSteps,
+  options,
   unsupported,
   errorMsg,
   verbSlug,
@@ -72,7 +74,7 @@ export function PlaygroundResult({
             </p>
           ) : null}
           <DerivationPanel steps={traceSteps} />
-          <CorpusExamples form={result.form} />
+          <CorpusExamples form={result.form} options={options} />
         </>
       ) : unsupported ? (
         <p className="mt-2 text-stone-400 italic">

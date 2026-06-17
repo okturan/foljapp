@@ -28,3 +28,27 @@ Current local cache total: about 13G.
 MaCoCu is the strongest next source for public examples because it carries provenance and quality metadata. OPUS is useful when the UI needs an English translation, but rare forms in OPUS skew toward mined/noisy corpora. CC100 expands recall for forms like `punuakam`, but the sample includes obvious web junk, so it should never feed the UI without filtering, sentence segmentation, and dedupe. SEEUniversity also finds rare forms, but some hits are grammar/reference prose rather than natural usage.
 
 The machine-readable inventory is in `resources.json`.
+
+## Local example index
+
+The playground can read a local SQLite FTS5 index from `.cache/corpus-examples.sqlite`. This is for local development only; raw corpora and the SQLite DB are not committed or deployed to Cloudflare Pages.
+
+Build the target list from the engine:
+
+```bash
+npm run build:example-targets
+```
+
+Build a focused local demo DB:
+
+```bash
+npm run build:example-targets -- '--forms=punoj,të punoj,punuakam,punuake,punuaka,punuakan,paskam punuar,punon,punojnë,punuar' --out=.cache/corpus-example-targets.demo.json
+npm run build:local-examples -- --targets=.cache/corpus-example-targets.demo.json --sources=seeuniversity --matched-only --max-per-target=3
+```
+
+Append a late rare-form source without replacing the DB:
+
+```bash
+npm run build:example-targets -- '--forms=punuakam' --out=.cache/corpus-example-targets.punuakam.json
+npm run build:local-examples -- --append --targets=.cache/corpus-example-targets.punuakam.json --sources=cc100 --matched-only --max-per-target=3 --stop-when-satisfied
+```

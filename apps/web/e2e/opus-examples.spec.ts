@@ -14,7 +14,7 @@ test('playground shows indexed examples for a generated form', async ({
   await expect(examples.locator('table')).toBeVisible();
   await expect(examples).toContainText('Indexed form: punoj');
   await expect(
-    examples.getByRole('columnheader', { name: 'Corpus' }),
+    examples.getByRole('columnheader', { name: 'Source' }),
   ).toBeVisible();
   await expect(examples).toContainText('punoj');
 
