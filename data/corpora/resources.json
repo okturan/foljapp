@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-17T02:30:41Z",
+  "updatedAt": "2026-06-17T11:13:54Z",
   "cacheRoot": ".cache/datasets",
   "notes": [
     "Raw corpora live under .cache/datasets and are intentionally not committed.",
@@ -19,8 +19,15 @@
       "format": "Moses text zip files",
       "downloadedBytes": 7821399014,
       "onDiskSize": "7.3G",
+      "downloadedZipCount": 27,
       "corpusCount": 27,
       "alignmentPairs": 113512247,
+      "manifestGeneratedAt": "2026-06-17T00:08:22.416Z",
+      "license": "Varies by OPUS corpus; check per-corpus OPUS metadata before redistribution.",
+      "checksumScope": "Per-corpus ZIP sha256 values in manifestPath.",
+      "indexerSupport": "rust",
+      "provenanceGranularity": "OPUS corpus zip and line number; no original document URL in Moses files.",
+      "redistributionPolicy": "Do not redistribute raw OPUS zips from foljapp; keep local cache only.",
       "contents": "Albanian-English aligned sentence pairs. Useful when a foljapp form can be shown with an English translation, but quality varies heavily by source.",
       "cautions": [
         "Rare forms mostly appeared in mined corpora such as CCMatrix and NLLB.",
@@ -33,7 +40,11 @@
         { "name": "HPLT", "version": "v3", "alignmentPairs": 6864132 },
         { "name": "MultiHPLT", "version": "v3", "alignmentPairs": 6864132 },
         { "name": "CCAligned", "version": "v1", "alignmentPairs": 2317644 },
-        { "name": "OpenSubtitles", "version": "v2024", "alignmentPairs": 2193576 },
+        {
+          "name": "OpenSubtitles",
+          "version": "v2024",
+          "alignmentPairs": 2193576
+        },
         { "name": "XLEnt", "version": "v1.2", "alignmentPairs": 1361565 },
         { "name": "MaCoCu", "version": "v2", "alignmentPairs": 507538 },
         { "name": "MultiMaCoCu", "version": "v2", "alignmentPairs": 507538 },
@@ -41,20 +52,65 @@
         { "name": "SETIMES", "version": "v2", "alignmentPairs": 227516 },
         { "name": "WikiMatrix", "version": "v1", "alignmentPairs": 180112 },
         { "name": "GNOME", "version": "v1", "alignmentPairs": 151012 },
-        { "name": "wikimedia", "version": "v20230407", "alignmentPairs": 121077 },
+        {
+          "name": "wikimedia",
+          "version": "v20230407",
+          "alignmentPairs": 121077
+        },
         { "name": "QED", "version": "v2.0a", "alignmentPairs": 117215 },
         { "name": "TED2020", "version": "v1", "alignmentPairs": 69896 },
         { "name": "bible-uedin", "version": "v1", "alignmentPairs": 62195 },
         { "name": "NeuLab-TedTalks", "version": "v1", "alignmentPairs": 47272 },
         { "name": "ELRC-5067-SciPar", "version": "v1", "alignmentPairs": 7780 },
-        { "name": "GlobalVoices", "version": "v2018q4", "alignmentPairs": 6078 },
+        {
+          "name": "GlobalVoices",
+          "version": "v2018q4",
+          "alignmentPairs": 6078
+        },
         { "name": "TildeMODEL", "version": "v2018", "alignmentPairs": 3058 },
         { "name": "EUbookshop", "version": "v2", "alignmentPairs": 2223 },
         { "name": "Tatoeba", "version": "v2023-04-12", "alignmentPairs": 1094 },
-        { "name": "ELRC-3052-wikipedia_health", "version": "v1", "alignmentPairs": 389 },
-        { "name": "ELRC-wikipedia_health", "version": "v1", "alignmentPairs": 389 },
+        {
+          "name": "ELRC-3052-wikipedia_health",
+          "version": "v1",
+          "alignmentPairs": 389
+        },
+        {
+          "name": "ELRC-wikipedia_health",
+          "version": "v1",
+          "alignmentPairs": 389
+        },
         { "name": "ELRC_2922", "version": "v1", "alignmentPairs": 388 },
         { "name": "Ubuntu", "version": "v14.10", "alignmentPairs": null }
+      ]
+    },
+    {
+      "id": "opus-all-to-sq-moses-latest",
+      "status": "downloaded",
+      "kind": "parallel-sentence-pairs",
+      "title": "OPUS all Albanian-paired Moses corpora",
+      "sourceUrl": "https://opus.nlpl.eu/",
+      "apiUrl": "https://opus.nlpl.eu/opusapi?source=sq&preprocessing=moses&version=latest",
+      "localPath": ".cache/datasets/opus/all-to-sq/moses/latest",
+      "manifestPath": ".cache/datasets/opus/all-to-sq/moses/latest/manifest.json",
+      "format": "Moses text zip files",
+      "downloadedBytes": 29694387365,
+      "onDiskSize": "28G",
+      "downloadedZipCount": 1721,
+      "apiRowCount": 1722,
+      "corpusCount": 29,
+      "alignmentPairs": 462057730,
+      "manifestGeneratedAt": "2026-06-17T11:13:54.652Z",
+      "license": "Varies by OPUS corpus; check per-corpus OPUS metadata before redistribution.",
+      "checksumScope": "Presence and byte size are recorded in manifestPath; per-zip sha256 not computed for this large all-pairs cache.",
+      "indexerSupport": "rust",
+      "provenanceGranularity": "OPUS corpus zip and line number; no original document URL in Moses files.",
+      "redistributionPolicy": "Do not redistribute raw OPUS zips from foljapp; keep local cache only.",
+      "contents": "All currently listed OPUS Moses zip files paired with Albanian from the OPUS API snapshot, including non-English language pairs beyond the existing en-sq cache.",
+      "cautions": [
+        "Includes one duplicate API row that maps to an existing unique local zip path.",
+        "Many Albanian sides repeat across multiple source languages and OPUS corpora.",
+        "Alignment quality varies heavily; examples need ranking, dedupe, and source labels."
       ]
     },
     {
@@ -69,6 +125,9 @@
       "onDiskSize": "1.5G",
       "sha256": "e6bc4d8bf5ffb661af2c74770016d32831ba88e03fde63b44422a9c8c1f2dc03",
       "license": "CC0-1.0",
+      "indexerSupport": "rust",
+      "provenanceGranularity": "Document URL/domain/title plus sentence number generated locally.",
+      "redistributionPolicy": "Raw corpus stays local; derived short examples need source labels.",
       "schema": ["id", "title", "text", "url", "domain", "tld", "genre"],
       "contents": "Document-level Albanian web text with URL/domain/title and genre metadata. Good candidate for monolingual sentence examples with provenance.",
       "observedUsefulForms": ["punuakam", "punuaka", "punuakan"],
@@ -89,6 +148,9 @@
       "onDiskSize": "1.6G",
       "sha256": "02e4728e1c42566a2263bd8ab8430dfa78bd55b8300854f795b7a10986d5efbb",
       "license": "CC0-1.0",
+      "indexerSupport": "rust",
+      "provenanceGranularity": "Document URL/domain/title plus paragraph id and sentence number generated locally.",
+      "redistributionPolicy": "Raw corpus stays local; derived short examples need source labels.",
       "schema": [
         "corpus",
         "doc id/title/crawl_date/url/domain/file_type/lang_distr/lm_score",
@@ -113,6 +175,9 @@
       "onDiskSize": "1.3G",
       "sha256": "5cc7c5ebc83626f3913943d7592f83b9b27f94358271ec3d71503177c9ee6b01",
       "license": "Public research corpus; check upstream terms before redistribution.",
+      "indexerSupport": "rust",
+      "provenanceGranularity": "Local line number only; no source URL in the raw file.",
+      "redistributionPolicy": "Do not redistribute raw CC100 text from foljapp; keep local cache only.",
       "schema": ["one text line per record"],
       "contents": "Large raw Albanian web text. It finds rare forms that OPUS misses, including natural-looking occurrences of admirative forms.",
       "observedUsefulForms": ["punuakam", "punuaka", "punuakan"],
@@ -120,6 +185,223 @@
         "Very noisy raw web data; sampled lines included junk/adult/spam text.",
         "No URL or document metadata in the local text file.",
         "Needs aggressive filtering before any public UI use."
+      ]
+    },
+    {
+      "id": "mc4-sq",
+      "status": "downloaded",
+      "kind": "monolingual-web-documents",
+      "title": "mC4 Albanian",
+      "sourceUrl": "https://huggingface.co/datasets/allenai/c4",
+      "discoveryDatasetUrl": "https://huggingface.co/datasets/legacy-datasets/mc4",
+      "sourceRevision": "1ddc917116b730e1859edef32896ec5c16be51d0",
+      "localPath": ".cache/datasets/monolingual-albanian/mc4-sq",
+      "manifestPath": ".cache/datasets/monolingual-albanian/mc4-sq/download-list.json",
+      "format": "json.gz shards",
+      "downloadedBytes": 5371611943,
+      "onDiskSize": "5.1G",
+      "shardCount": 129,
+      "trainShardCount": 128,
+      "validationShardCount": 1,
+      "license": "ODC-BY; Common Crawl terms also apply.",
+      "indexerSupport": "rust",
+      "provenanceGranularity": "Document URL/timestamp plus shard line and sentence number generated locally.",
+      "redistributionPolicy": "Do not redistribute raw mC4 shards from foljapp; keep local cache only.",
+      "schema": ["text", "timestamp", "url"],
+      "contents": "Albanian mC4 JSON.GZ shards with web document text, timestamp, and URL. Useful for broad monolingual sentence recall with basic provenance.",
+      "cautions": [
+        "Very large web documents need sentence segmentation, dedupe, and filtering before UI use.",
+        "No upstream quality score is present in each record.",
+        "License and redistribution terms must be checked upstream before publishing derived examples."
+      ]
+    },
+    {
+      "id": "hf-albanian-wiki-clean-lm",
+      "status": "downloaded",
+      "kind": "monolingual-wikipedia-parquet",
+      "title": "Albanian Wiki clean LM",
+      "sourceUrl": "https://huggingface.co/datasets/silsilhfu/albanian-wiki-clean-lm",
+      "localPath": ".cache/datasets/huggingface/albanian-wiki-clean-lm",
+      "format": "Parquet shards",
+      "downloadedBytes": 241082451,
+      "onDiskSize": "230M",
+      "shardCount": 3,
+      "indexerSupport": "raw-download-only",
+      "provenanceGranularity": "Parquet row metadata after schema inspection.",
+      "redistributionPolicy": "Keep raw parquet local until license and schema are reviewed.",
+      "contents": "Cleaned Albanian Wikipedia language-model text.",
+      "cautions": [
+        "Not wired into the Rust example index yet.",
+        "Schema and license need review before public examples are derived."
+      ]
+    },
+    {
+      "id": "hf-albanian-english-bundled",
+      "status": "downloaded",
+      "kind": "parallel-and-language-model-parquet",
+      "title": "Albanian-English bundled dataset",
+      "sourceUrl": "https://huggingface.co/datasets/tools4eu/albanian-english-bundled",
+      "localPath": ".cache/datasets/huggingface/albanian-english-bundled",
+      "format": "Parquet shards",
+      "downloadedBytes": 242504356,
+      "onDiskSize": "232M",
+      "shardCount": 2,
+      "license": "GPL-3.0",
+      "indexerSupport": "raw-download-only",
+      "provenanceGranularity": "Parquet row metadata after schema inspection.",
+      "redistributionPolicy": "Keep raw parquet local; review GPL implications before derived public use.",
+      "contents": "Public Albanian-English bundled data for translation/fill-mask tasks.",
+      "cautions": [
+        "Not wired into the Rust example index yet.",
+        "Task-format rows may not be natural standalone sentence examples."
+      ]
+    },
+    {
+      "id": "hf-bigmind-albanian",
+      "status": "downloaded",
+      "kind": "instruction-parquet",
+      "title": "BigMind Albanian",
+      "sourceUrl": "https://huggingface.co/datasets/noxneural/bigmind_albanian",
+      "localPath": ".cache/datasets/huggingface/bigmind-albanian",
+      "format": "Parquet shards",
+      "downloadedBytes": 1038555570,
+      "onDiskSize": "991M",
+      "shardCount": 3,
+      "indexerSupport": "raw-download-only",
+      "provenanceGranularity": "Parquet row metadata after schema inspection.",
+      "redistributionPolicy": "Keep raw parquet local until license and generation provenance are reviewed.",
+      "contents": "Large public Albanian instruction-style dataset.",
+      "cautions": [
+        "Likely synthetic or instruction-tuned content; do not treat as corpus evidence without review.",
+        "Not wired into the Rust example index yet."
+      ]
+    },
+    {
+      "id": "hf-albanian-wikiorca",
+      "status": "downloaded",
+      "kind": "question-answer-parquet",
+      "title": "Albanian WikiOrca",
+      "sourceUrl": "https://huggingface.co/datasets/noxneural/Albanian_WikiOrca",
+      "localPath": ".cache/datasets/huggingface/albanian-wikiorca",
+      "format": "Parquet shards",
+      "downloadedBytes": 230612313,
+      "onDiskSize": "220M",
+      "shardCount": 3,
+      "indexerSupport": "raw-download-only",
+      "provenanceGranularity": "Parquet row metadata after schema inspection.",
+      "redistributionPolicy": "Keep raw parquet local until license and generation provenance are reviewed.",
+      "contents": "Public Albanian WikiOrca question/response data.",
+      "cautions": [
+        "Question-answer rows are not direct corpus attestations.",
+        "Not wired into the Rust example index yet."
+      ]
+    },
+    {
+      "id": "fineweb2-albanian-varieties",
+      "status": "downloaded",
+      "kind": "monolingual-web-parquet",
+      "title": "FineWeb2 Albanian varieties",
+      "sourceUrl": "https://huggingface.co/datasets/HuggingFaceFW/fineweb-2",
+      "localPath": ".cache/datasets/monolingual-albanian/fineweb2",
+      "format": "Parquet shards",
+      "downloadedBytes": 9108035860,
+      "onDiskSize": "8.5G",
+      "shardCount": 5,
+      "languages": ["als_Latn", "aln_Latn"],
+      "license": "ODC-BY",
+      "indexerSupport": "raw-download-only",
+      "provenanceGranularity": "Parquet row metadata after schema inspection.",
+      "redistributionPolicy": "Keep raw parquet local until extraction and license attribution are reviewed.",
+      "contents": "FineWeb2 Albanian-language variety shards for Tosk/standard and Gheg-style language codes.",
+      "cautions": [
+        "Not wired into the Rust example index yet.",
+        "Likely overlaps with other Common Crawl-derived corpora."
+      ]
+    },
+    {
+      "id": "hplt-v3-als-latn",
+      "status": "downloaded",
+      "kind": "monolingual-web-documents",
+      "title": "HPLT v3 Albanian als_Latn",
+      "sourceUrl": "https://data.hplt-project.org/three/sorted/als_Latn.map",
+      "localPath": ".cache/datasets/monolingual-albanian/hplt-v3/als_Latn",
+      "manifestPath": ".cache/datasets/monolingual-albanian/hplt-v3/als_Latn.map",
+      "format": "jsonl.zst shards",
+      "downloadedBytes": 12778954242,
+      "onDiskSize": "12G",
+      "shardCount": 6,
+      "license": "Check HPLT v3 terms before redistribution.",
+      "indexerSupport": "rust",
+      "provenanceGranularity": "Common Crawl URL, crawl id, shard, record id, and generated sentence number.",
+      "redistributionPolicy": "Keep raw shards local; derived examples need URL/source labels and HPLT/Common Crawl term review.",
+      "schema": ["text", "u", "ts", "crawl_id", "lang", "prob", "filter", "id"],
+      "contents": "Large HPLT v3 Albanian web corpus shards with document text and source URL metadata.",
+      "cautions": [
+        "Common Crawl-derived web data overlaps with MaCoCu, CC100, mC4, FineWeb2, CulturaX, and OSCAR.",
+        "Still requires filtering and dedupe before UI display."
+      ]
+    },
+    {
+      "id": "leipzig-sqi",
+      "status": "downloaded",
+      "kind": "sentence-corpus-archives",
+      "title": "Leipzig Albanian corpora",
+      "sourceUrl": "https://wortschatz.uni-leipzig.de/en/download/",
+      "localPath": ".cache/datasets/monolingual-albanian/leipzig",
+      "format": "tar.gz sentence archives",
+      "downloadedBytes": 1973506239,
+      "onDiskSize": "1.9G",
+      "archiveCount": 23,
+      "indexerSupport": "rust",
+      "provenanceGranularity": "Leipzig archive name plus sentence id.",
+      "redistributionPolicy": "Keep raw archives local; derived examples need Leipzig/source attribution review.",
+      "contents": "Albanian community, news, and Wikipedia sentence corpora in multiple Leipzig sample-size archives.",
+      "cautions": [
+        "Sample-size archives overlap heavily.",
+        "No original document URL is present in the sentence files."
+      ]
+    },
+    {
+      "id": "tatoeba-full",
+      "status": "downloaded",
+      "kind": "parallel-and-standalone-sentences",
+      "title": "Tatoeba full exports",
+      "sourceUrl": "https://downloads.tatoeba.org/exports/",
+      "localPath": ".cache/datasets/tatoeba",
+      "format": "tar.bz2 exports",
+      "downloadedBytes": 453239159,
+      "onDiskSize": "433M",
+      "archiveCount": 3,
+      "license": "CC-BY 2.0 FR",
+      "indexerSupport": "rust",
+      "provenanceGranularity": "Tatoeba sentence id and public sentence URL.",
+      "redistributionPolicy": "Short attributed examples may be used under Tatoeba license; keep raw exports local.",
+      "schema": ["sentences_detailed.csv", "links.csv", "tags.csv"],
+      "contents": "Full Tatoeba sentence, link, and tag exports. The Rust scanner currently indexes Albanian rows from sentences_detailed.",
+      "cautions": [
+        "Small compared with web corpora.",
+        "Sentence quality and naturalness vary by contributor."
+      ]
+    },
+    {
+      "id": "wikimedia-sq-latest",
+      "status": "downloaded",
+      "kind": "wikimedia-article-dumps",
+      "title": "Wikimedia Albanian latest article dumps",
+      "sourceUrl": "https://dumps.wikimedia.org/",
+      "localPath": ".cache/datasets/wikimedia",
+      "format": "MediaWiki XML bz2 dumps",
+      "downloadedBytes": 174862456,
+      "onDiskSize": "167M",
+      "dumpCount": 5,
+      "license": "CC-BY-SA/GFDL depending on project content; check Wikimedia project terms.",
+      "indexerSupport": "raw-download-only",
+      "provenanceGranularity": "Article title/page metadata after XML extraction.",
+      "redistributionPolicy": "Keep raw dumps local; derived examples need Wikimedia attribution and license handling.",
+      "contents": "Latest Albanian article dumps for sqwiki, sqwiktionary, sqwikiquote, sqwikibooks, and sqwikinews.",
+      "cautions": [
+        "Not wired into the Rust example index yet.",
+        "Requires MediaWiki markup extraction before sentence indexing."
       ]
     },
     {
@@ -134,6 +416,9 @@
       "onDiskSize": "912M",
       "sha256": "7f5ad8077d54689f19e6ef4255f9924608813f05c43912c0fa3baac75bd0dd74",
       "license": "AFL-3.0",
+      "indexerSupport": "rust",
+      "provenanceGranularity": "Local line number only; no source URL in the raw file.",
+      "redistributionPolicy": "Raw corpus stays local; derived examples need filtering because source provenance is weak.",
       "lineCount": 8380151,
       "schema": ["one text line per record"],
       "contents": "Line-oriented Albanian corpus for language-model training. It includes both reference/grammar material and general text.",
@@ -155,6 +440,8 @@
       "onDiskSize": "72K",
       "sha256": "1713908256b357c08ea03304ff72d77834b34df20ffa84d14af77ce446bf76aa",
       "license": "See archive LICENSE.txt",
+      "indexerSupport": "rust",
+      "provenanceGranularity": "CoNLL-U sentence id/source metadata where present.",
       "contents": "Small manually annotated Albanian dependency treebank with train/dev/test CoNLL-U files.",
       "cautions": [
         "Too small for broad example coverage.",
@@ -173,6 +460,8 @@
       "onDiskSize": "20K",
       "sha256": "711231d27e1da99ad3af1dadeabd1378561f5d431defff563ac9da4d660354c0",
       "license": "See archive LICENSE.txt",
+      "indexerSupport": "rust",
+      "provenanceGranularity": "CoNLL-U sentence id/source metadata where present.",
       "contents": "Small manually annotated Albanian dependency treebank with a test CoNLL-U file.",
       "cautions": [
         "Too small for broad example coverage.",

@@ -1,3 +1,7 @@
+import { execFileSync } from 'node:child_process';
+import { existsSync, statSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+
 import {
   generatedSearchTarget,
   normalizeSearchKey,
@@ -6,9 +10,6 @@ import {
   type NonFiniteForm,
   type Tense,
 } from '@foljapp/engine';
-import { existsSync, statSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { execFileSync } from 'node:child_process';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 

@@ -4,16 +4,19 @@ Albanian verbal system reference. Educational, reference-quality, academically r
 
 ## Status
 
-Pre-alpha — Phase 1 (foundation) only. No verb data ships yet.
+Pre-alpha. The web app, conjugation engine, verb corpus, reference pages,
+playground, and local corpus-example tooling are active.
 
 ## Layout
 
 ```
 apps/web/          Next.js 15 webapp (App Router, RSC)
-packages/engine/   Pure-TypeScript conjugation engine (placeholder)
-packages/data/     Verb-corpus schemas and loaders (placeholder)
+packages/engine/   Pure-TypeScript conjugation engine
+packages/data/     Verb-corpus schemas and loaders
 data/verbs/        Verb JSON entries (populated by add-conjugation-engine)
+data/corpora/      Tracked ledger for local corpus resources
 scripts/           Build-time tooling
+tools/             Rust local corpus indexer
 openspec/          Specs, changes, roadmap (canonical project plan)
 ```
 
@@ -24,6 +27,7 @@ See [`openspec/config.yaml`](./openspec/config.yaml) for the project context
 and 14-capability roadmap across 5 phases.
 
 Active changes:
+
 ```
 openspec list
 ```

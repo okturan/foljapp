@@ -19,7 +19,6 @@
     "build:opus-examples": "tsx scripts/build-opus-examples.ts",
     "build:opus-examples:local": "tsx scripts/build-opus-examples.ts --from-local-cache",
     "build:example-targets": "tsx scripts/build-corpus-example-targets.ts",
-    "build:local-examples": "python3 scripts/materialize-local-corpus-examples.py",
     "materialize:local-examples": "python3 scripts/materialize-local-corpus-examples.py",
     "scan:local-examples": "CARGO_TARGET_DIR=.cache/cargo-target cargo run --release --manifest-path tools/corpus-indexer/Cargo.toml -- scan",
     "download:opus": "tsx scripts/download-opus-corpora.ts",

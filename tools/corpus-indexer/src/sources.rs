@@ -5,12 +5,15 @@ use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, SyncSender};
 use std::thread;
 
+use bzip2::read::BzDecoder;
 use flate2::read::GzDecoder;
 use quick_xml::events::{BytesStart, Event};
 use quick_xml::Reader as XmlReader;
 use serde_json::Value;
+use tar::Archive as TarArchive;
 use xz2::read::XzDecoder;
 use zip::ZipArchive;
+use zstd::stream::read::Decoder as ZstdDecoder;
 
 pub type SourceResult<T> = anyhow::Result<T>;
 
@@ -31,8 +34,12 @@ pub enum SourceKind {
     MacocuGenreJsonlGz,
     MacocuXmlZip,
     Cc100XzLines,
+    HpltJsonlZstDir,
+    LeipzigTarGzDir,
+    Mc4JsonGzDir,
     SeeUniversityTxtLines,
     OpusMosesZipDir,
+    TatoebaTarBz2Dir,
     UdConlluZip,
 }
 
@@ -106,10 +113,26 @@ pub fn open_resource(resource: &ResourceSpec) -> SourceResult<CandidateStream> {
         SourceKind::Cc100XzLines => {
             cc100_xz_lines_with_id(resource.local_path.clone(), resource.id.clone())
         }
+        SourceKind::HpltJsonlZstDir => Ok(hplt_jsonl_zst_dir_with_id(
+            resource.local_path.clone(),
+            resource.id.clone(),
+        )),
+        SourceKind::LeipzigTarGzDir => Ok(leipzig_tar_gz_dir_with_id(
+            resource.local_path.clone(),
+            resource.id.clone(),
+        )),
+        SourceKind::Mc4JsonGzDir => Ok(mc4_json_gz_dir_with_id(
+            resource.local_path.clone(),
+            resource.id.clone(),
+        )),
         SourceKind::SeeUniversityTxtLines => {
             seeuniversity_txt_lines_with_id(resource.local_path.clone(), resource.id.clone())
         }
         SourceKind::OpusMosesZipDir => Ok(opus_moses_zip_dir_with_id(
+            resource.local_path.clone(),
+            resource.id.clone(),
+        )),
+        SourceKind::TatoebaTarBz2Dir => Ok(tatoeba_tar_bz2_dir_with_id(
             resource.local_path.clone(),
             resource.id.clone(),
         )),
@@ -167,8 +190,24 @@ fn macocu_xml_zip_with_id(path: PathBuf, resource_id: String) -> CandidateStream
     spawn_reader(move |tx| run_macocu_xml_zip(path, resource_id, tx))
 }
 
+fn hplt_jsonl_zst_dir_with_id(path: PathBuf, resource_id: String) -> CandidateStream {
+    spawn_reader(move |tx| run_hplt_jsonl_zst_dir(path, resource_id, tx))
+}
+
+fn leipzig_tar_gz_dir_with_id(path: PathBuf, resource_id: String) -> CandidateStream {
+    spawn_reader(move |tx| run_leipzig_tar_gz_dir(path, resource_id, tx))
+}
+
+fn mc4_json_gz_dir_with_id(path: PathBuf, resource_id: String) -> CandidateStream {
+    spawn_reader(move |tx| run_mc4_json_gz_dir(path, resource_id, tx))
+}
+
 fn opus_moses_zip_dir_with_id(path: PathBuf, resource_id: String) -> CandidateStream {
     spawn_reader(move |tx| run_opus_moses_zip_dir(path, resource_id, tx))
+}
+
+fn tatoeba_tar_bz2_dir_with_id(path: PathBuf, resource_id: String) -> CandidateStream {
+    spawn_reader(move |tx| run_tatoeba_tar_bz2_dir(path, resource_id, tx))
 }
 
 fn ud_conllu_zip_with_id(path: PathBuf, resource_id: String) -> CandidateStream {
@@ -466,6 +505,253 @@ fn run_opus_moses_zip_dir(
     Ok(())
 }
 
+fn run_hplt_jsonl_zst_dir(
+    path: PathBuf,
+    resource_id: String,
+    tx: SyncSender<SourceResult<Candidate>>,
+) -> SourceResult<()> {
+    let mut shard_paths = fs::read_dir(&path)?
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| {
+            path.file_name()
+                .and_then(|name| name.to_str())
+                .is_some_and(|name| name.ends_with(".jsonl.zst"))
+        })
+        .collect::<Vec<_>>();
+    shard_paths.sort();
+
+    for shard_path in shard_paths {
+        let shard_name = shard_path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or("hplt-shard")
+            .to_owned();
+        let file = File::open(&shard_path)?;
+        let decoder = ZstdDecoder::new(file)?;
+        let reader = BufReader::new(decoder);
+
+        for (line_idx, line) in reader.lines().enumerate() {
+            let line = line?;
+            if line.trim().is_empty() {
+                continue;
+            }
+            let record: Value = serde_json::from_str(&line)?;
+            let Some(text) = str_field(&record, "text") else {
+                continue;
+            };
+            let url = str_field(&record, "u").map(ToOwned::to_owned);
+            let domain = url.as_deref().and_then(domain_from_url);
+            let doc_id = str_field(&record, "id")
+                .map(ToOwned::to_owned)
+                .unwrap_or_else(|| format!("{shard_name}:{}", line_idx + 1));
+            let quality = match str_field(&record, "filter") {
+                Some("keep") => Some("good".to_owned()),
+                Some(value) => Some(value.to_owned()),
+                None => None,
+            };
+
+            for (sentence_idx, sentence) in split_sentences(text).into_iter().enumerate() {
+                let candidate = Candidate {
+                    resource_id: resource_id.clone(),
+                    doc_id: format!("{doc_id}#s{}", sentence_idx + 1),
+                    title: str_field(&record, "crawl_id").map(ToOwned::to_owned),
+                    url: url.clone(),
+                    domain: domain.clone(),
+                    genre: Some("web".to_owned()),
+                    quality: quality.clone(),
+                    sentence,
+                };
+                if tx.send(Ok(candidate)).is_err() {
+                    return Ok(());
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn run_leipzig_tar_gz_dir(
+    path: PathBuf,
+    resource_id: String,
+    tx: SyncSender<SourceResult<Candidate>>,
+) -> SourceResult<()> {
+    let mut archive_paths = fs::read_dir(&path)?
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| {
+            path.file_name()
+                .and_then(|name| name.to_str())
+                .is_some_and(|name| name.ends_with(".tar.gz"))
+        })
+        .collect::<Vec<_>>();
+    archive_paths.sort();
+
+    for archive_path in archive_paths {
+        let archive_name = archive_path
+            .file_stem()
+            .and_then(|stem| stem.to_str())
+            .unwrap_or("leipzig")
+            .trim_end_matches(".tar")
+            .to_owned();
+        let file = File::open(&archive_path)?;
+        let decoder = GzDecoder::new(file);
+        let mut archive = TarArchive::new(decoder);
+
+        for entry in archive.entries()? {
+            let entry = entry?;
+            let member_name = entry.path()?.to_string_lossy().into_owned();
+            if !member_name.ends_with("-sentences.txt") {
+                continue;
+            }
+
+            let reader = BufReader::new(entry);
+            for (idx, line) in reader.lines().enumerate() {
+                let line = line?;
+                let Some((raw_id, text)) = line.split_once('\t') else {
+                    continue;
+                };
+                for (sentence_idx, sentence) in split_sentences(text).into_iter().enumerate() {
+                    let candidate = Candidate {
+                        resource_id: resource_id.clone(),
+                        doc_id: format!("{archive_name}:{raw_id}#s{}", sentence_idx + 1),
+                        title: Some(archive_name.clone()),
+                        url: None,
+                        domain: Some("wortschatz-leipzig.de".to_owned()),
+                        genre: Some("leipzig".to_owned()),
+                        quality: Some("good".to_owned()),
+                        sentence,
+                    };
+                    if tx.send(Ok(candidate)).is_err() {
+                        return Ok(());
+                    }
+                }
+                if idx > 0 && idx.is_multiple_of(1_000_000) {
+                    println!("  read {idx} Leipzig sentence lines from {archive_name}");
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn run_mc4_json_gz_dir(
+    path: PathBuf,
+    resource_id: String,
+    tx: SyncSender<SourceResult<Candidate>>,
+) -> SourceResult<()> {
+    let mut shard_paths = fs::read_dir(&path)?
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| {
+            path.file_name()
+                .and_then(|name| name.to_str())
+                .is_some_and(|name| name.ends_with(".json.gz"))
+        })
+        .collect::<Vec<_>>();
+    shard_paths.sort();
+
+    for shard_path in shard_paths {
+        let shard_name = shard_path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or("mc4-shard")
+            .to_owned();
+        let file = File::open(&shard_path)?;
+        let decoder = GzDecoder::new(file);
+        let reader = BufReader::new(decoder);
+
+        for (line_idx, line) in reader.lines().enumerate() {
+            let line = line?;
+            if line.trim().is_empty() {
+                continue;
+            }
+            let record: Value = serde_json::from_str(&line)?;
+            let Some(text) = str_field(&record, "text") else {
+                continue;
+            };
+            let url = str_field(&record, "url").map(ToOwned::to_owned);
+            let domain = url.as_deref().and_then(domain_from_url);
+
+            for (sentence_idx, sentence) in split_sentences(text).into_iter().enumerate() {
+                let candidate = Candidate {
+                    resource_id: resource_id.clone(),
+                    doc_id: format!("{shard_name}:{}#s{}", line_idx + 1, sentence_idx + 1),
+                    title: None,
+                    url: url.clone(),
+                    domain: domain.clone(),
+                    genre: Some("web".to_owned()),
+                    quality: None,
+                    sentence,
+                };
+                if tx.send(Ok(candidate)).is_err() {
+                    return Ok(());
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn run_tatoeba_tar_bz2_dir(
+    path: PathBuf,
+    resource_id: String,
+    tx: SyncSender<SourceResult<Candidate>>,
+) -> SourceResult<()> {
+    let archive_path = path.join("sentences_detailed.tar.bz2");
+    let file = File::open(&archive_path)?;
+    let decoder = BzDecoder::new(file);
+    let mut archive = TarArchive::new(decoder);
+
+    for entry in archive.entries()? {
+        let entry = entry?;
+        let member_name = entry.path()?.to_string_lossy().into_owned();
+        if !member_name.ends_with("sentences_detailed.csv") {
+            continue;
+        }
+
+        let reader = BufReader::new(entry);
+        for line in reader.lines() {
+            let line = line?;
+            let mut parts = line.splitn(4, '\t');
+            let Some(sentence_id) = parts.next() else {
+                continue;
+            };
+            let Some(lang) = parts.next() else {
+                continue;
+            };
+            let Some(text) = parts.next() else {
+                continue;
+            };
+            if lang != "sqi" && lang != "sq" {
+                continue;
+            }
+            for (sentence_idx, sentence) in split_sentences(text).into_iter().enumerate() {
+                let candidate = Candidate {
+                    resource_id: resource_id.clone(),
+                    doc_id: format!("{sentence_id}#s{}", sentence_idx + 1),
+                    title: Some("Tatoeba".to_owned()),
+                    url: Some(format!(
+                        "https://tatoeba.org/en/sentences/show/{sentence_id}"
+                    )),
+                    domain: Some("tatoeba.org".to_owned()),
+                    genre: Some("parallel".to_owned()),
+                    quality: None,
+                    sentence,
+                };
+                if tx.send(Ok(candidate)).is_err() {
+                    return Ok(());
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
 fn run_ud_conllu_zip(
     path: PathBuf,
     resource_id: String,
@@ -627,13 +913,31 @@ fn source_kind(id: &str, format: Option<&str>) -> Option<SourceKind> {
         ("macocu-genre-sq", "jsonl.gz") => Some(SourceKind::MacocuGenreJsonlGz),
         ("macocu-sq-1.0-xml", "xml.zip") => Some(SourceKind::MacocuXmlZip),
         ("cc100-sq", "txt.xz") => Some(SourceKind::Cc100XzLines),
+        ("hplt-v3-als-latn", "jsonl.zst shards") => Some(SourceKind::HpltJsonlZstDir),
+        ("leipzig-sqi", "tar.gz sentence archives") => Some(SourceKind::LeipzigTarGzDir),
+        ("mc4-sq", "json.gz shards") => Some(SourceKind::Mc4JsonGzDir),
         ("seeuniversity-albanian-corpora-bert", "txt") => Some(SourceKind::SeeUniversityTxtLines),
-        ("opus-en-sq-moses-latest", "Moses text zip files") => Some(SourceKind::OpusMosesZipDir),
+        ("opus-en-sq-moses-latest", "Moses text zip files")
+        | ("opus-all-to-sq-moses-latest", "Moses text zip files") => {
+            Some(SourceKind::OpusMosesZipDir)
+        }
+        ("tatoeba-full", "tar.bz2 exports") => Some(SourceKind::TatoebaTarBz2Dir),
         ("ud-albanian-staf", "CoNLL-U zip") | ("ud-albanian-tsa", "CoNLL-U zip") => {
             Some(SourceKind::UdConlluZip)
         }
         _ => None,
     }
+}
+
+fn domain_from_url(url: &str) -> Option<String> {
+    let rest = url
+        .strip_prefix("https://")
+        .or_else(|| url.strip_prefix("http://"))?;
+    rest.split('/')
+        .next()
+        .and_then(|host| host.split(':').next())
+        .filter(|host| !host.is_empty())
+        .map(ToOwned::to_owned)
 }
 
 fn str_field<'a>(value: &'a Value, key: &str) -> Option<&'a str> {
