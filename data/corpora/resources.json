@@ -1,0 +1,217 @@
+{
+  "updatedAt": "2026-06-17T02:30:41Z",
+  "cacheRoot": ".cache/datasets",
+  "notes": [
+    "Raw corpora live under .cache/datasets and are intentionally not committed.",
+    "Downloaded sizes are compressed/on-disk sizes from the local cache.",
+    "Use this file as the tracked inventory for corpus experiments and rebuilds."
+  ],
+  "resources": [
+    {
+      "id": "opus-en-sq-moses-latest",
+      "status": "downloaded",
+      "kind": "parallel-sentence-pairs",
+      "title": "OPUS Albanian-English Moses corpora",
+      "sourceUrl": "https://opus.nlpl.eu/",
+      "apiUrl": "https://opus.nlpl.eu/opusapi?source=sq&target=en&preprocessing=moses&version=latest",
+      "localPath": ".cache/datasets/opus/en-sq/moses/latest",
+      "manifestPath": ".cache/datasets/opus/en-sq/moses/latest/manifest.json",
+      "format": "Moses text zip files",
+      "downloadedBytes": 7821399014,
+      "onDiskSize": "7.3G",
+      "corpusCount": 27,
+      "alignmentPairs": 113512247,
+      "contents": "Albanian-English aligned sentence pairs. Useful when a foljapp form can be shown with an English translation, but quality varies heavily by source.",
+      "cautions": [
+        "Rare forms mostly appeared in mined corpora such as CCMatrix and NLLB.",
+        "Alignment quality is uneven; examples need ranking, dedupe, and source labels.",
+        "Not enough by itself for rare Albanian-only forms."
+      ],
+      "corpora": [
+        { "name": "NLLB", "version": "v1", "alignmentPairs": 69172136 },
+        { "name": "CCMatrix", "version": "v1", "alignmentPairs": 22358158 },
+        { "name": "HPLT", "version": "v3", "alignmentPairs": 6864132 },
+        { "name": "MultiHPLT", "version": "v3", "alignmentPairs": 6864132 },
+        { "name": "CCAligned", "version": "v1", "alignmentPairs": 2317644 },
+        { "name": "OpenSubtitles", "version": "v2024", "alignmentPairs": 2193576 },
+        { "name": "XLEnt", "version": "v1.2", "alignmentPairs": 1361565 },
+        { "name": "MaCoCu", "version": "v2", "alignmentPairs": 507538 },
+        { "name": "MultiMaCoCu", "version": "v2", "alignmentPairs": 507538 },
+        { "name": "Tanzil", "version": "v1", "alignmentPairs": 368134 },
+        { "name": "SETIMES", "version": "v2", "alignmentPairs": 227516 },
+        { "name": "WikiMatrix", "version": "v1", "alignmentPairs": 180112 },
+        { "name": "GNOME", "version": "v1", "alignmentPairs": 151012 },
+        { "name": "wikimedia", "version": "v20230407", "alignmentPairs": 121077 },
+        { "name": "QED", "version": "v2.0a", "alignmentPairs": 117215 },
+        { "name": "TED2020", "version": "v1", "alignmentPairs": 69896 },
+        { "name": "bible-uedin", "version": "v1", "alignmentPairs": 62195 },
+        { "name": "NeuLab-TedTalks", "version": "v1", "alignmentPairs": 47272 },
+        { "name": "ELRC-5067-SciPar", "version": "v1", "alignmentPairs": 7780 },
+        { "name": "GlobalVoices", "version": "v2018q4", "alignmentPairs": 6078 },
+        { "name": "TildeMODEL", "version": "v2018", "alignmentPairs": 3058 },
+        { "name": "EUbookshop", "version": "v2", "alignmentPairs": 2223 },
+        { "name": "Tatoeba", "version": "v2023-04-12", "alignmentPairs": 1094 },
+        { "name": "ELRC-3052-wikipedia_health", "version": "v1", "alignmentPairs": 389 },
+        { "name": "ELRC-wikipedia_health", "version": "v1", "alignmentPairs": 389 },
+        { "name": "ELRC_2922", "version": "v1", "alignmentPairs": 388 },
+        { "name": "Ubuntu", "version": "v14.10", "alignmentPairs": null }
+      ]
+    },
+    {
+      "id": "macocu-genre-sq",
+      "status": "downloaded",
+      "kind": "monolingual-web-documents",
+      "title": "Genre-enriched web corpus MaCoCu-Genre Albanian",
+      "sourceUrl": "https://www.clarin.si/repository/xmlui/handle/11356/1969",
+      "localPath": ".cache/datasets/monolingual-albanian/macocu-genre/MaCoCu-Genre.sq.jsonl.gz",
+      "format": "jsonl.gz",
+      "downloadedBytes": 1605172693,
+      "onDiskSize": "1.5G",
+      "sha256": "e6bc4d8bf5ffb661af2c74770016d32831ba88e03fde63b44422a9c8c1f2dc03",
+      "license": "CC0-1.0",
+      "schema": ["id", "title", "text", "url", "domain", "tld", "genre"],
+      "contents": "Document-level Albanian web text with URL/domain/title and genre metadata. Good candidate for monolingual sentence examples with provenance.",
+      "observedUsefulForms": ["punuakam", "punuaka", "punuakan"],
+      "cautions": [
+        "Documents can be very large; sentence segmentation and dedupe are required.",
+        "JSON lines contain full documents, so direct grep output can be unwieldy."
+      ]
+    },
+    {
+      "id": "macocu-sq-1.0-xml",
+      "status": "downloaded",
+      "kind": "monolingual-web-paragraphs",
+      "title": "Albanian web corpus MaCoCu-sq 1.0",
+      "sourceUrl": "https://www.clarin.si/repository/xmlui/handle/11356/1804",
+      "localPath": ".cache/datasets/monolingual-albanian/macocu-xml/MaCoCu-sq-1.0.xml.zip",
+      "format": "xml.zip",
+      "downloadedBytes": 1750116890,
+      "onDiskSize": "1.6G",
+      "sha256": "02e4728e1c42566a2263bd8ab8430dfa78bd55b8300854f795b7a10986d5efbb",
+      "license": "CC0-1.0",
+      "schema": [
+        "corpus",
+        "doc id/title/crawl_date/url/domain/file_type/lang_distr/lm_score",
+        "p id/quality/lm_score/sensitive/heading/lang"
+      ],
+      "contents": "Albanian web paragraphs with document and paragraph quality metadata. Strong candidate for filtered example search because paragraph quality and language tags are explicit.",
+      "observedUsefulForms": ["punuakam"],
+      "cautions": [
+        "XML parsing is needed; do not use ad hoc string slicing for ingestion.",
+        "Some paragraphs are headings or non-Albanian despite being inside the Albanian corpus."
+      ]
+    },
+    {
+      "id": "cc100-sq",
+      "status": "downloaded",
+      "kind": "monolingual-web-lines",
+      "title": "CC100 Albanian",
+      "sourceUrl": "https://data.statmt.org/cc-100/sq.txt.xz",
+      "localPath": ".cache/datasets/monolingual-albanian/cc100/sq.txt.xz",
+      "format": "txt.xz",
+      "downloadedBytes": 1371498032,
+      "onDiskSize": "1.3G",
+      "sha256": "5cc7c5ebc83626f3913943d7592f83b9b27f94358271ec3d71503177c9ee6b01",
+      "license": "Public research corpus; check upstream terms before redistribution.",
+      "schema": ["one text line per record"],
+      "contents": "Large raw Albanian web text. It finds rare forms that OPUS misses, including natural-looking occurrences of admirative forms.",
+      "observedUsefulForms": ["punuakam", "punuaka", "punuakan"],
+      "cautions": [
+        "Very noisy raw web data; sampled lines included junk/adult/spam text.",
+        "No URL or document metadata in the local text file.",
+        "Needs aggressive filtering before any public UI use."
+      ]
+    },
+    {
+      "id": "seeuniversity-albanian-corpora-bert",
+      "status": "downloaded",
+      "kind": "monolingual-lines",
+      "title": "SEEUniversity Albanian corpora for BERT",
+      "sourceUrl": "https://huggingface.co/datasets/SEEUniversity/albanian_corpora_bert",
+      "localPath": ".cache/datasets/monolingual-albanian/huggingface/SEEUniversity_albanian_corpora_bert/albanian_bert.txt",
+      "format": "txt",
+      "downloadedBytes": 941079588,
+      "onDiskSize": "912M",
+      "sha256": "7f5ad8077d54689f19e6ef4255f9924608813f05c43912c0fa3baac75bd0dd74",
+      "license": "AFL-3.0",
+      "lineCount": 8380151,
+      "schema": ["one text line per record"],
+      "contents": "Line-oriented Albanian corpus for language-model training. It includes both reference/grammar material and general text.",
+      "observedUsefulForms": ["punuakam", "punuaka", "punuakan"],
+      "cautions": [
+        "Many hits for rare forms are grammar/reference prose rather than natural sentences.",
+        "No URL or document metadata in the local text file."
+      ]
+    },
+    {
+      "id": "ud-albanian-staf",
+      "status": "downloaded",
+      "kind": "annotated-treebank",
+      "title": "Universal Dependencies Albanian STAF",
+      "sourceUrl": "https://github.com/UniversalDependencies/UD_Albanian-STAF",
+      "localPath": ".cache/datasets/universal-dependencies/UD_Albanian-STAF-main.zip",
+      "format": "CoNLL-U zip",
+      "downloadedBytes": 71128,
+      "onDiskSize": "72K",
+      "sha256": "1713908256b357c08ea03304ff72d77834b34df20ffa84d14af77ce446bf76aa",
+      "license": "See archive LICENSE.txt",
+      "contents": "Small manually annotated Albanian dependency treebank with train/dev/test CoNLL-U files.",
+      "cautions": [
+        "Too small for broad example coverage.",
+        "Better for morphology/syntax checks than for rare-form search."
+      ]
+    },
+    {
+      "id": "ud-albanian-tsa",
+      "status": "downloaded",
+      "kind": "annotated-treebank",
+      "title": "Universal Dependencies Albanian TSA",
+      "sourceUrl": "https://github.com/UniversalDependencies/UD_Albanian-TSA",
+      "localPath": ".cache/datasets/universal-dependencies/UD_Albanian-TSA-main.zip",
+      "format": "CoNLL-U zip",
+      "downloadedBytes": 17879,
+      "onDiskSize": "20K",
+      "sha256": "711231d27e1da99ad3af1dadeabd1378561f5d431defff563ac9da4d660354c0",
+      "license": "See archive LICENSE.txt",
+      "contents": "Small manually annotated Albanian dependency treebank with a test CoNLL-U file.",
+      "cautions": [
+        "Too small for broad example coverage.",
+        "Better for morphology/syntax checks than for rare-form search."
+      ]
+    },
+    {
+      "id": "culturax-sq",
+      "status": "gated-not-downloaded",
+      "kind": "monolingual-web-parquet",
+      "title": "CulturaX Albanian",
+      "sourceUrl": "https://huggingface.co/datasets/uonlp/CulturaX",
+      "format": "Parquet shards",
+      "availableFiles": [
+        "sq/checksum.sha256",
+        "sq/sq_part_00000.parquet",
+        "sq/sq_part_00001.parquet",
+        "sq/sq_part_00002.parquet",
+        "sq/sq_part_00003.parquet"
+      ],
+      "access": "Hugging Face auto-gated; requires accepting terms and an authenticated token.",
+      "contents": "Large multilingual cleaned web corpus with Albanian shards. Good candidate for broader monolingual coverage after access is granted.",
+      "cautions": [
+        "Not downloaded locally yet.",
+        "License/access terms must be checked before indexing or redistribution."
+      ]
+    },
+    {
+      "id": "oscar-sq",
+      "status": "manual-gated-not-downloaded",
+      "kind": "monolingual-web-corpus",
+      "title": "OSCAR Albanian",
+      "sourceUrl": "https://huggingface.co/datasets/oscar-corpus/oscar",
+      "access": "Hugging Face manual-gated; anonymous API exposes no downloadable sibling files.",
+      "contents": "Large multilingual Common Crawl-derived corpus; Albanian is listed as a supported language.",
+      "cautions": [
+        "Not downloaded locally yet.",
+        "Manual approval is required before we can inspect exact Albanian files or sizes."
+      ]
+    }
+  ]
+}
