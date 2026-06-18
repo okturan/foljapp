@@ -6,9 +6,13 @@
  * from the checked-in verb corpus and engine, not source data.
  *
  * Run:
- *   npx tsx scripts/build-corpus-example-targets.ts
- *   npx tsx scripts/build-corpus-example-targets.ts --forms=punoj,"të punoj",punuakam
+ *   npx tsx scripts/build-corpus-targets.ts
+ *   npx tsx scripts/build-corpus-targets.ts --forms=punoj,"të punoj",punuakam
  */
+
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import {
   allCells,
@@ -21,13 +25,10 @@ import {
   type ConjugateOptions,
   type VerbEntry,
 } from '@foljapp/engine';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
-const DEFAULT_OUT = join(REPO_ROOT, '.cache', 'corpus-example-targets.json');
+const DEFAULT_OUT = join(REPO_ROOT, '.cache', 'corpus-targets.json');
 const VERB_BUNDLE_PATH = join(
   REPO_ROOT,
   'data',

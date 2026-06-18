@@ -149,7 +149,7 @@ export function CorpusExamples({ form, options }: Props) {
 
   return (
     <section
-      data-testid="opus-examples"
+      data-testid="examples"
       className="mt-6 border-t border-stone-200 pt-5"
     >
       <details className="group" open>
@@ -309,7 +309,7 @@ export function CorpusExamples({ form, options }: Props) {
             </div>
           ) : (
             <p
-              data-testid="opus-empty-state"
+              data-testid="examples-empty-state"
               className="mt-3 text-sm text-stone-500"
             >
               No sentence examples indexed for{' '}

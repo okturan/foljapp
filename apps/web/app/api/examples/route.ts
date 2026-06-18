@@ -13,7 +13,7 @@ import {
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-import { lookupOpusExamples } from '@/lib/opus-examples';
+import { lookupParallelExamples } from '@/lib/parallel-examples';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -66,10 +66,6 @@ function sqliteBin(): string {
 
 function sqlString(value: string): string {
   return `'${value.replace(/'/g, "''")}'`;
-}
-
-function ftsPhrase(value: string): string {
-  return `"${value.replace(/"/g, '""')}"`;
 }
 
 function parseOptions(url: URL): ConjugateOptions | null {
@@ -185,37 +181,7 @@ function localExamples(
         `,
         );
 
-  if (rows.length > 0) return rows.map(apiExampleFromSqliteRow);
-
-  const ftsSql = `
-    SELECT
-      'local-fts-' || s.id AS id,
-      'local' AS sourceType,
-      r.id AS resourceId,
-      r.title AS corpus,
-      s.title AS title,
-      s.url AS url,
-      s.domain AS domain,
-      s.genre AS genre,
-      s.quality AS quality,
-      s.sentence AS sentence,
-      NULL AS translation,
-      'fts_phrase' AS matchKind,
-      40 - bm25(sentence_fts) AS score,
-      s.flags_json AS flagsJson,
-      NULL AS cellLabel,
-      NULL AS ancQuery
-    FROM sentence_fts
-    JOIN sentences s ON s.id = sentence_fts.rowid
-    JOIN resources r ON r.id = s.resource_id
-    WHERE sentence_fts MATCH ${sqlString(ftsPhrase(targetKey))}
-      AND ${publicExampleWhere}
-    ORDER BY bm25(sentence_fts), length(s.sentence) ASC, s.id ASC
-    LIMIT ${limit}
-  `;
-  return runSqliteJson<Record<string, unknown>>(dbPath, ftsSql).map(
-    apiExampleFromSqliteRow,
-  );
+  return rows.map(apiExampleFromSqliteRow);
 }
 
 function apiExampleFromSqliteRow(row: Record<string, unknown>): ApiExample {
@@ -248,10 +214,10 @@ function apiExampleFromSqliteRow(row: Record<string, unknown>): ApiExample {
   };
 }
 
-function opusFallbackExamples(form: string, limit: number): ApiExample[] {
-  const lookup = lookupOpusExamples(form);
+function parallelFallbackExamples(form: string, limit: number): ApiExample[] {
+  const lookup = lookupParallelExamples(form);
   return lookup.examples.slice(0, limit).map((example, index) => ({
-    id: `opus-${example.corpus}-${example.sentenceNumber}-${index}`,
+    id: `parallel-${example.corpus}-${example.sentenceNumber}-${index}`,
     sourceType: 'parallel',
     resourceId: 'opus-en-sq-moses-latest',
     corpus: example.corpus,
@@ -262,7 +228,7 @@ function opusFallbackExamples(form: string, limit: number): ApiExample[] {
     quality: null,
     sentence: example.sq,
     translation: example.en,
-    matchKind: 'opus_parallel',
+    matchKind: 'parallel_sentence',
     score: 55,
     flags: [],
     cellLabel: null,
@@ -296,7 +262,7 @@ export function GET(request: NextRequest) {
 
   const remaining = Math.max(limit - examples.length, 0);
   if (remaining > 0) {
-    examples.push(...opusFallbackExamples(surface, remaining));
+    examples.push(...parallelFallbackExamples(surface, remaining));
   }
 
   return NextResponse.json({

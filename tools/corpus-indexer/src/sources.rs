@@ -155,6 +155,37 @@ pub fn open_resource(resource: &ResourceSpec) -> SourceResult<CandidateStream> {
     }
 }
 
+pub fn expand_resource_partitions(resource: &ResourceSpec) -> SourceResult<Vec<ResourceSpec>> {
+    let paths = match resource.kind {
+        SourceKind::HpltJsonlZstDir => files_with_suffix(&resource.local_path, ".jsonl.zst")?,
+        SourceKind::LeipzigTarGzDir => files_with_suffix(&resource.local_path, ".tar.gz")?,
+        SourceKind::Mc4JsonGzDir => files_with_suffix(&resource.local_path, ".json.gz")?,
+        SourceKind::ParquetDir => files_with_suffix(&resource.local_path, ".parquet")?,
+        SourceKind::WikimediaXmlBz2Dir => files_with_suffix(&resource.local_path, ".xml.bz2")?,
+        SourceKind::OpusMosesZipDir => {
+            files_with_suffix(&resource.local_path.join("zips"), ".zip")?
+        }
+        _ => Vec::new(),
+    };
+
+    if paths.len() <= 1 {
+        return Ok(vec![resource.clone()]);
+    }
+
+    paths
+        .into_iter()
+        .map(|path| {
+            let shard = partition_name(&resource.local_path, &path);
+            let mut partition = resource.clone();
+            partition.id = format!("{}#{}", resource.id, shard);
+            partition.title = format!("{} ({})", resource.title, shard);
+            partition.local_path_text = path.to_string_lossy().into_owned();
+            partition.local_path = path;
+            Ok(partition)
+        })
+        .collect()
+}
+
 fn macocu_genre_jsonl_gz_with_id(
     path: PathBuf,
     resource_id: String,
@@ -482,12 +513,15 @@ fn run_opus_moses_zip_dir(
     resource_id: String,
     tx: SyncSender<SourceResult<Candidate>>,
 ) -> SourceResult<()> {
-    let zips_dir = path.join("zips");
-    let mut zip_paths = fs::read_dir(&zips_dir)?
-        .filter_map(Result::ok)
-        .map(|entry| entry.path())
-        .filter(|path| path.extension().and_then(|extension| extension.to_str()) == Some("zip"))
-        .collect::<Vec<_>>();
+    let mut zip_paths = if path.is_file() {
+        vec![path]
+    } else {
+        fs::read_dir(path.join("zips"))?
+            .filter_map(Result::ok)
+            .map(|entry| entry.path())
+            .filter(|path| path.extension().and_then(|extension| extension.to_str()) == Some("zip"))
+            .collect::<Vec<_>>()
+    };
     zip_paths.sort();
 
     for zip_path in zip_paths {
@@ -530,15 +564,19 @@ fn run_hplt_jsonl_zst_dir(
     resource_id: String,
     tx: SyncSender<SourceResult<Candidate>>,
 ) -> SourceResult<()> {
-    let mut shard_paths = fs::read_dir(&path)?
-        .filter_map(Result::ok)
-        .map(|entry| entry.path())
-        .filter(|path| {
-            path.file_name()
-                .and_then(|name| name.to_str())
-                .is_some_and(|name| name.ends_with(".jsonl.zst"))
-        })
-        .collect::<Vec<_>>();
+    let mut shard_paths = if path.is_file() {
+        vec![path.clone()]
+    } else {
+        fs::read_dir(&path)?
+            .filter_map(Result::ok)
+            .map(|entry| entry.path())
+            .filter(|path| {
+                path.file_name()
+                    .and_then(|name| name.to_str())
+                    .is_some_and(|name| name.ends_with(".jsonl.zst"))
+            })
+            .collect::<Vec<_>>()
+    };
     shard_paths.sort();
 
     for shard_path in shard_paths {
@@ -597,15 +635,19 @@ fn run_leipzig_tar_gz_dir(
     resource_id: String,
     tx: SyncSender<SourceResult<Candidate>>,
 ) -> SourceResult<()> {
-    let mut archive_paths = fs::read_dir(&path)?
-        .filter_map(Result::ok)
-        .map(|entry| entry.path())
-        .filter(|path| {
-            path.file_name()
-                .and_then(|name| name.to_str())
-                .is_some_and(|name| name.ends_with(".tar.gz"))
-        })
-        .collect::<Vec<_>>();
+    let mut archive_paths = if path.is_file() {
+        vec![path.clone()]
+    } else {
+        fs::read_dir(&path)?
+            .filter_map(Result::ok)
+            .map(|entry| entry.path())
+            .filter(|path| {
+                path.file_name()
+                    .and_then(|name| name.to_str())
+                    .is_some_and(|name| name.ends_with(".tar.gz"))
+            })
+            .collect::<Vec<_>>()
+    };
     archive_paths.sort();
 
     for archive_path in archive_paths {
@@ -662,15 +704,19 @@ fn run_mc4_json_gz_dir(
     resource_id: String,
     tx: SyncSender<SourceResult<Candidate>>,
 ) -> SourceResult<()> {
-    let mut shard_paths = fs::read_dir(&path)?
-        .filter_map(Result::ok)
-        .map(|entry| entry.path())
-        .filter(|path| {
-            path.file_name()
-                .and_then(|name| name.to_str())
-                .is_some_and(|name| name.ends_with(".json.gz"))
-        })
-        .collect::<Vec<_>>();
+    let mut shard_paths = if path.is_file() {
+        vec![path.clone()]
+    } else {
+        fs::read_dir(&path)?
+            .filter_map(Result::ok)
+            .map(|entry| entry.path())
+            .filter(|path| {
+                path.file_name()
+                    .and_then(|name| name.to_str())
+                    .is_some_and(|name| name.ends_with(".json.gz"))
+            })
+            .collect::<Vec<_>>()
+    };
     shard_paths.sort();
 
     for shard_path in shard_paths {
@@ -1108,7 +1154,23 @@ fn source_kind(id: &str, format: Option<&str>) -> Option<SourceKind> {
 fn files_with_suffix(path: &Path, suffix: &str) -> SourceResult<Vec<PathBuf>> {
     let mut paths = Vec::new();
     collect_files_with_suffix(path, suffix, &mut paths)?;
+    paths.sort();
     Ok(paths)
+}
+
+fn partition_name(root: &Path, path: &Path) -> String {
+    path.strip_prefix(root)
+        .unwrap_or(path)
+        .to_string_lossy()
+        .chars()
+        .map(|ch| {
+            if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' {
+                ch
+            } else {
+                '_'
+            }
+        })
+        .collect()
 }
 
 fn collect_files_with_suffix(

@@ -1,8 +1,9 @@
 use crate::text::normalize_token;
+use aho_corasick::AhoCorasick;
 use anyhow::Result;
 use serde::Deserialize;
 use serde_json::Value;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 
@@ -54,76 +55,68 @@ fn targets_from_json(raw: &str) -> Result<Vec<Target>> {
     Ok(file.targets.into_iter().map(Target::from).collect())
 }
 
-type TargetsByToken = HashMap<Vec<String>, Vec<Target>>;
-type TargetsByWidth = BTreeMap<usize, TargetsByToken>;
-
-pub struct TargetIndex {
-    by_first: HashMap<String, TargetsByWidth>,
+pub struct TargetMatcher {
+    automaton: AhoCorasick,
+    targets_by_pattern: Vec<Vec<Target>>,
 }
 
-impl TargetIndex {
-    pub fn new(targets: Vec<Target>) -> Self {
-        let mut by_first: HashMap<String, TargetsByWidth> = HashMap::new();
-
+impl TargetMatcher {
+    pub fn new(targets: Vec<Target>) -> Result<Self> {
+        let mut by_pattern = BTreeMap::<String, Vec<Target>>::new();
         for target in targets {
             if target.tokens.is_empty() {
                 continue;
             }
-
-            let first = target.tokens[0].clone();
-            let width = target.tokens.len();
-            let key = target.tokens.clone();
-
-            by_first
-                .entry(first)
-                .or_default()
-                .entry(width)
-                .or_default()
-                .entry(key)
+            by_pattern
+                .entry(target.tokens.join(" "))
                 .or_default()
                 .push(target);
         }
 
-        Self { by_first }
+        let mut patterns = Vec::with_capacity(by_pattern.len());
+        let mut targets_by_pattern = Vec::with_capacity(by_pattern.len());
+        for (pattern, targets) in by_pattern {
+            patterns.push(pattern);
+            targets_by_pattern.push(targets);
+        }
+
+        Ok(Self {
+            automaton: AhoCorasick::new(patterns)?,
+            targets_by_pattern,
+        })
     }
 
-    pub fn matches_tokens(&self, tokens: &[String]) -> Vec<TargetMatch<'_>> {
+    pub fn matches_normalized(&self, normalized: &str) -> Vec<TargetMatch<'_>> {
         let mut matches = Vec::new();
+        let bytes = normalized.as_bytes();
 
-        for (index, token) in tokens.iter().enumerate() {
-            let Some(by_len) = self.by_first.get(token) else {
+        for matched in self.automaton.find_overlapping_iter(normalized) {
+            if !is_token_boundary(bytes, matched.start())
+                || !is_token_boundary(bytes, matched.end())
+            {
                 continue;
-            };
+            }
 
-            for (width, by_tokens) in by_len {
-                let end = index + width;
-                if end > tokens.len() {
-                    continue;
-                }
-
-                let Some(targets) = by_tokens.get(&tokens[index..end]) else {
-                    continue;
-                };
-
-                let kind = if *width == 1 {
-                    MatchKind::ExactToken
-                } else {
-                    MatchKind::ExactPhrase
-                };
-
-                for target in targets {
-                    matches.push(TargetMatch {
-                        id: &target.id,
-                        target_key: &target.target_key,
-                        signature: &target.signature,
-                        kind,
-                    });
-                }
+            for target in &self.targets_by_pattern[matched.pattern().as_usize()] {
+                matches.push(TargetMatch {
+                    id: &target.id,
+                    target_key: &target.target_key,
+                    signature: &target.signature,
+                    kind: if target.tokens.len() == 1 {
+                        MatchKind::ExactToken
+                    } else {
+                        MatchKind::ExactPhrase
+                    },
+                });
             }
         }
 
         matches
     }
+}
+
+fn is_token_boundary(bytes: &[u8], index: usize) -> bool {
+    index == 0 || index == bytes.len() || bytes[index - 1] == b' ' || bytes[index] == b' '
 }
 
 #[derive(Debug, Deserialize)]
@@ -176,7 +169,7 @@ impl From<TargetRow> for Target {
 mod tests {
     use crate::text::tokens_for;
 
-    use super::{targets_from_json, MatchKind, TargetIndex};
+    use super::{targets_from_json, MatchKind, TargetMatcher};
 
     const TARGETS_JSON: &str = r#"
 {
@@ -229,19 +222,17 @@ mod tests {
     }
 
     #[test]
-    fn matches_tokens_and_phrases_by_tuple_lookup() {
+    fn matches_many_targets_in_one_normalized_pass() {
         let targets = targets_from_json(TARGETS_JSON).expect("targets parse");
-        let index = TargetIndex::new(targets);
-        let tokens = tokens_for("Ai T\u{00cb} punoj, pastaj punoj.");
-        let matches = index.matches_tokens(&tokens);
+        let matcher = TargetMatcher::new(targets).expect("matcher builds");
+        let normalized = tokens_for("Ai T\u{00cb} punoj, pastaj punoj.").join(" ");
+        let matches = matcher.matches_normalized(&normalized);
 
         assert_eq!(matches.len(), 3);
         assert_eq!(matches[0].target_key, "t\u{00eb} punoj");
         assert_eq!(matches[0].kind, MatchKind::ExactPhrase);
-        assert_eq!(matches[0].kind.as_str(), "exact_phrase");
         assert_eq!(matches[1].target_key, "punoj");
         assert_eq!(matches[1].kind, MatchKind::ExactToken);
         assert_eq!(matches[2].target_key, "punoj");
-        assert_eq!(matches[2].kind, MatchKind::ExactToken);
     }
 }

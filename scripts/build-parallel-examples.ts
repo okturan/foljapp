@@ -1,5 +1,5 @@
 /**
- * Build a compact OPUS example index for generated Albanian verb forms.
+ * Build a compact parallel-example index for generated Albanian verb forms.
  *
  * The script uses OPUS' metadata API to locate zipped Moses files for
  * Albanian-English corpora, scans the Albanian side for exact generated forms
@@ -7,7 +7,7 @@
  * consumed by the playground.
  *
  * Run:
- *   npm run build:opus-examples -- --forms=punoj,punon,punojnë,punuar,punuake
+ *   npm run build:parallel-examples -- --forms=punoj,punon,punojnë,punuar,punuake
  */
 
 import { execFileSync, spawn } from 'node:child_process';
@@ -130,7 +130,7 @@ interface CorpusMetadata {
   downloadUrl: string;
 }
 
-interface OpusExample {
+interface ParallelExample {
   corpus: string;
   version: string;
   sentenceNumber: number;
@@ -147,7 +147,7 @@ interface Output {
   languagePair: { source: 'sq'; target: 'en' };
   formFilter: string[] | null;
   corpora: CorpusMetadata[];
-  examples: Record<string, OpusExample[]>;
+  examples: Record<string, ParallelExample[]>;
 }
 
 interface LocalDownloadRecord extends OpusApiCorpus {
@@ -489,7 +489,7 @@ async function scanCorpus(
   meta: CorpusMetadata,
   zipPath: string,
   targetForms: Set<string>,
-  examples: Map<string, OpusExample[]>,
+  examples: Map<string, ParallelExample[]>,
   maxPerForm: number,
 ): Promise<number> {
   const files = alignedTextFiles(zipPath);
@@ -565,7 +565,7 @@ async function scanCorpus(
 function emitOutput(
   args: Args,
   corpora: CorpusMetadata[],
-  examples: Map<string, OpusExample[]>,
+  examples: Map<string, ParallelExample[]>,
 ): void {
   mkdirSync(dirname(OUT_PATH), { recursive: true });
   const sortedExamples = Object.fromEntries(
@@ -603,7 +603,7 @@ function emitOutput(
 async function main(): Promise<void> {
   const args = parseArgs();
   const generatedForms = args.forms ?? loadGeneratedForms();
-  const examples = new Map<string, OpusExample[]>();
+  const examples = new Map<string, ParallelExample[]>();
   const sources = args.fromLocalCache
     ? loadLocalCorpusSources(args)
     : await loadRemoteCorpusSources(args);

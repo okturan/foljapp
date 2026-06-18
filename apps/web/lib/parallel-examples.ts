@@ -1,6 +1,6 @@
-import opusExamplesData from '../../../data/opus/examples.json';
+import parallelExamplesData from '../../../data/opus/examples.json';
 
-export interface OpusExample {
+export interface ParallelExample {
   corpus: string;
   version: string;
   sentenceNumber: number;
@@ -20,7 +20,7 @@ interface CorpusMetadata {
   downloadUrl: string;
 }
 
-interface OpusExamplesData {
+interface ParallelExamplesData {
   generatedAt: string;
   source: 'OPUS';
   sourceUrl: string;
@@ -28,15 +28,15 @@ interface OpusExamplesData {
   languagePair: { source: 'sq'; target: 'en' };
   formFilter: string[] | null;
   corpora: CorpusMetadata[];
-  examples: Record<string, OpusExample[]>;
+  examples: Record<string, ParallelExample[]>;
 }
 
-export interface OpusExampleLookup {
+export interface ParallelExampleLookup {
   lookupForm: string | null;
-  examples: OpusExample[];
+  examples: ParallelExample[];
 }
 
-const data = opusExamplesData as OpusExamplesData;
+const data = parallelExamplesData as ParallelExamplesData;
 
 const SKIP_TOKENS = new Set([
   'dhe',
@@ -56,28 +56,28 @@ const SKIP_TOKENS = new Set([
   'të',
 ]);
 
-export const opusExamplesMetadata = {
+export const parallelExamplesMetadata = {
   generatedAt: data.generatedAt,
   sourceUrl: data.sourceUrl,
   apiUrl: data.apiUrl,
   corpora: data.corpora,
 };
 
-export function normalizeOpusToken(token: string): string {
+export function normalizeParallelToken(token: string): string {
   return token.normalize('NFC').toLocaleLowerCase('sq-AL').trim();
 }
 
 function tokensForLookup(form: string): string[] {
-  return (form.match(/\p{L}+/gu) ?? []).map(normalizeOpusToken);
+  return (form.match(/\p{L}+/gu) ?? []).map(normalizeParallelToken);
 }
 
 function formKeyForLookup(form: string): string | null {
   return tokensForLookup(form).join(' ') || null;
 }
 
-export function lookupOpusExamples(
+export function lookupParallelExamples(
   form: string | null | undefined,
-): OpusExampleLookup {
+): ParallelExampleLookup {
   if (!form) return { lookupForm: null, examples: [] };
 
   const normalized = formKeyForLookup(form);

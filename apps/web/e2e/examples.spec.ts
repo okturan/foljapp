@@ -7,7 +7,7 @@ test('playground shows indexed examples for a generated form', async ({
     '/playground?verb=punoj&mood=indicative&tense=present&voice=active&person=1&number=singular&polarity=affirmative&modality=declarative',
   );
 
-  const examples = page.getByTestId('opus-examples');
+  const examples = page.getByTestId('examples');
   await expect(examples.getByTestId('examples-summary')).toContainText(
     'Examples',
   );
@@ -29,7 +29,7 @@ test('playground shows phrase-level examples for multiword forms', async ({
     '/playground?verb=punoj&mood=subjunctive&tense=present&voice=active&person=1&number=singular&polarity=affirmative&modality=declarative',
   );
 
-  const examples = page.getByTestId('opus-examples');
+  const examples = page.getByTestId('examples');
   await expect(examples).toContainText('Indexed form: të punoj');
   await expect(examples).toContainText('Tatoeba');
   await expect(examples).toContainText('Unë nuk dua të punoj në këto kushte.');
@@ -45,7 +45,7 @@ test('rare generated forms can show a corpus-backed example', async ({
     '/playground?verb=punoj&mood=admirative&tense=present&voice=active&person=2&number=singular&polarity=affirmative&modality=declarative',
   );
 
-  const examples = page.getByTestId('opus-examples');
+  const examples = page.getByTestId('examples');
   await expect(examples).toContainText('Indexed form: punuake');
   await expect(examples).toContainText('OpenSubtitles');
   await expect(examples).toContainText('Më nuk punuake në dhomën e ngrënies.');

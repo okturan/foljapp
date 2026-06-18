@@ -44,50 +44,84 @@ MaCoCu is the strongest source for public examples because it carries provenance
 
 The machine-readable inventory is in `resources.json`.
 
-## Local full-corpus index
+## Local corpus examples
 
-The playground reads a local SQLite FTS5 index from `.cache/corpus-local-full.sqlite` by default. This is for local development only; raw corpora and the SQLite DB are not committed or deployed to Cloudflare Pages. Local corpus scanning runs through the Rust indexer in `tools/corpus-indexer` and requires Cargo.
+The playground reads local examples from `.cache/corpus-local-full.sqlite` by default. This is for local development only; raw corpora and the SQLite DB are not committed or deployed to Cloudflare Pages. Local corpus scanning runs through the Rust indexer in `tools/corpus-indexer` and requires Cargo.
 
-This is a sentence/text-fragment index, not a frequency corpus. It stores accepted local corpus rows for search, plus generated-form occurrences materialized from FTS. Duplicate suppression happens during example materialization, not during bulk corpus ingest. The scanner writes per-source accounting to `resource_stats`, including candidates seen, inserted sentences, quality rejects, unmatched rejects, occurrences, and duration. The default full-index command uses `--max-db-gib=160` so the generated SQLite artifact stays bounded against the 300GB local corpus budget after the 70GB raw cache and FTS rebuild overhead are included.
-
-The durable path is two-phase:
-
-1. Build the full sentence FTS index from the downloaded raw corpora.
-2. Materialize foljapp targets from that existing FTS index.
+The scanner is the first-pass classifier. It expands shardable corpora to their
+natural file partitions, streams selected raw corpus partitions with a worker
+pool, matches all generated foljapp forms with Aho-Corasick in Rust, and stores
+only matching example sentences plus occurrence rows. This avoids writing tens
+or hundreds of gigabytes of non-matching sentences. The scanner writes
+per-source accounting to `resource_stats`, including candidates seen, stored hit
+sentences, quality rejects, unmatched rejects, and duration.
 
 Build the target list from the engine:
 
 ```bash
-npm run build:example-targets
+npm run build:corpus-targets
 ```
 
-Build the full local sentence index, then materialize the generated targets:
+Build local examples from every downloaded corpus:
 
 ```bash
 npm run build:local-corpus-index
 ```
 
-Changing the target set should use materialization only; it should not rescan raw corpora:
+Changing the target set requires rescanning raw corpora, because the fast path does not store non-matching sentences:
 
 ```bash
-npm run build:example-targets
-npm run materialize:local-corpus -- --max-per-target=3
+npm run build:corpus-targets
+npm run scan:local-corpus
 ```
 
 Build a focused smoke-test index:
 
 ```bash
-npm run build:example-targets -- '--forms=punoj,të punoj,punuakam,punuake,punuaka,punuakan,paskam punuar,punon,punojnë,punuar' --out=.cache/corpus-example-targets.demo.json
-npm run scan:local-examples -- --out=.cache/corpus-smoke.sqlite --targets=.cache/corpus-example-targets.demo.json --sources=seeuniversity --matched-only --max-per-target=3
-npm run materialize:local-examples -- --db=.cache/corpus-smoke.sqlite --targets=.cache/corpus-example-targets.demo.json --max-per-target=3
+npm run build:corpus-targets -- '--forms=punoj,të punoj,punuakam,punuake,punuaka,punuakan,paskam punuar,punon,punojnë,punuar' --out=.cache/corpus-targets.smoke.json
+npm run scan:local-corpus -- --out=.cache/corpus-smoke.sqlite --targets=.cache/corpus-targets.smoke.json --sources=seeuniversity --max-per-target=3 --jobs=4
 ```
 
 Append a late rare-form source without replacing the DB:
 
 ```bash
-npm run build:example-targets -- '--forms=punuakam' --out=.cache/corpus-example-targets.punuakam.json
-npm run scan:local-examples -- --append --out=.cache/corpus-local-full.sqlite --targets=.cache/corpus-example-targets.punuakam.json --sources=cc100 --matched-only --max-per-target=3 --stop-when-satisfied
-npm run materialize:local-corpus -- --max-per-target=3
+npm run build:corpus-targets -- '--forms=punuakam' --out=.cache/corpus-targets.punuakam.json
+npm run scan:local-corpus -- --append --out=.cache/corpus-local-full.sqlite --targets=.cache/corpus-targets.punuakam.json --sources=cc100 --max-per-target=3 --jobs=4
 ```
 
-On the current local FTS index, materializing the full generated target set covers 97,488 unique surfaces in about 3.5 seconds. The slow operation is now corpus extraction, not adding or changing foljapp targets.
+The generated target list is compact, but changing it still requires rescanning raw corpora because the local app index stores only matching sentences.
+
+An absence is only meaningful for the exact normalized targets that were scanned.
+For example, `mos të gjezdisni` and `të mos gjezdisni` are different targets.
+Diacritic-free spellings, OCR splits, and alternate word order must be generated
+as explicit targets before they count as checked.
+
+## Local corpus search
+
+The retained indexed-search engine is Tantivy. It is for lookup over retained
+sentences, not the initial generated-form classification pass. Build it from the
+local examples DB:
+
+```bash
+npm run build:corpus-search-index
+```
+
+Search it with exact phrase semantics:
+
+```bash
+npm run search:corpus -- --query="mos të ledhatojë" --limit=5
+```
+
+SQLite is kept as the compact app-facing examples database. SQLite FTS,
+Postgres, ClickHouse, Quickwit, Solr, Meilisearch, Typesense, DuckDB, ripgrep,
+RocksDB, and LMDB are not production corpus-search paths in this repo.
+
+## Search engine benchmark
+
+Run the local corpus-search benchmark with:
+
+```bash
+npm run bench:corpus-search -- --sample-size=100000 --query-limit=200
+```
+
+The current measured decision is tracked in [`search-benchmark.md`](./search-benchmark.md).

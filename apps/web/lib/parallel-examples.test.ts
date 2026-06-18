@@ -1,14 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
-import { lookupOpusExamples, normalizeOpusToken } from './opus-examples';
+import {
+  lookupParallelExamples,
+  normalizeParallelToken,
+} from './parallel-examples';
 
-describe('opus examples lookup', () => {
+describe('parallel examples lookup', () => {
   it('normalizes Albanian tokens', () => {
-    expect(normalizeOpusToken(' PUNON ')).toBe('punon');
+    expect(normalizeParallelToken(' PUNON ')).toBe('punon');
   });
 
   it('finds indexed examples for a generated form', () => {
-    const lookup = lookupOpusExamples('punoj');
+    const lookup = lookupParallelExamples('punoj');
 
     expect(lookup.lookupForm).toBe('punoj');
     expect(lookup.examples.length).toBeGreaterThan(0);
@@ -18,7 +21,7 @@ describe('opus examples lookup', () => {
   });
 
   it('finds indexed examples for a generated phrase', () => {
-    const lookup = lookupOpusExamples('të punoj');
+    const lookup = lookupParallelExamples('të punoj');
 
     expect(lookup.lookupForm).toBe('të punoj');
     expect(lookup.examples[0]).toMatchObject({
@@ -29,14 +32,14 @@ describe('opus examples lookup', () => {
   });
 
   it('does not collapse unindexed phrases to a single token', () => {
-    const lookup = lookupOpusExamples('mos punoj');
+    const lookup = lookupParallelExamples('mos punoj');
 
     expect(lookup.lookupForm).toBe('mos punoj');
     expect(lookup.examples).toEqual([]);
   });
 
   it('finds the OpenSubtitles corpus example for a rare generated form', () => {
-    const lookup = lookupOpusExamples('punuake');
+    const lookup = lookupParallelExamples('punuake');
 
     expect(lookup.lookupForm).toBe('punuake');
     expect(lookup.examples[0]).toMatchObject({
@@ -47,7 +50,7 @@ describe('opus examples lookup', () => {
   });
 
   it('returns an honest empty state for unindexed forms', () => {
-    const lookup = lookupOpusExamples('notindexed');
+    const lookup = lookupParallelExamples('notindexed');
 
     expect(lookup.lookupForm).toBe('notindexed');
     expect(lookup.examples).toEqual([]);

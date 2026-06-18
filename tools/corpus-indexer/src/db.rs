@@ -79,21 +79,6 @@ impl ExampleDb {
         Ok(())
     }
 
-    pub fn begin_bulk_load(&self) -> Result<()> {
-        self.con.pragma_update(None, "locking_mode", "EXCLUSIVE")?;
-        self.con.pragma_update(None, "journal_mode", "OFF")?;
-        self.con.pragma_update(None, "synchronous", "OFF")?;
-        self.con.pragma_update(None, "cache_size", -1_000_000)?;
-        Ok(())
-    }
-
-    pub fn finish_bulk_load(&self) -> Result<()> {
-        self.con.pragma_update(None, "locking_mode", "NORMAL")?;
-        self.con.pragma_update(None, "journal_mode", "WAL")?;
-        self.con.pragma_update(None, "synchronous", "NORMAL")?;
-        Ok(())
-    }
-
     pub fn begin(&self) -> Result<()> {
         self.con.execute_batch("BEGIN")?;
         Ok(())
@@ -109,7 +94,6 @@ impl ExampleDb {
         candidate: &Candidate,
         normalized: &str,
         flags_json: &str,
-        index_fts: bool,
     ) -> Result<i64> {
         let mut insert = self.con.prepare_cached(
             r#"
@@ -134,22 +118,7 @@ impl ExampleDb {
         ])?;
         drop(insert);
         debug_assert_eq!(inserted, 1);
-        let id = self.con.last_insert_rowid();
-        if index_fts {
-            let mut insert_fts = self.con.prepare_cached(
-                "INSERT INTO sentence_fts(rowid, sentence, normalized) VALUES (?, ?, ?)",
-            )?;
-            insert_fts.execute(params![id, candidate.sentence, normalized])?;
-        }
-        Ok(id)
-    }
-
-    pub fn rebuild_fts(&self) -> Result<()> {
-        self.con.execute(
-            "INSERT INTO sentence_fts(sentence_fts) VALUES('rebuild')",
-            [],
-        )?;
-        Ok(())
+        Ok(self.con.last_insert_rowid())
     }
 
     pub fn insert_occurrence(
@@ -195,7 +164,7 @@ impl ExampleDb {
         Ok(counts)
     }
 
-    pub fn write_scan_mode(&self, mode: &str, sources: &str) -> Result<()> {
+    pub fn write_index_metadata(&self, mode: &str, sources: &str) -> Result<()> {
         self.con.execute(
             "INSERT OR REPLACE INTO metadata(key, value) VALUES ('index_mode', ?)",
             params![mode],
@@ -312,14 +281,6 @@ CREATE TABLE IF NOT EXISTS sentences (
   sentence TEXT NOT NULL,
   normalized TEXT NOT NULL,
   flags_json TEXT NOT NULL
-);
-
-CREATE VIRTUAL TABLE IF NOT EXISTS sentence_fts USING fts5(
-  sentence,
-  normalized,
-  content='sentences',
-  content_rowid='id',
-  tokenize='unicode61 remove_diacritics 0'
 );
 
 CREATE TABLE IF NOT EXISTS occurrences (
