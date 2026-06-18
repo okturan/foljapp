@@ -1,7 +1,7 @@
 use crate::sources::{Candidate, ResourceSpec};
 use crate::targets::Target;
 use anyhow::Result;
-use rusqlite::{params, Connection, OptionalExtension};
+use rusqlite::{params, Connection};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -79,6 +79,21 @@ impl ExampleDb {
         Ok(())
     }
 
+    pub fn begin_bulk_load(&self) -> Result<()> {
+        self.con.pragma_update(None, "locking_mode", "EXCLUSIVE")?;
+        self.con.pragma_update(None, "journal_mode", "OFF")?;
+        self.con.pragma_update(None, "synchronous", "OFF")?;
+        self.con.pragma_update(None, "cache_size", -1_000_000)?;
+        Ok(())
+    }
+
+    pub fn finish_bulk_load(&self) -> Result<()> {
+        self.con.pragma_update(None, "locking_mode", "NORMAL")?;
+        self.con.pragma_update(None, "journal_mode", "WAL")?;
+        self.con.pragma_update(None, "synchronous", "NORMAL")?;
+        Ok(())
+    }
+
     pub fn begin(&self) -> Result<()> {
         self.con.execute_batch("BEGIN")?;
         Ok(())
@@ -94,46 +109,47 @@ impl ExampleDb {
         candidate: &Candidate,
         normalized: &str,
         flags_json: &str,
-    ) -> Result<Option<i64>> {
-        let inserted = self.con.execute(
+        index_fts: bool,
+    ) -> Result<i64> {
+        let mut insert = self.con.prepare_cached(
             r#"
-            INSERT OR IGNORE INTO sentences(
+            INSERT INTO sentences(
               resource_id, doc_id, title, url, domain, genre, quality,
               sentence, normalized, flags_json
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             "#,
-            params![
-                &candidate.resource_id,
-                Some(candidate.doc_id.as_str()),
-                candidate.title.as_deref(),
-                candidate.url.as_deref(),
-                candidate.domain.as_deref(),
-                candidate.genre.as_deref(),
-                candidate.quality.as_deref(),
-                &candidate.sentence,
-                normalized,
-                flags_json
-            ],
         )?;
-        if inserted == 1 {
-            let id = self.con.last_insert_rowid();
-            self.con.execute(
+        let inserted = insert.execute(params![
+            &candidate.resource_id,
+            Some(candidate.doc_id.as_str()),
+            candidate.title.as_deref(),
+            candidate.url.as_deref(),
+            candidate.domain.as_deref(),
+            candidate.genre.as_deref(),
+            candidate.quality.as_deref(),
+            &candidate.sentence,
+            normalized,
+            flags_json
+        ])?;
+        drop(insert);
+        debug_assert_eq!(inserted, 1);
+        let id = self.con.last_insert_rowid();
+        if index_fts {
+            let mut insert_fts = self.con.prepare_cached(
                 "INSERT INTO sentence_fts(rowid, sentence, normalized) VALUES (?, ?, ?)",
-                params![id, candidate.sentence, normalized],
             )?;
-            return Ok(Some(id));
+            insert_fts.execute(params![id, candidate.sentence, normalized])?;
         }
+        Ok(id)
+    }
 
-        let existing = self
-            .con
-            .query_row(
-                "SELECT id FROM sentences WHERE resource_id = ? AND normalized = ?",
-                params![&candidate.resource_id, normalized],
-                |row| row.get(0),
-            )
-            .optional()?;
-        Ok(existing)
+    pub fn rebuild_fts(&self) -> Result<()> {
+        self.con.execute(
+            "INSERT INTO sentence_fts(sentence_fts) VALUES('rebuild')",
+            [],
+        )?;
+        Ok(())
     }
 
     pub fn insert_occurrence(
@@ -145,22 +161,22 @@ impl ExampleDb {
         match_kind: &str,
         score: i64,
     ) -> Result<bool> {
-        let inserted = self.con.execute(
+        let mut insert = self.con.prepare_cached(
             r#"
             INSERT OR IGNORE INTO occurrences(
               target_id, target_key, signature, sentence_id, match_kind, score
             )
             VALUES (?, ?, ?, ?, ?, ?)
             "#,
-            params![
-                target_id,
-                target_key,
-                signature,
-                sentence_id,
-                match_kind,
-                score
-            ],
         )?;
+        let inserted = insert.execute(params![
+            target_id,
+            target_key,
+            signature,
+            sentence_id,
+            match_kind,
+            score
+        ])?;
         Ok(inserted == 1)
     }
 
@@ -177,6 +193,54 @@ impl ExampleDb {
             counts.insert(target_id, count);
         }
         Ok(counts)
+    }
+
+    pub fn write_scan_mode(&self, mode: &str, sources: &str) -> Result<()> {
+        self.con.execute(
+            "INSERT OR REPLACE INTO metadata(key, value) VALUES ('index_mode', ?)",
+            params![mode],
+        )?;
+        self.con.execute(
+            "INSERT OR REPLACE INTO metadata(key, value) VALUES ('selected_sources', ?)",
+            params![sources],
+        )?;
+        Ok(())
+    }
+
+    pub fn write_resource_stats(
+        &self,
+        resource_id: &str,
+        candidates_seen: usize,
+        sentences_inserted: usize,
+        duplicate_sentences: usize,
+        occurrences_inserted: usize,
+        empty_candidates: usize,
+        quality_rejected: usize,
+        unmatched_rejected: usize,
+        duration_ms: u128,
+    ) -> Result<()> {
+        self.con.execute(
+            r#"
+            INSERT OR REPLACE INTO resource_stats(
+              resource_id, candidates_seen, sentences_inserted, duplicate_sentences,
+              occurrences_inserted, empty_candidates, quality_rejected,
+              unmatched_rejected, duration_ms, finished_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+            "#,
+            params![
+                resource_id,
+                candidates_seen.to_string(),
+                sentences_inserted.to_string(),
+                duplicate_sentences.to_string(),
+                occurrences_inserted.to_string(),
+                empty_candidates.to_string(),
+                quality_rejected.to_string(),
+                unmatched_rejected.to_string(),
+                duration_ms.to_string()
+            ],
+        )?;
+        Ok(())
     }
 
     pub fn write_counts(&self) -> Result<(i64, i64)> {
@@ -247,8 +311,7 @@ CREATE TABLE IF NOT EXISTS sentences (
   quality TEXT,
   sentence TEXT NOT NULL,
   normalized TEXT NOT NULL,
-  flags_json TEXT NOT NULL,
-  UNIQUE(resource_id, normalized)
+  flags_json TEXT NOT NULL
 );
 
 CREATE VIRTUAL TABLE IF NOT EXISTS sentence_fts USING fts5(
@@ -268,6 +331,19 @@ CREATE TABLE IF NOT EXISTS occurrences (
   match_kind TEXT NOT NULL,
   score INTEGER NOT NULL,
   UNIQUE(target_id, sentence_id)
+);
+
+CREATE TABLE IF NOT EXISTS resource_stats (
+  resource_id TEXT PRIMARY KEY REFERENCES resources(id),
+  candidates_seen INTEGER NOT NULL DEFAULT 0,
+  sentences_inserted INTEGER NOT NULL DEFAULT 0,
+  duplicate_sentences INTEGER NOT NULL DEFAULT 0,
+  occurrences_inserted INTEGER NOT NULL DEFAULT 0,
+  empty_candidates INTEGER NOT NULL DEFAULT 0,
+  quality_rejected INTEGER NOT NULL DEFAULT 0,
+  unmatched_rejected INTEGER NOT NULL DEFAULT 0,
+  duration_ms INTEGER NOT NULL DEFAULT 0,
+  finished_at TEXT NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_occurrences_target_key ON occurrences(target_key);

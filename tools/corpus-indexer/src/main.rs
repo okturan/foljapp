@@ -35,6 +35,7 @@ const ALL_SOURCE_IDS: &[&str] = &[
     "opus-all-to-sq-moses-latest",
     "tatoeba-full",
 ];
+const COMMIT_EVERY_WRITES: usize = 100_000;
 
 #[derive(Parser)]
 #[command(author, version, about)]
@@ -52,7 +53,7 @@ enum Command {
 struct ScanArgs {
     #[arg(long, default_value = ".cache/corpus-example-targets.json")]
     targets: PathBuf,
-    #[arg(long, default_value = ".cache/corpus-examples.sqlite")]
+    #[arg(long, default_value = ".cache/corpus-local-full.sqlite")]
     out: PathBuf,
     #[arg(long, default_value = "macocu-xml,macocu-genre")]
     sources: String,
@@ -68,6 +69,8 @@ struct ScanArgs {
     append: bool,
     #[arg(long)]
     sentences_only: bool,
+    #[arg(long, default_value_t = 0.0)]
+    max_db_gib: f64,
 }
 
 fn main() -> Result<()> {
@@ -102,10 +105,15 @@ fn scan(args: ScanArgs) -> Result<()> {
     }
 
     let target_index = TargetIndex::new(targets.clone());
+    let defer_fts = args.sentences_only && !args.append;
     let db = ExampleDb::open(&args.out, args.append)
         .with_context(|| format!("open {}", args.out.display()))?;
+    if defer_fts {
+        db.begin_bulk_load()?;
+    }
     db.insert_resources(&resources)?;
     db.insert_targets(&targets)?;
+    db.write_scan_mode(scan_mode(&args), &args.sources)?;
     let mut counts = db.occurrence_counts()?;
     let target_ids = targets
         .iter()
@@ -115,11 +123,17 @@ fn scan(args: ScanArgs) -> Result<()> {
     let started = Instant::now();
     let mut total_sentences = 0usize;
     let mut total_occurrences = 0usize;
+    let mut hit_size_limit = false;
 
     for resource in resources.drain(..) {
         let source_started = Instant::now();
         let mut raw_seen = 0usize;
         let mut stored_for_source = 0usize;
+        let mut occurrences_for_source = 0usize;
+        let mut empty_candidates = 0usize;
+        let mut quality_rejected = 0usize;
+        let mut unmatched_rejected = 0usize;
+        let mut writes_since_commit = 0usize;
         println!("Scanning {}...", resource.id);
         db.begin()?;
         let stream =
@@ -135,6 +149,7 @@ fn scan(args: ScanArgs) -> Result<()> {
 
             let tokens = tokens_for(&candidate.sentence);
             if tokens.is_empty() {
+                empty_candidates += 1;
                 continue;
             }
             let normalized = tokens.join(" ");
@@ -144,6 +159,7 @@ fn scan(args: ScanArgs) -> Result<()> {
                 candidate.quality.as_deref(),
             );
             if !keep_sentence(&flags) {
+                quality_rejected += 1;
                 continue;
             }
 
@@ -159,16 +175,16 @@ fn scan(args: ScanArgs) -> Result<()> {
                 })
                 .collect::<Vec<_>>();
             if args.matched_only && viable.is_empty() {
+                unmatched_rejected += 1;
                 continue;
             }
 
             let flags_json = serde_json::to_string(&flags)?;
-            let Some(sentence_id) = db.insert_sentence(&candidate, &normalized, &flags_json)?
-            else {
-                continue;
-            };
+            let sentence_id =
+                db.insert_sentence(&candidate, &normalized, &flags_json, !defer_fts)?;
             stored_for_source += 1;
             total_sentences += 1;
+            writes_since_commit += 1;
 
             for matched in viable {
                 if counts.get(matched.id).copied().unwrap_or(0) >= args.max_per_target {
@@ -185,7 +201,20 @@ fn scan(args: ScanArgs) -> Result<()> {
                 )? {
                     *counts.entry(matched.id.to_owned()).or_insert(0) += 1;
                     total_occurrences += 1;
+                    occurrences_for_source += 1;
+                    writes_since_commit += 1;
                 }
+            }
+
+            if writes_since_commit >= COMMIT_EVERY_WRITES {
+                db.commit()?;
+                if db_over_size_limit(&args.out, args.max_db_gib)? {
+                    hit_size_limit = true;
+                    db.begin()?;
+                    break;
+                }
+                db.begin()?;
+                writes_since_commit = 0;
             }
 
             if args.max_sentences_per_source > 0
@@ -200,14 +229,38 @@ fn scan(args: ScanArgs) -> Result<()> {
                 break;
             }
         }
+        db.write_resource_stats(
+            &resource.id,
+            raw_seen,
+            stored_for_source,
+            0,
+            occurrences_for_source,
+            empty_candidates,
+            quality_rejected,
+            unmatched_rejected,
+            source_started.elapsed().as_millis(),
+        )?;
         db.commit()?;
         println!(
             "  stored {stored_for_source} sentence(s) from {} in {:.1}s",
             resource.id,
             source_started.elapsed().as_secs_f64()
         );
+        if hit_size_limit {
+            println!(
+                "Stopped before scanning remaining sources because {} reached the --max-db-gib limit ({:.1} GiB).",
+                args.out.display(),
+                args.max_db_gib
+            );
+            break;
+        }
     }
 
+    if defer_fts {
+        println!("Rebuilding FTS index...");
+        db.rebuild_fts()?;
+        db.finish_bulk_load()?;
+    }
     let (sentence_count, occurrence_count) = db.write_counts()?;
     println!(
         "Wrote {} with {sentence_count} sentence(s) and {occurrence_count} occurrence(s) in {:.1}s",
@@ -218,6 +271,29 @@ fn scan(args: ScanArgs) -> Result<()> {
         println!("No matching sentences were stored.");
     }
     Ok(())
+}
+
+fn db_over_size_limit(path: &Path, max_db_gib: f64) -> Result<bool> {
+    if max_db_gib <= 0.0 {
+        return Ok(false);
+    }
+    let bytes = match std::fs::metadata(path) {
+        Ok(metadata) => metadata.len(),
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(false),
+        Err(err) => return Err(err.into()),
+    };
+    let gib = bytes as f64 / 1024.0 / 1024.0 / 1024.0;
+    Ok(gib >= max_db_gib)
+}
+
+fn scan_mode(args: &ScanArgs) -> &'static str {
+    if args.sentences_only {
+        "full_sentence_fts"
+    } else if args.matched_only {
+        "matched_examples"
+    } else {
+        "sentence_fts_with_target_occurrences"
+    }
 }
 
 fn select_resources(repo_root: &Path, raw_sources: &str) -> Result<Vec<ResourceSpec>> {

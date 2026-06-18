@@ -44,13 +44,15 @@ MaCoCu is the strongest source for public examples because it carries provenance
 
 The machine-readable inventory is in `resources.json`.
 
-## Local example index
+## Local full-corpus index
 
-The playground can read a local SQLite FTS5 index from `.cache/corpus-examples.sqlite`. This is for local development only; raw corpora and the SQLite DB are not committed or deployed to Cloudflare Pages. Local corpus scanning runs through the Rust indexer in `tools/corpus-indexer` and requires Cargo.
+The playground reads a local SQLite FTS5 index from `.cache/corpus-local-full.sqlite` by default. This is for local development only; raw corpora and the SQLite DB are not committed or deployed to Cloudflare Pages. Local corpus scanning runs through the Rust indexer in `tools/corpus-indexer` and requires Cargo.
 
-The fast path is two-phase:
+This is a sentence/text-fragment index, not a frequency corpus. It stores accepted local corpus rows for search, plus generated-form occurrences materialized from FTS. Duplicate suppression happens during example materialization, not during bulk corpus ingest. The scanner writes per-source accounting to `resource_stats`, including candidates seen, inserted sentences, quality rejects, unmatched rejects, occurrences, and duration. The default full-index command uses `--max-db-gib=160` so the generated SQLite artifact stays bounded against the 300GB local corpus budget after the 70GB raw cache and FTS rebuild overhead are included.
 
-1. Build or append a sentence index by scanning raw corpora.
+The durable path is two-phase:
+
+1. Build the full sentence FTS index from the downloaded raw corpora.
 2. Materialize foljapp targets from that existing FTS index.
 
 Build the target list from the engine:
@@ -59,29 +61,33 @@ Build the target list from the engine:
 npm run build:example-targets
 ```
 
-Build or append the full local sentence index, then materialize the generated targets:
+Build the full local sentence index, then materialize the generated targets:
 
 ```bash
-npm run scan:local-examples -- --sentences-only --sources=all
-npm run materialize:local-examples -- --max-per-target=3
+npm run build:local-corpus-index
 ```
 
-Changing the target set should use materialization only; it should not rescan raw corpora.
+Changing the target set should use materialization only; it should not rescan raw corpora:
+
+```bash
+npm run build:example-targets
+npm run materialize:local-corpus -- --max-per-target=3
+```
 
 Build a focused smoke-test index:
 
 ```bash
 npm run build:example-targets -- '--forms=punoj,të punoj,punuakam,punuake,punuaka,punuakan,paskam punuar,punon,punojnë,punuar' --out=.cache/corpus-example-targets.demo.json
-npm run scan:local-examples -- --targets=.cache/corpus-example-targets.demo.json --sources=seeuniversity --matched-only --max-per-target=3
-npm run materialize:local-examples -- --targets=.cache/corpus-example-targets.demo.json --max-per-target=3
+npm run scan:local-examples -- --out=.cache/corpus-smoke.sqlite --targets=.cache/corpus-example-targets.demo.json --sources=seeuniversity --matched-only --max-per-target=3
+npm run materialize:local-examples -- --db=.cache/corpus-smoke.sqlite --targets=.cache/corpus-example-targets.demo.json --max-per-target=3
 ```
 
 Append a late rare-form source without replacing the DB:
 
 ```bash
 npm run build:example-targets -- '--forms=punuakam' --out=.cache/corpus-example-targets.punuakam.json
-npm run scan:local-examples -- --append --targets=.cache/corpus-example-targets.punuakam.json --sources=cc100 --matched-only --max-per-target=3 --stop-when-satisfied
-npm run materialize:local-examples -- --max-per-target=3
+npm run scan:local-examples -- --append --out=.cache/corpus-local-full.sqlite --targets=.cache/corpus-example-targets.punuakam.json --sources=cc100 --matched-only --max-per-target=3 --stop-when-satisfied
+npm run materialize:local-corpus -- --max-per-target=3
 ```
 
 On the current local FTS index, materializing the full generated target set covers 97,488 unique surfaces in about 3.5 seconds. The slow operation is now corpus extraction, not adding or changing foljapp targets.

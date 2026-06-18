@@ -56,7 +56,7 @@ function findRepoRoot(): string {
 function localDbPath(): string {
   return (
     process.env.FOLJAPP_LOCAL_EXAMPLES_DB ??
-    join(findRepoRoot(), '.cache', 'corpus-examples.sqlite')
+    join(findRepoRoot(), '.cache', 'corpus-local-full.sqlite')
   );
 }
 
@@ -311,7 +311,7 @@ export function GET(request: NextRequest) {
       : null,
     local: {
       available: dbAvailable,
-      path: '.cache/corpus-examples.sqlite',
+      path: '.cache/corpus-local-full.sqlite',
       bytes: dbAvailable ? statSync(dbPath).size : 0,
       error: localError,
     },

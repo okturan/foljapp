@@ -12,7 +12,7 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_DB = ROOT / ".cache" / "corpus-examples.sqlite"
+DEFAULT_DB = ROOT / ".cache" / "corpus-local-full.sqlite"
 DEFAULT_TARGETS = ROOT / ".cache" / "corpus-example-targets.json"
 
 
@@ -135,8 +135,13 @@ def main() -> None:
         phrase = len(needle) > 1
         limit = max(opts.max_per_target * opts.candidate_multiplier, 10)
         matches: list[sqlite3.Row] = []
+        seen_normalized: set[str] = set()
         for row in find.execute(find_sql, (quote_fts(key), limit)):
-            if contiguous(str(row["normalized"]).split(), needle):
+            normalized = str(row["normalized"])
+            if normalized in seen_normalized:
+                continue
+            if contiguous(normalized.split(), needle):
+                seen_normalized.add(normalized)
                 matches.append(row)
             if len(matches) >= opts.max_per_target:
                 break
