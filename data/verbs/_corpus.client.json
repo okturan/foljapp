@@ -1460,6 +1460,9 @@
         "reference": "scaffolded by ingest-kaikki-batch"
       }
     ],
+    "flags": {
+      "middlePassiveThirdPersonOnly": true
+    },
     "dialect": "tosk"
   },
   {
