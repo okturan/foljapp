@@ -704,6 +704,7 @@ function labelMiss(
   lemma: { total: number; hit: number; miss: number },
   surface: { total: number; hit: number; miss: number },
   scannerVariantsRecorded: boolean,
+  morphology: MorphologyTargetVerdict | undefined,
 ): string[] {
   const labels: string[] = [];
   const o = target.options;
@@ -754,7 +755,17 @@ function labelMiss(
   if (lemma.total >= 100 && lemmaMissRate >= 0.75) labels.push('lemma_outlier');
   if (surface.total > 1) labels.push('duplicate_surface_targets');
 
-  return labels.length > 0 ? labels : ['unexplained_exact_absence'];
+  if (labels.length > 0) return labels;
+  if (morphology?.form === 'analyzer_accepted') {
+    return ['analyzer_accepted_exact_absence'];
+  }
+  if (target.tokens.length > 1 && morphology?.scope === 'head-token-only') {
+    return ['component_morphology_only_exact_absence'];
+  }
+  if (morphology?.form === 'not_validated') {
+    return ['morphology_not_validated_exact_absence'];
+  }
+  return ['unexplained_exact_absence'];
 }
 
 function primaryCategory(labels: string[]): string {
@@ -789,6 +800,15 @@ function primaryCategory(labels: string[]): string {
   if (labels.includes('lemma_outlier')) return 'lemma_outlier';
   if (labels.includes('duplicate_surface_targets')) return 'duplicate_surface_target';
   if (labels.includes('te_mos_order_variant_probe')) return 'variant_probe_candidate';
+  if (labels.includes('analyzer_accepted_exact_absence')) {
+    return 'analyzer_valid_exact_absence';
+  }
+  if (labels.includes('component_morphology_only_exact_absence')) {
+    return 'component_valid_phrase_absence';
+  }
+  if (labels.includes('morphology_not_validated_exact_absence')) {
+    return 'morphology_unvalidated_exact_absence';
+  }
   return 'unexplained_exact_absence';
 }
 
@@ -922,6 +942,7 @@ function main(): void {
       byLemma.get(target.verbId)!,
       bySurface.get(target.targetKey)!,
       scannerVariantsRecorded,
+      morphologyEvidence.byTargetId.get(target.id),
     );
     for (const label of labels) add(labelCounts, label);
     const primary = primaryCategory(labels);
@@ -1269,6 +1290,7 @@ function main(): void {
     'Evidence labels overlap; the primary category is a single prioritized bucket per missed target.',
     'Exact retained absence is not universal raw-corpus absence. Ungenerated alternants, OCR/tokenization variants, filtered examples, and examples dropped by the per-target cap can all remain outside the retained SQLite evidence.',
     'External morphology verdicts, when present, are review hints only. They do not change hit/miss counts and do not prove corpus attestation or impossibility.',
+    '`analyzer_valid_exact_absence` means UniParser accepted the exact single-token form. `component_valid_phrase_absence` means the target is a multiword phrase where only the head token or lemma has morphology evidence.',
     '',
     '## DB Cap/Filter Evidence',
     '',

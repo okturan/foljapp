@@ -695,10 +695,10 @@ function classifyVoice(
     reasons.push('external_lexeme_intransitive_only');
     return {
       form: 'not_validated',
-      voiceEligibility: 'blocked_candidate',
+      voiceEligibility: 'ambiguous',
       proofLevel: 'lexeme',
       reasons,
-      action: 'review_no_middle_passive',
+      action: 'review_intransitive_or_impersonal_nonactive',
     };
   }
 
