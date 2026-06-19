@@ -248,6 +248,25 @@ function readJson<T>(path: string): T {
   return JSON.parse(readFileSync(path, 'utf8')) as T;
 }
 
+function requireFreshInputs(targetFile: TargetFile, coverage: CoverageReport): void {
+  if (!targetFile.generatedAt) throw new Error('Target file is missing generatedAt');
+  if (!targetFile.corpusVersion) throw new Error('Target file is missing corpusVersion');
+  if (!coverage.targetGeneratedAt) {
+    throw new Error('Coverage report is missing targetGeneratedAt');
+  }
+  if (!coverage.corpusVersion) throw new Error('Coverage report is missing corpusVersion');
+  if (coverage.targetGeneratedAt !== targetFile.generatedAt) {
+    throw new Error(
+      `Coverage target generation mismatch: ${coverage.targetGeneratedAt} != ${targetFile.generatedAt}`,
+    );
+  }
+  if (coverage.corpusVersion !== targetFile.corpusVersion) {
+    throw new Error(
+      `Coverage corpus version mismatch: ${coverage.corpusVersion} != ${targetFile.corpusVersion}`,
+    );
+  }
+}
+
 function emptyMorphologyEvidence(
   status: string,
   path: string,
@@ -306,51 +325,47 @@ function readMorphologyEvidence(
     console.warn(`Ignoring optional morphology audit at ${path}: missing targets[]`);
     return emptyMorphologyEvidence('invalid', path);
   }
-  if (
-    audit.inputs?.targetGeneratedAt &&
-    audit.inputs.targetGeneratedAt !== targetFile.generatedAt
-  ) {
-    return emptyMorphologyEvidence('stale_target_generation', path, {
-      generatedAt: audit.run?.generatedAt ?? null,
-      skippedRows: audit.targets.length,
-    });
+  if (!audit.inputs?.targetGeneratedAt) {
+    throw new Error(`Morphology audit is missing inputs.targetGeneratedAt: ${path}`);
   }
-  if (
-    audit.inputs?.coverageTargetGeneratedAt &&
-    audit.inputs.coverageTargetGeneratedAt !== coverage.targetGeneratedAt
-  ) {
-    return emptyMorphologyEvidence('stale_coverage_generation', path, {
-      generatedAt: audit.run?.generatedAt ?? null,
-      skippedRows: audit.targets.length,
-    });
+  if (!audit.inputs.coverageTargetGeneratedAt) {
+    throw new Error(`Morphology audit is missing inputs.coverageTargetGeneratedAt: ${path}`);
   }
-  if (audit.inputs?.corpusVersion && audit.inputs.corpusVersion !== targetFile.corpusVersion) {
-    return emptyMorphologyEvidence('stale_corpus_version', path, {
-      generatedAt: audit.run?.generatedAt ?? null,
-      skippedRows: audit.targets.length,
-    });
+  if (!audit.inputs.corpusVersion) {
+    throw new Error(`Morphology audit is missing inputs.corpusVersion: ${path}`);
+  }
+  if (audit.inputs.targetGeneratedAt !== targetFile.generatedAt) {
+    throw new Error(
+      `Morphology target generation mismatch: ${audit.inputs.targetGeneratedAt} != ${targetFile.generatedAt}`,
+    );
+  }
+  if (audit.inputs.coverageTargetGeneratedAt !== coverage.targetGeneratedAt) {
+    throw new Error(
+      `Morphology coverage generation mismatch: ${audit.inputs.coverageTargetGeneratedAt} != ${coverage.targetGeneratedAt}`,
+    );
+  }
+  if (audit.inputs.corpusVersion !== targetFile.corpusVersion) {
+    throw new Error(
+      `Morphology corpus version mismatch: ${audit.inputs.corpusVersion} != ${targetFile.corpusVersion}`,
+    );
   }
 
   const byTargetId = new Map<string, MorphologyTargetVerdict>();
-  let skippedRows = 0;
-  let duplicateTargetIds = 0;
+  const skippedRows = 0;
+  const duplicateTargetIds = 0;
   for (const target of audit.targets ?? []) {
-    if (!target.targetId) {
-      skippedRows += 1;
-      continue;
-    }
+    if (!target.targetId) throw new Error(`Morphology audit row is missing targetId: ${path}`);
+    if (!target.targetKey) throw new Error(`Morphology audit row is missing targetKey: ${path}`);
+    if (!target.signature) throw new Error(`Morphology audit row is missing signature: ${path}`);
     const current = targetsById.get(target.targetId);
-    if (
-      !current ||
-      (target.targetKey !== undefined && target.targetKey !== current.targetKey) ||
-      (target.signature !== undefined && target.signature !== current.signature)
-    ) {
-      skippedRows += 1;
-      continue;
+    if (!current) {
+      throw new Error(`Morphology audit has unknown targetId ${target.targetId}: ${path}`);
+    }
+    if (target.targetKey !== current.targetKey || target.signature !== current.signature) {
+      throw new Error(`Morphology audit stale row for ${target.targetId}: ${path}`);
     }
     if (byTargetId.has(target.targetId)) {
-      duplicateTargetIds += 1;
-      continue;
+      throw new Error(`Morphology audit has duplicate targetId ${target.targetId}: ${path}`);
     }
     byTargetId.set(target.targetId, {
       headToken: target.headToken ?? null,
@@ -826,6 +841,7 @@ function main(): void {
 
   const targetFile = readJson<TargetFile>(targetsPath);
   const coverage = readJson<CoverageReport>(coveragePath);
+  requireFreshInputs(targetFile, coverage);
   const verbs = readJson<VerbEntry[]>(verbsPath);
   const targetsById = new Map(targetFile.targets.map((target) => [target.id, target]));
   const dbEvidence = existsSync(dbPath)

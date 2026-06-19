@@ -93,11 +93,12 @@ def main() -> int:
     }
 
     out_path = Path(args.out)
+    tmp_path = out_path.with_name(f"{out_path.name}.tmp")
     out_path.parent.mkdir(parents=True, exist_ok=True)
     cache: dict[tuple[str, str], list[dict[str, Any]]] = {}
     rows_with_analyses = 0
     analysis_count = 0
-    with out_path.open("w", encoding="utf-8") as out:
+    with tmp_path.open("w", encoding="utf-8") as out:
         for row in rows:
             key = (row["mode"], row["token"])
             if key not in cache:
@@ -108,6 +109,7 @@ def main() -> int:
                 rows_with_analyses += 1
                 analysis_count += len(row["analyses"])
             out.write(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n")
+    tmp_path.replace(out_path)
 
     print(
         f"Wrote {len(rows)} row(s), {len(cache)} unique token/mode lookup(s), "

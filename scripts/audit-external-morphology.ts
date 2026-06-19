@@ -792,10 +792,25 @@ function main(): void {
   if (lexemesPath && lexemes?.entries.length === 0) {
     throw new Error(`UniParser lexeme file contained no entries: ${lexemesPath}`);
   }
-  const analyzerFile =
-    analyzerInputProvided && !analyzerLocation.path
-      ? emptyAnalyzerFile('path_missing', analyzerLocation)
-      : loadAnalyzerEvidenceFile(analyzerLocation, targetsById, targetFile, coverage);
+  if (analyzerInputProvided && !analyzerLocation.path) {
+    throw new Error(`UniParser analyzer file not found: ${analyzerLocation.searchedPaths[0]}`);
+  }
+  const analyzerFile = loadAnalyzerEvidenceFile(
+    analyzerLocation,
+    targetsById,
+    targetFile,
+    coverage,
+  );
+  if (analyzerInputProvided && analyzerFile.rowsSkipped > 0) {
+    throw new Error(
+      `UniParser analyzer file has ${analyzerFile.rowsSkipped} stale or invalid row(s): ${analyzerFile.path}`,
+    );
+  }
+  if (analyzerInputProvided && analyzerFile.duplicateRows > 0) {
+    throw new Error(
+      `UniParser analyzer file has ${analyzerFile.duplicateRows} duplicate row(s): ${analyzerFile.path}`,
+    );
+  }
 
   const byLemmaVoice = new Map<string, VoiceRow>();
   for (const target of targetFile.targets) {
