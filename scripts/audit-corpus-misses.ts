@@ -61,6 +61,7 @@ interface TargetFile {
 }
 
 interface CoverageReport {
+  generatedAt?: string;
   targetGeneratedAt?: string;
   corpusVersion?: string;
   summary: {
@@ -1357,6 +1358,19 @@ function main(): void {
     generatedAt: new Date().toISOString(),
     targetsPath,
     coveragePath,
+    inputs: {
+      targetsPath,
+      targetGeneratedAt: targetFile.generatedAt,
+      coveragePath,
+      coverageGeneratedAt: coverage.generatedAt ?? null,
+      coverageTargetGeneratedAt: coverage.targetGeneratedAt,
+      corpusVersion: targetFile.corpusVersion,
+      morphologyPath: morphologyEvidence.path,
+      morphologyGeneratedAt: morphologyEvidence.generatedAt,
+      analyzerRowsLoaded: morphologyEvidence.external.analyzerRowsLoaded,
+      analyzerRowsMatched: morphologyEvidence.external.analyzerRowsMatched,
+      analyzerRowsSkipped: morphologyEvidence.external.analyzerRowsSkipped,
+    },
     summary: {
       totalTargets: coverage.summary.totalTargets,
       hitTargets: coverage.summary.hitTargets,
@@ -1610,6 +1624,24 @@ function main(): void {
     '# Corpus Missing Audit',
     '',
     `Generated: ${report.generatedAt}`,
+    '',
+    '## Freshness & Reproduction',
+    '',
+    `- Target file: ${report.inputs.targetsPath}`,
+    `- Target generated at: ${report.inputs.targetGeneratedAt}`,
+    `- Coverage report: ${report.inputs.coveragePath}`,
+    `- Coverage generated at: ${report.inputs.coverageGeneratedAt ?? 'unknown'}`,
+    `- Coverage target generated at: ${report.inputs.coverageTargetGeneratedAt}`,
+    `- Corpus version: ${report.inputs.corpusVersion}`,
+    `- Morphology artifact: ${report.inputs.morphologyPath}`,
+    `- Morphology generated at: ${report.inputs.morphologyGeneratedAt ?? 'unknown'}`,
+    `- Analyzer rows loaded/matched/skipped: ${report.inputs.analyzerRowsLoaded ?? 'unknown'} / ${report.inputs.analyzerRowsMatched ?? 'unknown'} / ${report.inputs.analyzerRowsSkipped ?? 'unknown'}`,
+    '',
+    'Rerun the strongest local audit with:',
+    '',
+    '```bash',
+    'npm run audit:corpus-misses:full',
+    '```',
     '',
     '## Summary',
     '',

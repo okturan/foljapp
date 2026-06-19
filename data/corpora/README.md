@@ -111,6 +111,32 @@ The same audit command also writes a compact missing-form dossier to
 The audit explains retained-evidence misses in `.cache/corpus-local-full.sqlite`;
 it is not a proof that a form is absent from every scanned raw sentence.
 
+For the strongest local review, join the full UniParser analyzer pass before
+writing the missing-form audit:
+
+```bash
+npm run audit:corpus-misses:full
+```
+
+The main audit is `.cache/corpus-missing-audit.md` / `.json`. Read it as an
+aggregate investigation report:
+
+- `Corpus Source-Family Contribution` shows which downloaded corpus families
+  produced retained evidence and how many candidates each family scanned.
+- `UniParser-Accepted Missing Forms` separates exact single-token analyzer
+  acceptance from head-token-only validation inside generated multiword forms.
+- `Next Review Worklist` groups misses into conservative human-review actions,
+  such as rare-valid unattested forms, middle-passive eligibility review,
+  scanner-variant absences, near-empty grammatical cells, lemma outliers, and
+  component-supported full-phrase gaps.
+- `Middle-Passive Review Actions` and `Middle-Passive Lemma Shortlist` split the
+  largest middle-passive bucket by joined morphology action and show bounded
+  lemma samples to open first.
+
+The dossier remains sample-only. Use it when you need specific target rows,
+joined morphology fields, and SQL lookup snippets; use the main audit for
+aggregate counts and review priorities.
+
 Trace raw scanner-stage provenance for selected target IDs or forms:
 
 ```bash
