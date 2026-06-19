@@ -24,8 +24,9 @@ impl ExampleDb {
         con.pragma_update(None, "synchronous", "NORMAL")?;
         con.pragma_update(None, "temp_store", "MEMORY")?;
         con.execute_batch(SCHEMA)?;
+        ensure_occurrence_evidence_columns(&con)?;
         con.execute(
-            "INSERT OR REPLACE INTO metadata(key, value) VALUES ('schema_version', '1')",
+            "INSERT OR REPLACE INTO metadata(key, value) VALUES ('schema_version', '2')",
             [],
         )?;
         Ok(Self { con })
@@ -128,14 +129,17 @@ impl ExampleDb {
         signature: &str,
         sentence_id: i64,
         match_kind: &str,
+        variant_kind: &str,
+        matched_pattern: &str,
         score: i64,
     ) -> Result<bool> {
         let mut insert = self.con.prepare_cached(
             r#"
             INSERT OR IGNORE INTO occurrences(
-              target_id, target_key, signature, sentence_id, match_kind, score
+              target_id, target_key, signature, sentence_id,
+              match_kind, variant_kind, matched_pattern, score
             )
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             "#,
         )?;
         let inserted = insert.execute(params![
@@ -144,6 +148,8 @@ impl ExampleDb {
             signature,
             sentence_id,
             match_kind,
+            variant_kind,
+            matched_pattern,
             score
         ])?;
         Ok(inserted == 1)
@@ -290,6 +296,8 @@ CREATE TABLE IF NOT EXISTS occurrences (
   signature TEXT NOT NULL,
   sentence_id INTEGER NOT NULL REFERENCES sentences(id),
   match_kind TEXT NOT NULL,
+  variant_kind TEXT NOT NULL DEFAULT 'canonical',
+  matched_pattern TEXT NOT NULL DEFAULT '',
   score INTEGER NOT NULL,
   UNIQUE(target_id, sentence_id)
 );
@@ -312,3 +320,28 @@ CREATE INDEX IF NOT EXISTS idx_occurrences_signature ON occurrences(signature);
 CREATE INDEX IF NOT EXISTS idx_occurrences_sentence ON occurrences(sentence_id);
 CREATE INDEX IF NOT EXISTS idx_sentences_resource ON sentences(resource_id);
 "#;
+
+fn ensure_occurrence_evidence_columns(con: &Connection) -> Result<()> {
+    let columns = table_columns(con, "occurrences")?;
+    if !columns.iter().any(|column| column == "variant_kind") {
+        con.execute_batch(
+            "ALTER TABLE occurrences ADD COLUMN variant_kind TEXT NOT NULL DEFAULT 'canonical'",
+        )?;
+    }
+    if !columns.iter().any(|column| column == "matched_pattern") {
+        con.execute_batch(
+            "ALTER TABLE occurrences ADD COLUMN matched_pattern TEXT NOT NULL DEFAULT ''",
+        )?;
+    }
+    Ok(())
+}
+
+fn table_columns(con: &Connection, table: &str) -> Result<Vec<String>> {
+    let mut stmt = con.prepare(&format!("PRAGMA table_info({table})"))?;
+    let rows = stmt.query_map([], |row| row.get::<_, String>(1))?;
+    let mut columns = Vec::new();
+    for row in rows {
+        columns.push(row?);
+    }
+    Ok(columns)
+}

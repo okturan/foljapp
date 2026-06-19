@@ -39,11 +39,44 @@ impl MatchKind {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum VariantKind {
+    Canonical,
+    TeMosOrder,
+    SNegative,
+    DiacriticFold,
+}
+
+impl VariantKind {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Canonical => "canonical",
+            Self::TeMosOrder => "te_mos_order",
+            Self::SNegative => "s_negative",
+            Self::DiacriticFold => "diacritic_fold",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TargetMatch<'a> {
     pub id: &'a str,
     pub target_key: &'a str,
     pub signature: &'a str,
     pub kind: MatchKind,
+    pub variant_kind: VariantKind,
+    pub matched_pattern: &'a str,
+}
+
+#[derive(Debug, Clone)]
+struct PatternTarget {
+    target: Target,
+    variant_kind: VariantKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct TargetPattern {
+    pattern: String,
+    variant_kind: VariantKind,
 }
 
 pub fn load_targets(path: impl AsRef<Path>) -> Result<Vec<Target>> {
@@ -57,18 +90,25 @@ fn targets_from_json(raw: &str) -> Result<Vec<Target>> {
 
 pub struct TargetMatcher {
     automaton: AhoCorasick,
-    targets_by_pattern: Vec<Vec<Target>>,
+    patterns: Vec<String>,
+    targets_by_pattern: Vec<Vec<PatternTarget>>,
 }
 
 impl TargetMatcher {
     pub fn new(targets: Vec<Target>) -> Result<Self> {
-        let mut by_pattern = BTreeMap::<String, Vec<Target>>::new();
+        let mut by_pattern = BTreeMap::<String, Vec<PatternTarget>>::new();
         for target in targets {
             if target.tokens.is_empty() {
                 continue;
             }
             for pattern in patterns_for_target(&target) {
-                by_pattern.entry(pattern).or_default().push(target.clone());
+                by_pattern
+                    .entry(pattern.pattern)
+                    .or_default()
+                    .push(PatternTarget {
+                        target: target.clone(),
+                        variant_kind: pattern.variant_kind,
+                    });
             }
         }
 
@@ -80,7 +120,8 @@ impl TargetMatcher {
         }
 
         Ok(Self {
-            automaton: AhoCorasick::new(patterns)?,
+            automaton: AhoCorasick::new(&patterns)?,
+            patterns,
             targets_by_pattern,
         })
     }
@@ -96,7 +137,10 @@ impl TargetMatcher {
                 continue;
             }
 
-            for target in &self.targets_by_pattern[matched.pattern().as_usize()] {
+            let pattern_index = matched.pattern().as_usize();
+            let matched_pattern = self.patterns[pattern_index].as_str();
+            for entry in &self.targets_by_pattern[pattern_index] {
+                let target = &entry.target;
                 matches.push(TargetMatch {
                     id: &target.id,
                     target_key: &target.target_key,
@@ -106,6 +150,8 @@ impl TargetMatcher {
                     } else {
                         MatchKind::ExactPhrase
                     },
+                    variant_kind: entry.variant_kind,
+                    matched_pattern,
                 });
             }
         }
@@ -114,22 +160,76 @@ impl TargetMatcher {
     }
 }
 
-fn patterns_for_target(target: &Target) -> Vec<String> {
-    let mut patterns = vec![target.tokens.join(" ")];
+fn patterns_for_target(target: &Target) -> Vec<TargetPattern> {
+    let mut patterns = Vec::new();
+    push_pattern(
+        &mut patterns,
+        target.tokens.join(" "),
+        VariantKind::Canonical,
+    );
     if target.tokens.first().map(String::as_str) == Some("mos")
         && target.tokens.get(1).map(String::as_str) == Some("të")
     {
-        patterns.push(
+        push_pattern(
+            &mut patterns,
             std::iter::once("të")
                 .chain(std::iter::once("mos"))
                 .chain(target.tokens.iter().skip(2).map(String::as_str))
                 .collect::<Vec<_>>()
                 .join(" "),
+            VariantKind::TeMosOrder,
         );
     }
-    patterns.sort();
-    patterns.dedup();
+    if target.tokens.first().map(String::as_str) == Some("nuk") && target.tokens.len() > 1 {
+        push_pattern(
+            &mut patterns,
+            std::iter::once("s")
+                .chain(target.tokens.iter().skip(1).map(String::as_str))
+                .collect::<Vec<_>>()
+                .join(" "),
+            VariantKind::SNegative,
+        );
+    }
+
+    let base_patterns = patterns.clone();
+    for pattern in base_patterns {
+        if let Some(folded) = diacritic_fold(&pattern.pattern) {
+            push_pattern(&mut patterns, folded, VariantKind::DiacriticFold);
+        }
+    }
+
     patterns
+}
+
+fn push_pattern(patterns: &mut Vec<TargetPattern>, pattern: String, variant_kind: VariantKind) {
+    if pattern.is_empty() || patterns.iter().any(|entry| entry.pattern == pattern) {
+        return;
+    }
+    patterns.push(TargetPattern {
+        pattern,
+        variant_kind,
+    });
+}
+
+fn diacritic_fold(pattern: &str) -> Option<String> {
+    let mut folded = String::with_capacity(pattern.len());
+    let mut changed = false;
+
+    for ch in pattern.chars() {
+        match ch {
+            'ë' => {
+                folded.push('e');
+                changed = true;
+            }
+            'ç' => {
+                folded.push('c');
+                changed = true;
+            }
+            _ => folded.push(ch),
+        }
+    }
+
+    changed.then_some(folded)
 }
 
 fn is_token_boundary(bytes: &[u8], index: usize) -> bool {
@@ -186,7 +286,7 @@ impl From<TargetRow> for Target {
 mod tests {
     use crate::text::tokens_for;
 
-    use super::{targets_from_json, MatchKind, TargetMatcher};
+    use super::{targets_from_json, MatchKind, TargetMatcher, VariantKind};
 
     const TARGETS_JSON: &str = r#"
 {
@@ -248,8 +348,12 @@ mod tests {
         assert_eq!(matches.len(), 3);
         assert_eq!(matches[0].target_key, "t\u{00eb} punoj");
         assert_eq!(matches[0].kind, MatchKind::ExactPhrase);
+        assert_eq!(matches[0].variant_kind, VariantKind::Canonical);
+        assert_eq!(matches[0].matched_pattern, "t\u{00eb} punoj");
         assert_eq!(matches[1].target_key, "punoj");
         assert_eq!(matches[1].kind, MatchKind::ExactToken);
+        assert_eq!(matches[1].variant_kind, VariantKind::Canonical);
+        assert_eq!(matches[1].matched_pattern, "punoj");
         assert_eq!(matches[2].target_key, "punoj");
     }
 
@@ -285,5 +389,79 @@ mod tests {
         assert_eq!(matches.len(), 1);
         assert_eq!(matches[0].target_key, "mos t\u{00eb} punoj");
         assert_eq!(matches[0].kind, MatchKind::ExactPhrase);
+        assert_eq!(matches[0].variant_kind, VariantKind::TeMosOrder);
+        assert_eq!(matches[0].matched_pattern, "t\u{00eb} mos punoj");
+    }
+
+    #[test]
+    fn matches_s_negative_for_nuk_targets() {
+        let targets = targets_from_json(
+            r#"
+{
+  "targets": [
+    {
+      "id": "punoj:indicative.present.1sg.active.negative.declarative:nuk_punoj",
+      "targetKey": "nuk punoj",
+      "displayForm": "nuk punoj",
+      "tokens": ["nuk", "punoj"],
+      "signature": "indicative.present.1sg.active.negative.declarative",
+      "ancTags": ["V", "ind"],
+      "ancQuery": "V ind",
+      "cellLabel": "indicative present 1sg active",
+      "verbId": "punoj",
+      "lemma": "punoj",
+      "translationEn": "to work",
+      "options": {"mood": "indicative"}
+    }
+  ]
+}
+"#,
+        )
+        .expect("targets parse");
+        let matcher = TargetMatcher::new(targets).expect("matcher builds");
+        let normalized = tokens_for("Un\u{00eb} s'punoj sot.").join(" ");
+        let matches = matcher.matches_normalized(&normalized);
+
+        assert_eq!(matches.len(), 1);
+        assert_eq!(matches[0].target_key, "nuk punoj");
+        assert_eq!(matches[0].kind, MatchKind::ExactPhrase);
+        assert_eq!(matches[0].variant_kind, VariantKind::SNegative);
+        assert_eq!(matches[0].matched_pattern, "s punoj");
+    }
+
+    #[test]
+    fn matches_diacritic_fold_variants() {
+        let targets = targets_from_json(
+            r#"
+{
+  "targets": [
+    {
+      "id": "coj:subjunctive.present.1sg.active.affirmative.declarative:t_coj",
+      "targetKey": "t\u00eb \u00e7oj",
+      "displayForm": "t\u00eb \u00e7oj",
+      "tokens": ["t\u00eb", "\u00e7oj"],
+      "signature": "subjunctive.present.1sg.active.affirmative.declarative",
+      "ancTags": ["V", "sbjv"],
+      "ancQuery": "V sbjv",
+      "cellLabel": "subjunctive present 1sg active",
+      "verbId": "coj",
+      "lemma": "\u00e7oj",
+      "translationEn": "to send",
+      "options": {"mood": "subjunctive"}
+    }
+  ]
+}
+"#,
+        )
+        .expect("targets parse");
+        let matcher = TargetMatcher::new(targets).expect("matcher builds");
+        let normalized = tokens_for("Dua te coj letren.").join(" ");
+        let matches = matcher.matches_normalized(&normalized);
+
+        assert_eq!(matches.len(), 1);
+        assert_eq!(matches[0].target_key, "t\u{00eb} \u{00e7}oj");
+        assert_eq!(matches[0].kind, MatchKind::ExactPhrase);
+        assert_eq!(matches[0].variant_kind, VariantKind::DiacriticFold);
+        assert_eq!(matches[0].matched_pattern, "te coj");
     }
 }

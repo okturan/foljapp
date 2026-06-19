@@ -25,7 +25,7 @@ use tantivy::schema::{
     Field, IndexRecordOption, Schema, TantivyDocument, Value, INDEXED, STORED, STRING, TEXT,
 };
 use tantivy::{doc, Index, Term};
-use targets::{load_targets, MatchKind, TargetMatcher};
+use targets::{load_targets, MatchKind, TargetMatcher, VariantKind};
 use text::normalized_text;
 
 const ALL_SOURCE_IDS: &[&str] = &[
@@ -119,6 +119,8 @@ struct OwnedMatch {
     target_key: String,
     signature: String,
     kind: MatchKind,
+    variant_kind: VariantKind,
+    matched_pattern: String,
 }
 
 #[derive(Debug)]
@@ -842,6 +844,8 @@ fn match_targets(args: MatchArgs) -> Result<()> {
                         &matched.signature,
                         sentence_id,
                         matched.kind.as_str(),
+                        matched.variant_kind.as_str(),
+                        &matched.matched_pattern,
                         score,
                     )? {
                         *counts.entry(matched.id.clone()).or_insert(0) += 1;
@@ -947,12 +951,17 @@ fn scan_resource_for_matches_inner(
         let matches = target_matcher
             .matches_normalized(&normalized)
             .into_iter()
+            .filter(|matched| {
+                variant_supported_by_raw_sentence(matched.variant_kind, &candidate.sentence)
+            })
             .filter(|matched| local_counts.get(matched.id).copied().unwrap_or(0) < max_per_target)
             .map(|matched| OwnedMatch {
                 id: matched.id.to_owned(),
                 target_key: matched.target_key.to_owned(),
                 signature: matched.signature.to_owned(),
                 kind: matched.kind,
+                variant_kind: matched.variant_kind,
+                matched_pattern: matched.matched_pattern.to_owned(),
             })
             .collect::<Vec<_>>();
 
@@ -999,6 +1008,20 @@ fn scan_resource_for_matches_inner(
     Ok(())
 }
 
+fn variant_supported_by_raw_sentence(variant_kind: VariantKind, sentence: &str) -> bool {
+    match variant_kind {
+        VariantKind::SNegative => has_apostrophe_negation(sentence),
+        _ => true,
+    }
+}
+
+fn has_apostrophe_negation(sentence: &str) -> bool {
+    sentence.contains("s'")
+        || sentence.contains("S'")
+        || sentence.contains("s’")
+        || sentence.contains("S’")
+}
+
 fn select_resources(repo_root: &Path, raw_sources: &str) -> Result<Vec<ResourceSpec>> {
     let wanted = source_ids(raw_sources);
     let by_id = load_downloaded_resources(repo_root)?
@@ -1019,6 +1042,18 @@ fn select_resources(repo_root: &Path, raw_sources: &str) -> Result<Vec<ResourceS
         }
     }
     Ok(selected)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::has_apostrophe_negation;
+
+    #[test]
+    fn apostrophe_negation_does_not_treat_suffix_s_as_negation() {
+        assert!(has_apostrophe_negation("Unë s'punoj sot."));
+        assert!(has_apostrophe_negation("Ai S’punon sot."));
+        assert!(!has_apostrophe_negation("NATO-s dhe UNESCO-s."));
+    }
 }
 
 fn source_ids(raw_sources: &str) -> Vec<String> {
