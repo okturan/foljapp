@@ -795,6 +795,18 @@ export function conjugate(
     );
   }
 
+  if (
+    options.mood !== 'non-finite' &&
+    voice === 'middle-passive' &&
+    entry.flags?.middlePassiveThirdPersonOnly &&
+    person !== 3
+  ) {
+    throw new UnsupportedCellError(
+      `${cellLabel(person, number)}/${options.mood}/middle-passive`,
+      `${entry.id} only supports third-person finite middle-passive cells (flag middlePassiveThirdPersonOnly)`,
+    );
+  }
+
   // Verbs flagged noMiddlePassive (copula `jam`, intransitive `iki`/`vij`)
   // have no MP voice in standard Albanian. Refuse before paradigm dispatch
   // so the engine never fabricates forms like `jamem`/`ikem`/`vihem`.

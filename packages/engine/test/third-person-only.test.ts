@@ -18,8 +18,20 @@ const defective: VerbEntry = {
   dialect: 'tosk',
 };
 
+const mpThirdPersonOnly: VerbEntry = {
+  id: 'mp-third-only',
+  lemma: 'mp-third-only',
+  translationEn: 'middle passive third-person-only sentinel',
+  class: 1,
+  auxiliary: 'kam',
+  principalParts: { present: 'çalo', aorist: 'çalua', participle: 'çaluar' },
+  sources: [{ source: 'manual', reference: 'test fixture' }],
+  flags: { middlePassiveThirdPersonOnly: true },
+  dialect: 'tosk',
+};
+
 beforeAll(() => {
-  configure([...fixtures, defective], '0.1.5');
+  configure([...fixtures, defective, mpThirdPersonOnly], '0.1.5');
 });
 
 describe('thirdPersonOnly', () => {
@@ -68,5 +80,63 @@ describe('thirdPersonOnly', () => {
     expect(present['3sg.active']).toBeDefined();
     expect(present['3pl.active']).toBeDefined();
     expect(present['3sg.middle-passive']).toBeUndefined();
+  });
+});
+
+describe('middlePassiveThirdPersonOnly', () => {
+  it('keeps active first and second person cells available', () => {
+    expect(
+      conjugate('mp-third-only', {
+        mood: 'indicative',
+        tense: 'present',
+        voice: 'active',
+        person: 1,
+        number: 'singular',
+        polarity: 'affirmative',
+        modality: 'declarative',
+      }).form,
+    ).toBe('çaloj');
+  });
+
+  it('throws for finite first and second person middle-passive cells', () => {
+    for (const [person, number] of [
+      [1, 'singular'],
+      [2, 'singular'],
+      [1, 'plural'],
+      [2, 'plural'],
+    ] as const) {
+      expect(() =>
+        conjugate('mp-third-only', {
+          mood: 'indicative',
+          tense: 'present',
+          voice: 'middle-passive',
+          person,
+          number,
+          polarity: 'affirmative',
+          modality: 'declarative',
+        }),
+      ).toThrow(UnsupportedCellError);
+    }
+  });
+
+  it('keeps third-person middle-passive cells available', () => {
+    expect(
+      conjugate('mp-third-only', {
+        mood: 'indicative',
+        tense: 'present',
+        voice: 'middle-passive',
+        person: 3,
+        number: 'singular',
+        polarity: 'affirmative',
+        modality: 'declarative',
+      }).form,
+    ).toBe('çalohet');
+  });
+
+  it('table omits unsupported middle-passive cells only', () => {
+    const present = table('mp-third-only').indicative.present as Record<string, unknown>;
+    expect(present['1sg.active']).toBeDefined();
+    expect(present['1sg.middle-passive']).toBeUndefined();
+    expect(present['3sg.middle-passive']).toBeDefined();
   });
 });

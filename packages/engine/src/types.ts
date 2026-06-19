@@ -138,6 +138,8 @@ export interface VerbEntryFlags {
   noMiddlePassive?: boolean;
   /** Defective finite verb whose usable forms are restricted to 3sg/3pl. */
   thirdPersonOnly?: boolean;
+  /** Middle-passive finite cells are restricted to 3sg/3pl; active voice is unaffected. */
+  middlePassiveThirdPersonOnly?: boolean;
 }
 
 /**
