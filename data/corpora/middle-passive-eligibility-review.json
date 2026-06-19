@@ -68,9 +68,9 @@
       },
       "analyzerSummary": {
         "accepted": 15,
-        "incompatible": 219,
+        "incompatible": 0,
         "noTokenAnalysis": 0,
-        "notProvided": 0,
+        "notProvided": 219,
         "compatibleRows": 15,
         "acceptedSamples": ["abstenohemi", "abstenohesh"]
       },
@@ -141,9 +141,9 @@
       },
       "analyzerSummary": {
         "accepted": 15,
-        "incompatible": 196,
+        "incompatible": 0,
         "noTokenAnalysis": 0,
-        "notProvided": 0,
+        "notProvided": 196,
         "compatibleRows": 15,
         "acceptedSamples": ["guxohem", "guxohemi"]
       },
@@ -214,9 +214,9 @@
       },
       "analyzerSummary": {
         "accepted": 9,
-        "incompatible": 184,
+        "incompatible": 0,
         "noTokenAnalysis": 0,
-        "notProvided": 0,
+        "notProvided": 184,
         "compatibleRows": 9,
         "acceptedSamples": ["banohem", "banoheshim"]
       },
@@ -286,9 +286,9 @@
       },
       "analyzerSummary": {
         "accepted": 13,
-        "incompatible": 178,
+        "incompatible": 0,
         "noTokenAnalysis": 0,
-        "notProvided": 0,
+        "notProvided": 178,
         "compatibleRows": 13,
         "acceptedSamples": ["nuk veprohem", "nuk veprohemi"]
       },
@@ -358,9 +358,9 @@
       },
       "analyzerSummary": {
         "accepted": 5,
-        "incompatible": 176,
+        "incompatible": 0,
         "noTokenAnalysis": 0,
-        "notProvided": 0,
+        "notProvided": 176,
         "compatibleRows": 5,
         "acceptedSamples": ["nuk dyshohemi", "nuk dyshohesha"]
       },
@@ -436,9 +436,9 @@
       },
       "analyzerSummary": {
         "accepted": 9,
-        "incompatible": 147,
+        "incompatible": 0,
         "noTokenAnalysis": 0,
-        "notProvided": 0,
+        "notProvided": 147,
         "compatibleRows": 9,
         "acceptedSamples": ["nuk shkohem", "nuk shkohemi"]
       },
@@ -513,9 +513,9 @@
       },
       "analyzerSummary": {
         "accepted": 4,
-        "incompatible": 123,
+        "incompatible": 0,
         "noTokenAnalysis": 0,
-        "notProvided": 0,
+        "notProvided": 123,
         "compatibleRows": 4,
         "acceptedSamples": ["nuk votohesha", "nuk votoheshe"]
       },
@@ -574,7 +574,9 @@
       "activeCoverage": "90/268 (33.6%)",
       "sourceLevel": "lexicon-only",
       "sources": ["kaikki", "manual"],
-      "currentFlags": { "middlePassiveThirdPersonOnly": true },
+      "currentFlags": {
+        "middlePassiveThirdPersonOnly": true
+      },
       "middlePassiveOverrideKeys": [],
       "totalMiddlePassiveTargets": 88,
       "totalMiddlePassiveMisses": 79,
@@ -591,9 +593,9 @@
       },
       "analyzerSummary": {
         "accepted": 6,
-        "incompatible": 73,
+        "incompatible": 0,
         "noTokenAnalysis": 0,
-        "notProvided": 0,
+        "notProvided": 73,
         "compatibleRows": 12,
         "acceptedSamples": ["çaloheshin", "nuk çalohej"]
       },

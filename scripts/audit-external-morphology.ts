@@ -6,17 +6,35 @@
  * as review evidence only.
  */
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
 const DEFAULT_TARGETS = join(REPO_ROOT, '.cache', 'corpus-targets.json');
-const DEFAULT_COVERAGE = join(REPO_ROOT, '.cache', 'corpus-coverage-report.json');
+const DEFAULT_COVERAGE = join(
+  REPO_ROOT,
+  '.cache',
+  'corpus-coverage-report.json',
+);
 const DEFAULT_VERBS = join(REPO_ROOT, 'data', 'verbs', '_corpus.client.json');
-const DEFAULT_JSON_OUT = join(REPO_ROOT, '.cache', 'external-morphology-audit.json');
-const DEFAULT_MD_OUT = join(REPO_ROOT, '.cache', 'external-morphology-audit.md');
+const DEFAULT_JSON_OUT = join(
+  REPO_ROOT,
+  '.cache',
+  'external-morphology-audit.json',
+);
+const DEFAULT_MD_OUT = join(
+  REPO_ROOT,
+  '.cache',
+  'external-morphology-audit.md',
+);
 const DEFAULT_UNIPARSER_LEXEME_PATHS = [
   join(REPO_ROOT, '.cache', 'uniparser-grammar-albanian', 'sqi_lexemes_V.txt'),
   join(REPO_ROOT, '.cache', 'sqi_lexemes_V.txt'),
@@ -150,7 +168,9 @@ interface LemmaAnalyzerSummary {
 }
 
 function valueAfter(prefix: string): string | undefined {
-  return process.argv.find((arg) => arg.startsWith(prefix))?.slice(prefix.length);
+  return process.argv
+    .find((arg) => arg.startsWith(prefix))
+    ?.slice(prefix.length);
 }
 
 function readJson<T>(path: string): T {
@@ -158,9 +178,11 @@ function readJson<T>(path: string): T {
   return JSON.parse(readFileSync(path, 'utf8')) as T;
 }
 
-function resolveUniparserLexemes(
-  explicitPath: string | undefined,
-): { path: string | null; searchedPaths: string[]; source: string } {
+function resolveUniparserLexemes(explicitPath: string | undefined): {
+  path: string | null;
+  searchedPaths: string[];
+  source: string;
+} {
   if (explicitPath) {
     return {
       path: existsSync(explicitPath) ? explicitPath : null,
@@ -182,12 +204,7 @@ function localUniparserPackageLexemePaths(): string[] {
   return readdirSync(lib, { withFileTypes: true })
     .filter((entry) => entry.isDirectory() && entry.name.startsWith('python'))
     .flatMap((entry) => {
-      const base = join(
-        lib,
-        entry.name,
-        'site-packages',
-        'uniparser_albanian',
-      );
+      const base = join(lib, entry.name, 'site-packages', 'uniparser_albanian');
       return [
         join(base, 'data_strict', 'lexemes.txt'),
         join(base, 'data_nodiacritics', 'lexemes.txt'),
@@ -195,9 +212,11 @@ function localUniparserPackageLexemePaths(): string[] {
     });
 }
 
-function resolveUniparserAnalysis(
-  explicitPath: string | undefined,
-): { path: string | null; searchedPaths: string[]; source: string } {
+function resolveUniparserAnalysis(explicitPath: string | undefined): {
+  path: string | null;
+  searchedPaths: string[];
+  source: string;
+} {
   if (!explicitPath) {
     return {
       path: null,
@@ -212,13 +231,19 @@ function resolveUniparserAnalysis(
   };
 }
 
-function requireFreshInputs(targetFile: TargetFile, coverage: CoverageReport): void {
-  if (!targetFile.generatedAt) throw new Error('Target file is missing generatedAt');
-  if (!targetFile.corpusVersion) throw new Error('Target file is missing corpusVersion');
+function requireFreshInputs(
+  targetFile: TargetFile,
+  coverage: CoverageReport,
+): void {
+  if (!targetFile.generatedAt)
+    throw new Error('Target file is missing generatedAt');
+  if (!targetFile.corpusVersion)
+    throw new Error('Target file is missing corpusVersion');
   if (!coverage.targetGeneratedAt) {
     throw new Error('Coverage report is missing targetGeneratedAt');
   }
-  if (!coverage.corpusVersion) throw new Error('Coverage report is missing corpusVersion');
+  if (!coverage.corpusVersion)
+    throw new Error('Coverage report is missing corpusVersion');
   if (coverage.targetGeneratedAt !== targetFile.generatedAt) {
     throw new Error(
       `Coverage target generation mismatch: ${coverage.targetGeneratedAt} != ${targetFile.generatedAt}`,
@@ -271,8 +296,38 @@ function middlePassiveOverrideKeys(verb: VerbEntry | undefined): string[] {
     .sort();
 }
 
+function sourceBackedUMarkerTarget(
+  target: TargetRecord,
+  verb: VerbEntry | undefined,
+): boolean {
+  if (!verb || !sourceKeys(verb).includes('husic')) return false;
+  if (target.options.voice !== 'middle-passive') return false;
+  const mood =
+    typeof target.options.mood === 'string' ? target.options.mood : '';
+  const tense =
+    typeof target.options.tense === 'string' ? target.options.tense : 'present';
+  const person = target.options.person;
+  const number = target.options.number;
+  if (typeof person !== 'number' || typeof number !== 'string') return false;
+  const cell = `${person}${number === 'singular' ? 'sg' : 'pl'}`;
+  const positive = target.targetKey.startsWith('nuk ')
+    ? target.targetKey.slice(4)
+    : target.targetKey;
+  const middlePassiveOverride =
+    verb.cellOverrides?.[`${mood}.${tense}.middle-passive`]?.[cell];
+  if (middlePassiveOverride === positive) return true;
+  const override = verb.cellOverrides?.[`${mood}.${tense}`]?.[cell];
+  if (!override) return false;
+  const bareOverride = override.startsWith('të ')
+    ? override.slice(3)
+    : override;
+  return positive === `u ${bareOverride}`;
+}
+
 function parseUniparserLexemes(path: string): LexemeIndex {
-  const text = readFileSync(path, 'utf8').replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+  const text = readFileSync(path, 'utf8')
+    .replaceAll('\r\n', '\n')
+    .replaceAll('\r', '\n');
   const chunks = text
     .split(/(?=^-lexeme\b)/gm)
     .map((chunk) => chunk.trim())
@@ -283,14 +338,18 @@ function parseUniparserLexemes(path: string): LexemeIndex {
     const lex = chunk.match(/(?:^|\n)\s*lex:\s*([^\s]+)/)?.[1];
     const gramm = chunk.match(/(?:^|\n)\s*gramm:\s*([^\n]+)/)?.[1];
     if (!lex || !gramm) continue;
-    const tags = gramm.split(',').map((tag) => tag.trim()).filter(Boolean);
+    const tags = gramm
+      .split(',')
+      .map((tag) => tag.trim())
+      .filter(Boolean);
     if (!tags.includes('V')) continue;
     entries.push({
       lex,
       tags,
       paradigm: chunk.match(/(?:^|\n)\s*paradigm:\s*([^\s]+)/)?.[1] ?? null,
       lexref: chunk.match(/(?:^|\n)\s*lexref:\s*([^\s]+)/)?.[1] ?? null,
-      transEn: chunk.match(/(?:^|\n)\s*trans_en:\s*([\s\S]*)$/)?.[1]?.trim() ?? '',
+      transEn:
+        chunk.match(/(?:^|\n)\s*trans_en:\s*([\s\S]*)$/)?.[1]?.trim() ?? '',
     });
   }
 
@@ -325,7 +384,9 @@ function optionalString(value: unknown): string | null {
   return typeof value === 'string' && value.trim() ? value.trim() : null;
 }
 
-function analyzerEntryFromRecord(row: Record<string, unknown>): AnalyzerEntry | null {
+function analyzerEntryFromRecord(
+  row: Record<string, unknown>,
+): AnalyzerEntry | null {
   const tags = unique([
     ...parseTags(row.tags),
     ...parseTags(row.gramm),
@@ -336,7 +397,10 @@ function analyzerEntryFromRecord(row: Record<string, unknown>): AnalyzerEntry | 
   if (tags.length === 0) return null;
   return {
     wf: optionalString(row.wf),
-    lemma: optionalString(row.lemma) ?? optionalString(row.lex) ?? optionalString(row.lexeme),
+    lemma:
+      optionalString(row.lemma) ??
+      optionalString(row.lex) ??
+      optionalString(row.lexeme),
     gramm: optionalString(row.gramm) ?? optionalString(row.grammar),
     pos: optionalString(row.pos),
     tags,
@@ -350,7 +414,9 @@ function analyzerRowFromRecord(row: unknown): AnalyzerRow | null {
   const signature = optionalString(row.signature);
   const targetGeneratedAt = optionalString(row.targetGeneratedAt);
   const corpusVersion = optionalString(row.corpusVersion);
-  const coverageTargetGeneratedAt = optionalString(row.coverageTargetGeneratedAt);
+  const coverageTargetGeneratedAt = optionalString(
+    row.coverageTargetGeneratedAt,
+  );
   const mode = row.mode;
   const token = optionalString(row.token);
   if (
@@ -376,12 +442,17 @@ function analyzerRowFromRecord(row: unknown): AnalyzerRow | null {
     mode,
     token,
     analyses: row.analyses
-      .map((analysis) => (isRecord(analysis) ? analyzerEntryFromRecord(analysis) : null))
+      .map((analysis) =>
+        isRecord(analysis) ? analyzerEntryFromRecord(analysis) : null,
+      )
       .filter((analysis): analysis is AnalyzerEntry => Boolean(analysis)),
   };
 }
 
-function analyzerRowMatchesTarget(row: AnalyzerRow, target: TargetRecord): boolean {
+function analyzerRowMatchesTarget(
+  row: AnalyzerRow,
+  target: TargetRecord,
+): boolean {
   const headToken = target.tokens[target.tokens.length - 1] ?? target.targetKey;
   return row.mode === 'strict'
     ? row.token === headToken
@@ -418,9 +489,14 @@ function loadAnalyzerEvidenceFile(
     );
   }
   const output = emptyAnalyzerFile('loaded', location);
-  const rowsByTarget = new Map<string, { strict: AnalyzerRow | null; noDiacritics: AnalyzerRow | null }>();
+  const rowsByTarget = new Map<
+    string,
+    { strict: AnalyzerRow | null; noDiacritics: AnalyzerRow | null }
+  >();
 
-  for (const line of readFileSync(location.path, 'utf8').replaceAll('\r', '\n').split('\n')) {
+  for (const line of readFileSync(location.path, 'utf8')
+    .replaceAll('\r', '\n')
+    .split('\n')) {
     const trimmed = line.trim();
     if (!trimmed) continue;
     let parsed: unknown;
@@ -500,7 +576,11 @@ function lexemeEvidence(
     lexemes.byLex.get(noDiacritics(verb.lemma));
   const folded = lexemes.byFoldedLex.get(noDiacritics(verb.lemma));
   const matches = exact ?? folded ?? [];
-  const matchKind = exact ? 'exact_or_id' : folded ? 'diacritic_fold' : 'no_match';
+  const matchKind = exact
+    ? 'exact_or_id'
+    : folded
+      ? 'diacritic_fold'
+      : 'no_match';
   const tags = unique(matches.flatMap((entry) => entry.tags));
   return {
     found: matches.length > 0,
@@ -529,8 +609,11 @@ function analyzerMatches(
   const expectedId = noDiacritics(target.verbId);
   return row.analyses.map((entry) => {
     const entryLemma = entry.lemma ? noDiacritics(entry.lemma) : '';
-    const lemmaMatches = entryLemma === expectedLemma || entryLemma === expectedId;
-    const missingExpectedTags = expected.filter((tag) => !entry.tags.includes(tag));
+    const lemmaMatches =
+      entryLemma === expectedLemma || entryLemma === expectedId;
+    const missingExpectedTags = expected.filter(
+      (tag) => !entry.tags.includes(tag),
+    );
     return {
       token: row.token,
       wf: entry.wf,
@@ -569,7 +652,8 @@ function analyzerEvidence(
   const compatibleRows = all.filter((match) => match.compatible).length;
   const componentRows =
     target.tokens.length > 1
-      ? all.filter((match) => match.lemmaMatches && match.tags.includes('V')).length
+      ? all.filter((match) => match.lemmaMatches && match.tags.includes('V'))
+          .length
       : 0;
   return {
     status:
@@ -656,15 +740,23 @@ function classifyVoice(
   const localSourceLevel = sourceLevel(sources);
   const localProof = sources.length > 0 ? 'local-source' : 'none';
   const mpMissRate =
-    row.middlePassiveTotal === 0 ? 0 : row.middlePassiveMiss / row.middlePassiveTotal;
+    row.middlePassiveTotal === 0
+      ? 0
+      : row.middlePassiveMiss / row.middlePassiveTotal;
 
-  if (target.tokens.length > 1) reasons.push('multiword_target_head_token_only');
+  if (target.tokens.length > 1)
+    reasons.push('multiword_target_head_token_only');
   if (localSourceLevel === 'lexicon-only') reasons.push('lexicon_only');
   if (middlePassiveOverrideKeys(verb).length === 0) {
     reasons.push('no_middle_passive_overrides');
   }
   if (mpMissRate >= 0.75) reasons.push('high_middle_passive_miss_pressure');
-  if (!lexeme.found) reasons.push(lexeme.matchKind === 'not_provided' ? 'no_external_lexeme_file' : 'no_external_lexeme_match');
+  if (!lexeme.found)
+    reasons.push(
+      lexeme.matchKind === 'not_provided'
+        ? 'no_external_lexeme_file'
+        : 'no_external_lexeme_match',
+    );
   if (analyzer.accepted) {
     reasons.push('uniparser_analyzer_accepts_head_token');
   } else if (analyzer.componentSupported) {
@@ -704,6 +796,17 @@ function classifyVoice(
       proofLevel: 'analyzer',
       reasons,
       action: 'review_as_analyzer_accepted',
+    };
+  }
+
+  if (sourceBackedUMarkerTarget(target, verb)) {
+    reasons.push('husic_backed_u_marker_from_active_override');
+    return {
+      form: 'source_backed_composed',
+      voiceEligibility: 'source_backed_composed_middle_passive',
+      proofLevel: 'local-source',
+      reasons,
+      action: 'review_source_backed_composed_phrase',
     };
   }
 
@@ -788,7 +891,9 @@ function add(map: Map<string, number>, key: string): void {
   map.set(key, (map.get(key) ?? 0) + 1);
 }
 
-function topCounts(map: Map<string, number>): Array<{ key: string; count: number }> {
+function topCounts(
+  map: Map<string, number>,
+): Array<{ key: string; count: number }> {
   return [...map.entries()]
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .map(([key, count]) => ({ key, count }));
@@ -823,6 +928,12 @@ function balancedTargetSample<T extends { lemma: string }>(
   return out;
 }
 
+function isAnalyzerNonacceptance(audit: {
+  verdict: { action: string };
+}): boolean {
+  return audit.verdict.action === 'review_analyzer_nonacceptance';
+}
+
 function main(): void {
   const targetsPath = valueAfter('--targets=') ?? DEFAULT_TARGETS;
   const coveragePath = valueAfter('--coverage=') ?? DEFAULT_COVERAGE;
@@ -846,15 +957,21 @@ function main(): void {
   const coverage = readJson<CoverageReport>(coveragePath);
   requireFreshInputs(targetFile, coverage);
   const verbs = readJson<VerbEntry[]>(verbsPath);
-  const targetsById = new Map(targetFile.targets.map((target) => [target.id, target]));
+  const targetsById = new Map(
+    targetFile.targets.map((target) => [target.id, target]),
+  );
   const missingIds = new Set(coverage.misses.map((miss) => miss.id));
   const verbsById = new Map(verbs.map((verb) => [verb.id, verb]));
   const lexemes = lexemesPath ? parseUniparserLexemes(lexemesPath) : null;
   if (lexemesPath && lexemes?.entries.length === 0) {
-    throw new Error(`UniParser lexeme file contained no entries: ${lexemesPath}`);
+    throw new Error(
+      `UniParser lexeme file contained no entries: ${lexemesPath}`,
+    );
   }
   if (analyzerInputProvided && !analyzerLocation.path) {
-    throw new Error(`UniParser analyzer file not found: ${analyzerLocation.searchedPaths[0]}`);
+    throw new Error(
+      `UniParser analyzer file not found: ${analyzerLocation.searchedPaths[0]}`,
+    );
   }
   const analyzerFile = loadAnalyzerEvidenceFile(
     analyzerLocation,
@@ -875,18 +992,20 @@ function main(): void {
 
   const byLemmaVoice = new Map<string, VoiceRow>();
   for (const target of targetFile.targets) {
-    if (target.options.voice !== 'active' && target.options.voice !== 'middle-passive') {
+    if (
+      target.options.voice !== 'active' &&
+      target.options.voice !== 'middle-passive'
+    ) {
       continue;
     }
-    const row =
-      byLemmaVoice.get(target.verbId) ?? {
-        activeTotal: 0,
-        activeHit: 0,
-        activeMiss: 0,
-        middlePassiveTotal: 0,
-        middlePassiveHit: 0,
-        middlePassiveMiss: 0,
-      };
+    const row = byLemmaVoice.get(target.verbId) ?? {
+      activeTotal: 0,
+      activeHit: 0,
+      activeMiss: 0,
+      middlePassiveTotal: 0,
+      middlePassiveHit: 0,
+      middlePassiveMiss: 0,
+    };
     const missed = missingIds.has(target.id);
     if (target.options.voice === 'active') {
       row.activeTotal += 1;
@@ -906,20 +1025,22 @@ function main(): void {
   const targetAudits = coverage.misses
     .map((miss) => {
       const target = targetsById.get(miss.id);
-      if (!target) throw new Error(`Coverage miss not found in targets: ${miss.id}`);
+      if (!target)
+        throw new Error(`Coverage miss not found in targets: ${miss.id}`);
       const verb = verbsById.get(target.verbId);
       const sources = sourceKeys(verb);
-      const voiceRow =
-        byLemmaVoice.get(target.verbId) ?? {
-          activeTotal: 0,
-          activeHit: 0,
-          activeMiss: 0,
-          middlePassiveTotal: 0,
-          middlePassiveHit: 0,
-          middlePassiveMiss: 0,
-        };
-      const lexeme = lexemeByVerb.get(target.verbId) ?? lexemeEvidence(verb, lexemes);
-      const analyzer = analyzerFile.byTargetId.get(target.id) ?? emptyAnalyzerEvidence();
+      const voiceRow = byLemmaVoice.get(target.verbId) ?? {
+        activeTotal: 0,
+        activeHit: 0,
+        activeMiss: 0,
+        middlePassiveTotal: 0,
+        middlePassiveHit: 0,
+        middlePassiveMiss: 0,
+      };
+      const lexeme =
+        lexemeByVerb.get(target.verbId) ?? lexemeEvidence(verb, lexemes);
+      const analyzer =
+        analyzerFile.byTargetId.get(target.id) ?? emptyAnalyzerEvidence();
       const verdict = classifyVoice(target, verb, lexeme, analyzer, voiceRow);
       return {
         targetId: target.id,
@@ -984,22 +1105,21 @@ function main(): void {
   const analyzerByVerb = new Map<string, LemmaAnalyzerSummary>();
   for (const audit of targetAudits) {
     if (audit.expected.voice !== 'middle-passive') continue;
-    const summary =
-      analyzerByVerb.get(audit.verbId) ?? {
-        accepted: 0,
-        incompatible: 0,
-        noTokenAnalysis: 0,
-        notProvided: 0,
-        compatibleRows: 0,
-        acceptedSamples: [],
-      };
+    const summary = analyzerByVerb.get(audit.verbId) ?? {
+      accepted: 0,
+      incompatible: 0,
+      noTokenAnalysis: 0,
+      notProvided: 0,
+      compatibleRows: 0,
+      acceptedSamples: [],
+    };
     const analyzer = audit.external.uniparserAnalyzer;
     if (analyzer.status === 'accepted') {
       summary.accepted += 1;
       if (summary.acceptedSamples.length < 2) {
         summary.acceptedSamples.push(audit.targetKey);
       }
-    } else if (analyzer.status === 'analyzed_incompatible') {
+    } else if (isAnalyzerNonacceptance(audit)) {
       summary.incompatible += 1;
     } else if (analyzer.status === 'no_token_analysis') {
       summary.noTokenAnalysis += 1;
@@ -1013,15 +1133,14 @@ function main(): void {
   const lemmaReviews = verbs
     .map((verb) => {
       const sources = sourceKeys(verb);
-      const row =
-        byLemmaVoice.get(verb.id) ?? {
-          activeTotal: 0,
-          activeHit: 0,
-          activeMiss: 0,
-          middlePassiveTotal: 0,
-          middlePassiveHit: 0,
-          middlePassiveMiss: 0,
-        };
+      const row = byLemmaVoice.get(verb.id) ?? {
+        activeTotal: 0,
+        activeHit: 0,
+        activeMiss: 0,
+        middlePassiveTotal: 0,
+        middlePassiveHit: 0,
+        middlePassiveMiss: 0,
+      };
       const lexeme = lexemeByVerb.get(verb.id) ?? lexemeEvidence(verb, lexemes);
       const fakeTarget: TargetRecord = {
         id: verb.id,
@@ -1047,16 +1166,21 @@ function main(): void {
         middlePassiveHitRate: pct(row.middlePassiveHit, row.middlePassiveTotal),
         lexeme,
         lexemeVoiceBucket: lexemeVoiceBucket(lexeme.tags),
-        analyzerSummary:
-          analyzerByVerb.get(verb.id) ?? {
-            accepted: 0,
-            incompatible: 0,
-            noTokenAnalysis: 0,
-            notProvided: 0,
-            compatibleRows: 0,
-            acceptedSamples: [],
-          },
-        verdict: classifyVoice(fakeTarget, verb, lexeme, emptyAnalyzerEvidence(), row),
+        analyzerSummary: analyzerByVerb.get(verb.id) ?? {
+          accepted: 0,
+          incompatible: 0,
+          noTokenAnalysis: 0,
+          notProvided: 0,
+          compatibleRows: 0,
+          acceptedSamples: [],
+        },
+        verdict: classifyVoice(
+          fakeTarget,
+          verb,
+          lexeme,
+          emptyAnalyzerEvidence(),
+          row,
+        ),
       };
     })
     .filter((row) => row.middlePassiveTargets > 0)
@@ -1084,10 +1208,7 @@ function main(): void {
     add(sourceLevelCounts, audit.localVerb.sourceLevel);
     add(scopeCounts, audit.scope);
     add(analyzerStatusCounts, audit.external.uniparserAnalyzer.status);
-    if (
-      audit.external.uniparserAnalyzer.status !== 'not_provided' &&
-      !audit.external.uniparserAnalyzer.accepted
-    ) {
+    if (isAnalyzerNonacceptance(audit)) {
       add(analyzerNonAcceptedLemmaCounts, audit.lemma);
       add(analyzerNonAcceptedSignatureCounts, audit.signature);
     }
@@ -1140,6 +1261,7 @@ function main(): void {
       'Analyzer rejection would not prove impossibility.',
       'Multiword targets are token/head checks, not whole-phrase validation.',
       '`component_supported` means UniParser recognized the head token as a verb form for the expected lemma, while auxiliary/person/tense features remain phrase-level and unchecked.',
+      '`source_backed_composed` means a Husić-backed active simple-cell override composes with the middle-passive `u` marker; it is source-backed morphology, not corpus attestation.',
       'This script never edits data/verbs/*.json.',
     ],
     summary: {
@@ -1150,7 +1272,8 @@ function main(): void {
       middlePassiveMissTargets: targetAudits.filter(
         (audit) => audit.expected.voice === 'middle-passive',
       ).length,
-      lexemeMatchedLemmas: lemmaReviews.filter((row) => row.lexeme.found).length,
+      lexemeMatchedLemmas: lemmaReviews.filter((row) => row.lexeme.found)
+        .length,
       analyzerRowMatchedTargets: targetAudits.filter(
         (audit) => audit.external.uniparserAnalyzer.status !== 'not_provided',
       ).length,
@@ -1158,7 +1281,8 @@ function main(): void {
         (audit) => audit.external.uniparserAnalyzer.analyzedRows > 0,
       ).length,
       analyzerNoTokenAnalysisTargets: targetAudits.filter(
-        (audit) => audit.external.uniparserAnalyzer.status === 'no_token_analysis',
+        (audit) =>
+          audit.external.uniparserAnalyzer.status === 'no_token_analysis',
       ).length,
       analyzerAcceptedTargets: targetAudits.filter(
         (audit) => audit.external.uniparserAnalyzer.accepted,
@@ -1171,7 +1295,9 @@ function main(): void {
     scopeCounts: topCounts(scopeCounts),
     analyzerStatusCounts: topCounts(analyzerStatusCounts),
     analyzerNonAcceptedLemmaCounts: topCounts(analyzerNonAcceptedLemmaCounts),
-    analyzerNonAcceptedSignatureCounts: topCounts(analyzerNonAcceptedSignatureCounts),
+    analyzerNonAcceptedSignatureCounts: topCounts(
+      analyzerNonAcceptedSignatureCounts,
+    ),
     lemmaActionCounts: topCounts(lemmaActionCounts),
     lemmaVoiceEligibilityCounts: topCounts(lemmaVoiceEligibilityCounts),
     lemmaLexemeVoiceBucketCounts: topCounts(lemmaLexemeVoiceBucketCounts),
@@ -1220,7 +1346,9 @@ function main(): void {
     '',
     '| Verdict | Missed Targets |',
     '| --- | ---: |',
-    ...report.voiceEligibilityCounts.map((row) => `| ${row.key} | ${row.count} |`),
+    ...report.voiceEligibilityCounts.map(
+      (row) => `| ${row.key} | ${row.count} |`,
+    ),
     '',
     '## Lemma Review Actions',
     '',
@@ -1230,11 +1358,15 @@ function main(): void {
     '',
     '| Lemma Voice Verdict | Lemmas |',
     '| --- | ---: |',
-    ...report.lemmaVoiceEligibilityCounts.map((row) => `| ${row.key} | ${row.count} |`),
+    ...report.lemmaVoiceEligibilityCounts.map(
+      (row) => `| ${row.key} | ${row.count} |`,
+    ),
     '',
     '| UniParser Lexeme Bucket | Lemmas |',
     '| --- | ---: |',
-    ...report.lemmaLexemeVoiceBucketCounts.map((row) => `| ${row.key} | ${row.count} |`),
+    ...report.lemmaLexemeVoiceBucketCounts.map(
+      (row) => `| ${row.key} | ${row.count} |`,
+    ),
     '',
     '## Source And Scope Counts',
     '',
@@ -1252,9 +1384,11 @@ function main(): void {
           '',
           '| Status | Missed Targets |',
           '| --- | ---: |',
-          ...report.analyzerStatusCounts.map((row) => `| ${row.key} | ${row.count} |`),
+          ...report.analyzerStatusCounts.map(
+            (row) => `| ${row.key} | ${row.count} |`,
+          ),
           '',
-          '## UniParser Non-Accepted Lemma Clusters',
+          '## Post-Verdict Analyzer Nonacceptance Lemma Clusters',
           '',
           '| Lemma | Targets |',
           '| --- | ---: |',
@@ -1262,7 +1396,7 @@ function main(): void {
             .slice(0, 20)
             .map((row) => `| ${md(row.key)} | ${row.count} |`),
           '',
-          '## UniParser Non-Accepted Signature Clusters',
+          '## Post-Verdict Analyzer Nonacceptance Signature Clusters',
           '',
           '| Signature | Targets |',
           '| --- | ---: |',
@@ -1274,12 +1408,14 @@ function main(): void {
       : []),
     '## Top Lemma Reviews',
     '',
-    '| Lemma | Verb ID | Flags | MP Misses | MP Hit Rate | Active Hit Rate | Source Level | Lexeme Bucket | MP Analyzer Accepted | MP Analyzer Incompatible | Accepted Samples | Lexeme Tags | Voice Verdict | Action |',
+    '| Lemma | Verb ID | Flags | MP Misses | MP Hit Rate | Active Hit Rate | Source Level | Lexeme Bucket | MP Analyzer Accepted | MP Analyzer Nonacceptance | Accepted Samples | Lexeme Tags | Voice Verdict | Action |',
     '| --- | --- | --- | ---: | ---: | ---: | --- | --- | ---: | ---: | --- | --- | --- | --- |',
-    ...report.verbs.slice(0, 60).map(
-      (row) =>
-        `| ${md(row.lemma)} | ${md(row.verbId)} | ${md(flagsText(row.flags))} | ${row.middlePassiveMisses} | ${row.middlePassiveHitRate} | ${row.activeHitRate} | ${row.sourceLevel} | ${row.lexemeVoiceBucket} | ${row.analyzerSummary.accepted} | ${row.analyzerSummary.incompatible} | ${md(row.analyzerSummary.acceptedSamples.join(', '))} | ${md(row.lexeme.tags.join(', ') || '')} | ${row.verdict.voiceEligibility} | ${row.verdict.action} |`,
-    ),
+    ...report.verbs
+      .slice(0, 60)
+      .map(
+        (row) =>
+          `| ${md(row.lemma)} | ${md(row.verbId)} | ${md(flagsText(row.flags))} | ${row.middlePassiveMisses} | ${row.middlePassiveHitRate} | ${row.activeHitRate} | ${row.sourceLevel} | ${row.lexemeVoiceBucket} | ${row.analyzerSummary.accepted} | ${row.analyzerSummary.incompatible} | ${md(row.analyzerSummary.acceptedSamples.join(', '))} | ${md(row.lexeme.tags.join(', ') || '')} | ${row.verdict.voiceEligibility} | ${row.verdict.action} |`,
+      ),
     '',
     '## Top Target Reviews',
     '',
