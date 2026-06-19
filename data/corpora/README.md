@@ -66,11 +66,14 @@ Build the target list from the engine:
 npm run build:corpus-targets
 ```
 
-Build local examples from every downloaded corpus:
+Build local examples from every scanner-configured downloaded corpus partition:
 
 ```bash
 npm run build:local-corpus-index
 ```
+
+This produces retained example evidence, not proof that missing forms are absent
+from all raw Albanian text.
 
 Changing the target set requires rescanning raw corpora when no candidate cache
 exists, because the examples DB stores only matching sentences:
@@ -138,11 +141,12 @@ The dossier remains sample-only. Use it when you need specific target rows,
 joined morphology fields, and SQL lookup snippets; use the main audit for
 aggregate counts and review priorities.
 
-The highest-signal likely data/engine follow-up is tracked in
+One focused source-review follow-up is tracked in
 [`middle-passive-eligibility-review.json`](./middle-passive-eligibility-review.json):
 8 intransitive-tagged lemmas, 1,296 middle-passive misses, current flags, sample
-target IDs, UniParser lexeme/analyzer evidence, and an explicit `decision`
-placeholder. Do not change generation from this file alone; use it as the
+target IDs, UniParser lexeme/analyzer evidence, and explicit `decision` values.
+Resolved decisions must include `decisionEvidence`; unresolved rows stay
+`needs_source`. Do not change generation from this file alone; use it as the
 review queue for source-backed voice-eligibility decisions.
 
 After rerunning the full local audit, validate that tracked review queue against

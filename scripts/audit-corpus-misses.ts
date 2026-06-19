@@ -933,7 +933,11 @@ function labelMiss(
     );
   }
   if (labels.length > 0) return labels;
-  if (target.tokens.length > 1 && morphology?.scope === 'head-token-only') {
+  if (
+    target.tokens.length > 1 &&
+    morphology?.scope === 'head-token-only' &&
+    morphology.form === 'component_supported'
+  ) {
     labels.push('component_morphology_only_exact_absence');
   }
   if (morphology?.form === 'not_validated') {

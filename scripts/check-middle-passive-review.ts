@@ -113,14 +113,37 @@ function main(): void {
 
   let actionTargetMisses = 0;
   let totalMiddlePassiveMisses = 0;
+  const decisionCounts = new Map<string, number>();
   for (const row of reviewRows) {
     const verbId = String(row.verbId);
     const expected = auditByVerb.get(verbId);
     const external = morphologyByVerb.get(verbId);
     actionTargetMisses += Number(row.actionTargetMisses ?? 0);
     totalMiddlePassiveMisses += Number(row.totalMiddlePassiveMisses ?? 0);
+    const decision = String(row.decision);
+    decisionCounts.set(decision, (decisionCounts.get(decision) ?? 0) + 1);
 
-    check(allowed.has(String(row.decision)), `${verbId}: invalid decision`);
+    check(allowed.has(decision), `${verbId}: invalid decision`);
+    if (decision !== 'needs_source') {
+      const evidence = row.decisionEvidence;
+      check(
+        Array.isArray(evidence) && evidence.length > 0,
+        `${verbId}: resolved decision needs decisionEvidence`,
+      );
+      if (Array.isArray(evidence)) {
+        for (const [index, item] of evidence.entries()) {
+          const record = asRecord(item, `${verbId}.decisionEvidence[${index}]`);
+          check(
+            typeof record.source === 'string' && record.source.length > 0,
+            `${verbId}: decisionEvidence[${index}] missing source`,
+          );
+          check(
+            typeof record.basis === 'string' && record.basis.length > 0,
+            `${verbId}: decisionEvidence[${index}] missing basis`,
+          );
+        }
+      }
+    }
     check(row.action === REVIEW_ACTION, `${verbId}: wrong review action`);
     check(Boolean(expected), `${verbId}: missing from current audit queue`);
     check(
@@ -225,6 +248,16 @@ function main(): void {
   check(
     summary.totalMiddlePassiveMisses === totalMiddlePassiveMisses,
     'summary totalMiddlePassiveMisses drift',
+  );
+  const expectedDecisionCounts = Object.fromEntries(
+    [...allowed].map((decision) => [
+      decision,
+      decisionCounts.get(decision) ?? 0,
+    ]),
+  );
+  check(
+    same(summary.decisionCounts, expectedDecisionCounts),
+    'summary decisionCounts drift',
   );
 
   if (failures.length > 0) {

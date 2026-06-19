@@ -25,14 +25,26 @@
   "summary": {
     "lemmas": 8,
     "actionTargetMisses": 1296,
-    "totalMiddlePassiveMisses": 1372
+    "totalMiddlePassiveMisses": 1372,
+    "decisionCounts": {
+      "keep": 3,
+      "noMiddlePassive": 0,
+      "middlePassiveThirdPersonOnly": 1,
+      "needs_source": 4
+    }
   },
   "rows": [
     {
       "verbId": "abstenoj",
       "lemma": "abstenoj",
       "translationEn": "to abstain",
-      "decision": "needs_source",
+      "decision": "keep",
+      "decisionEvidence": [
+        {
+          "source": ".cache/kaikki/abstenoj.jsonl",
+          "basis": "Kaikki/Wiktionary cache includes sq-conj-ohem and sq-conj-2 templates with middle-passive forms such as abstenohem, abstenohet, and u abstenua."
+        }
+      ],
       "action": "review_vi_tagged_nonactive_candidate",
       "actionTargetMisses": 219,
       "middlePassiveCoverage": "30/264 (11.4%)",
@@ -394,7 +406,13 @@
       "verbId": "shkoj",
       "lemma": "shkoj",
       "translationEn": "to go",
-      "decision": "needs_source",
+      "decision": "keep",
+      "decisionEvidence": [
+        {
+          "source": ".cache/husic/shkoj.jsonl",
+          "basis": "Husic-derived cache includes middle-passive present, imperfect, aorist, and compound forms including shkohem, shkohesh, shkohemi, and jam shkuar."
+        }
+      ],
       "action": "review_vi_tagged_nonactive_candidate",
       "actionTargetMisses": 147,
       "middlePassiveCoverage": "108/264 (40.9%)",
@@ -465,7 +483,13 @@
       "verbId": "votoj",
       "lemma": "votoj",
       "translationEn": "to vote",
-      "decision": "needs_source",
+      "decision": "keep",
+      "decisionEvidence": [
+        {
+          "source": ".cache/kaikki/votoj.jsonl",
+          "basis": "Kaikki/Wiktionary cache has a passive-voice entry with example Votohem nga populli and generated middle-passive forms such as votohem, votohesh, and votohet."
+        }
+      ],
       "action": "review_vi_tagged_nonactive_candidate",
       "actionTargetMisses": 123,
       "middlePassiveCoverage": "137/264 (51.9%)",
@@ -537,7 +561,13 @@
       "verbId": "caloj",
       "lemma": "çaloj",
       "translationEn": "to limp",
-      "decision": "needs_source",
+      "decision": "middlePassiveThirdPersonOnly",
+      "decisionEvidence": [
+        {
+          "source": "data/verbs/caloj.json",
+          "basis": "The current verb entry already carries middlePassiveThirdPersonOnly; this review retains that restriction instead of widening or deleting middle-passive generation."
+        }
+      ],
       "action": "review_vi_tagged_nonactive_candidate",
       "actionTargetMisses": 73,
       "middlePassiveCoverage": "9/88 (10.2%)",

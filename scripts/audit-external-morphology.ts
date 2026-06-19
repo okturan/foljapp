@@ -113,8 +113,10 @@ interface AnalyzerEvidence {
   strict: AnalyzerMatch[];
   noDiacritics: AnalyzerMatch[];
   accepted: boolean;
+  componentSupported: boolean;
   analyzedRows: number;
   compatibleRows: number;
+  componentRows: number;
 }
 
 interface AnalyzerEvidenceFile {
@@ -554,8 +556,10 @@ function analyzerEvidence(
       strict: [],
       noDiacritics: [],
       accepted: false,
+      componentSupported: false,
       analyzedRows: 0,
       compatibleRows: 0,
+      componentRows: 0,
     };
   }
 
@@ -563,6 +567,10 @@ function analyzerEvidence(
   const noDiacriticsMatches = analyzerMatches(target, rows.noDiacritics);
   const all = [...strict, ...noDiacriticsMatches];
   const compatibleRows = all.filter((match) => match.compatible).length;
+  const componentRows =
+    target.tokens.length > 1
+      ? all.filter((match) => match.lemmaMatches && match.tags.includes('V')).length
+      : 0;
   return {
     status:
       compatibleRows > 0
@@ -573,8 +581,10 @@ function analyzerEvidence(
     strict,
     noDiacritics: noDiacriticsMatches,
     accepted: compatibleRows > 0,
+    componentSupported: componentRows > 0,
     analyzedRows: all.length,
     compatibleRows,
+    componentRows,
   };
 }
 
@@ -584,8 +594,10 @@ function emptyAnalyzerEvidence(): AnalyzerEvidence {
     strict: [],
     noDiacritics: [],
     accepted: false,
+    componentSupported: false,
     analyzedRows: 0,
     compatibleRows: 0,
+    componentRows: 0,
   };
 }
 
@@ -655,6 +667,8 @@ function classifyVoice(
   if (!lexeme.found) reasons.push(lexeme.matchKind === 'not_provided' ? 'no_external_lexeme_file' : 'no_external_lexeme_match');
   if (analyzer.accepted) {
     reasons.push('uniparser_analyzer_accepts_head_token');
+  } else if (analyzer.componentSupported) {
+    reasons.push('uniparser_analyzer_supports_head_component');
   } else if (analyzer.status === 'analyzed_incompatible') {
     reasons.push('uniparser_analyzer_incompatible_head_token');
   } else if (analyzer.status === 'no_token_analysis') {
@@ -666,9 +680,18 @@ function classifyVoice(
 
   if (target.options.voice !== 'middle-passive') {
     return {
-      form: analyzer.accepted ? 'analyzer_accepted' : 'not_validated',
+      form: analyzer.accepted
+        ? 'analyzer_accepted'
+        : analyzer.componentSupported
+          ? 'component_supported'
+          : 'not_validated',
       voiceEligibility: 'not_applicable_active',
-      proofLevel: analyzer.accepted ? 'analyzer' : lexeme.found ? 'lexeme' : localProof,
+      proofLevel:
+        analyzer.accepted || analyzer.componentSupported
+          ? 'analyzer'
+          : lexeme.found
+            ? 'lexeme'
+            : localProof,
       reasons,
       action: 'none',
     };
@@ -729,6 +752,16 @@ function classifyVoice(
       proofLevel: 'lexeme',
       reasons,
       action: 'review_lemma_status',
+    };
+  }
+
+  if (analyzer.componentSupported) {
+    return {
+      form: 'component_supported',
+      voiceEligibility: 'full_phrase_unchecked',
+      proofLevel: 'analyzer',
+      reasons,
+      action: 'review_component_supported_phrase',
     };
   }
 
@@ -927,8 +960,10 @@ function main(): void {
           uniparserAnalyzer: {
             status: analyzer.status,
             accepted: analyzer.accepted,
+            componentSupported: analyzer.componentSupported,
             analyzedRows: analyzer.analyzedRows,
             compatibleRows: analyzer.compatibleRows,
+            componentRows: analyzer.componentRows,
           },
           wordlist: null,
         },
@@ -1104,6 +1139,7 @@ function main(): void {
       'Analyzer acceptance would not be corpus attestation.',
       'Analyzer rejection would not prove impossibility.',
       'Multiword targets are token/head checks, not whole-phrase validation.',
+      '`component_supported` means UniParser recognized the head token as a verb form for the expected lemma, while auxiliary/person/tense features remain phrase-level and unchecked.',
       'This script never edits data/verbs/*.json.',
     ],
     summary: {
