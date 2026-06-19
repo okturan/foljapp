@@ -243,6 +243,17 @@ function sourceLevel(sources: string[]): string {
   return 'unknown-source';
 }
 
+function lexemeVoiceBucket(tags: string[]): string {
+  const hasMed = tags.includes('med');
+  const hasVi = tags.includes('vi');
+  const hasVt = tags.includes('vt');
+  if (hasMed) return 'med';
+  if (hasVi && hasVt) return 'vi+vt';
+  if (hasVt) return 'vt';
+  if (hasVi) return 'vi-only';
+  return tags.length > 0 ? 'other-lexeme' : 'no-lexeme';
+}
+
 function middlePassiveOverrideKeys(verb: VerbEntry | undefined): string[] {
   return Object.keys(verb?.cellOverrides ?? {})
     .filter((key) => key.includes('middle-passive'))
@@ -668,21 +679,21 @@ function classifyVoice(
     reasons.push('local_no_middle_passive_flag');
     return {
       form: 'not_validated',
-      voiceEligibility: 'blocked_candidate',
+      voiceEligibility: 'locally_blocked_by_no_middle_passive_flag',
       proofLevel: 'local_flag',
       reasons,
-      action: 'keep_blocked',
+      action: 'keep_local_no_middle_passive_flag',
     };
   }
 
   if (lexeme.tags.includes('med')) {
-    reasons.push('external_lexeme_medial');
+    reasons.push('uniparser_lexeme_medial_tag');
     return {
       form: 'not_validated',
-      voiceEligibility: 'attested',
+      voiceEligibility: 'lexeme_medial_tagged',
       proofLevel: 'lexeme',
       reasons,
-      action: 'review_as_attested_middle_or_reflexive',
+      action: 'review_medial_or_reflexive_candidate',
     };
   }
 
@@ -692,13 +703,13 @@ function classifyVoice(
     !lexeme.tags.includes('vt') &&
     !lexeme.tags.includes('med')
   ) {
-    reasons.push('external_lexeme_intransitive_only');
+    reasons.push('uniparser_lexeme_vi_no_vt_med');
     return {
       form: 'not_validated',
       voiceEligibility: 'ambiguous',
       proofLevel: 'lexeme',
       reasons,
-      action: 'review_intransitive_or_impersonal_nonactive',
+      action: 'review_vi_tagged_nonactive_candidate',
     };
   }
 
@@ -718,7 +729,7 @@ function classifyVoice(
       voiceEligibility: 'ambiguous',
       proofLevel: 'analyzer',
       reasons,
-      action: 'review_analyzer_rejection',
+      action: 'review_analyzer_nonacceptance',
     };
   }
 
@@ -954,6 +965,7 @@ function main(): void {
         middlePassiveMisses: row.middlePassiveMiss,
         middlePassiveHitRate: pct(row.middlePassiveHit, row.middlePassiveTotal),
         lexeme,
+        lexemeVoiceBucket: lexemeVoiceBucket(lexeme.tags),
         verdict: classifyVoice(fakeTarget, verb, lexeme, emptyAnalyzerEvidence(), row),
       };
     })
@@ -972,6 +984,9 @@ function main(): void {
   const analyzerStatusCounts = new Map<string, number>();
   const analyzerNonAcceptedLemmaCounts = new Map<string, number>();
   const analyzerNonAcceptedSignatureCounts = new Map<string, number>();
+  const lemmaActionCounts = new Map<string, number>();
+  const lemmaVoiceEligibilityCounts = new Map<string, number>();
+  const lemmaLexemeVoiceBucketCounts = new Map<string, number>();
   for (const audit of targetAudits) {
     add(verdictCounts, audit.verdict.voiceEligibility);
     add(formCounts, audit.verdict.form);
@@ -986,6 +1001,11 @@ function main(): void {
       add(analyzerNonAcceptedLemmaCounts, audit.lemma);
       add(analyzerNonAcceptedSignatureCounts, audit.signature);
     }
+  }
+  for (const row of lemmaReviews) {
+    add(lemmaActionCounts, row.verdict.action);
+    add(lemmaVoiceEligibilityCounts, row.verdict.voiceEligibility);
+    add(lemmaLexemeVoiceBucketCounts, row.lexemeVoiceBucket);
   }
 
   const report = {
@@ -1061,6 +1081,9 @@ function main(): void {
     analyzerStatusCounts: topCounts(analyzerStatusCounts),
     analyzerNonAcceptedLemmaCounts: topCounts(analyzerNonAcceptedLemmaCounts),
     analyzerNonAcceptedSignatureCounts: topCounts(analyzerNonAcceptedSignatureCounts),
+    lemmaActionCounts: topCounts(lemmaActionCounts),
+    lemmaVoiceEligibilityCounts: topCounts(lemmaVoiceEligibilityCounts),
+    lemmaLexemeVoiceBucketCounts: topCounts(lemmaLexemeVoiceBucketCounts),
     verbs: lemmaReviews,
     targets: targetAudits,
   };
@@ -1108,6 +1131,20 @@ function main(): void {
     '| --- | ---: |',
     ...report.voiceEligibilityCounts.map((row) => `| ${row.key} | ${row.count} |`),
     '',
+    '## Lemma Review Actions',
+    '',
+    '| Action | Lemmas |',
+    '| --- | ---: |',
+    ...report.lemmaActionCounts.map((row) => `| ${row.key} | ${row.count} |`),
+    '',
+    '| Lemma Voice Verdict | Lemmas |',
+    '| --- | ---: |',
+    ...report.lemmaVoiceEligibilityCounts.map((row) => `| ${row.key} | ${row.count} |`),
+    '',
+    '| UniParser Lexeme Bucket | Lemmas |',
+    '| --- | ---: |',
+    ...report.lemmaLexemeVoiceBucketCounts.map((row) => `| ${row.key} | ${row.count} |`),
+    '',
     '## Source And Scope Counts',
     '',
     '| Source Level | Missed Targets |',
@@ -1146,11 +1183,11 @@ function main(): void {
       : []),
     '## Top Lemma Reviews',
     '',
-    '| Lemma | Verb ID | MP Misses | MP Hit Rate | Active Hit Rate | Source Level | Lexeme Tags | Voice Verdict | Action |',
-    '| --- | --- | ---: | ---: | ---: | --- | --- | --- | --- |',
+    '| Lemma | Verb ID | MP Misses | MP Hit Rate | Active Hit Rate | Source Level | Lexeme Bucket | Lexeme Tags | Voice Verdict | Action |',
+    '| --- | --- | ---: | ---: | ---: | --- | --- | --- | --- | --- |',
     ...report.verbs.slice(0, 60).map(
       (row) =>
-        `| ${md(row.lemma)} | ${md(row.verbId)} | ${row.middlePassiveMisses} | ${row.middlePassiveHitRate} | ${row.activeHitRate} | ${row.sourceLevel} | ${md(row.lexeme.tags.join(', ') || '')} | ${row.verdict.voiceEligibility} | ${row.verdict.action} |`,
+        `| ${md(row.lemma)} | ${md(row.verbId)} | ${row.middlePassiveMisses} | ${row.middlePassiveHitRate} | ${row.activeHitRate} | ${row.sourceLevel} | ${row.lexemeVoiceBucket} | ${md(row.lexeme.tags.join(', ') || '')} | ${row.verdict.voiceEligibility} | ${row.verdict.action} |`,
     ),
     '',
     '## Top Target Reviews',

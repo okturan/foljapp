@@ -1033,6 +1033,23 @@ function main(): void {
   const missesWithScannerVariantAlternants = auditedMisses.filter(
     (miss) => miss.scannerVariantAlternants.length > 0,
   ).length;
+  const primaryCategoryDetails = topEntries(primaryCounts, 20).map((primary) => {
+    const rows = auditedMisses.filter((miss) => miss.primary === primary.key);
+    const labels = new Map<string, number>();
+    for (const row of rows) {
+      for (const label of row.labels) add(labels, label);
+    }
+    return {
+      primary: primary.key,
+      count: primary.count,
+      labels: topEntries(labels, 5),
+      samples: rows.slice(0, 5).map((row) => ({
+        targetKey: row.targetKey,
+        lemma: row.lemma,
+        signature: row.signature,
+      })),
+    };
+  });
   const report = {
     generatedAt: new Date().toISOString(),
     targetsPath,
@@ -1090,6 +1107,7 @@ function main(): void {
         morphologyEvidence.summary.analyzerNoTokenAnalysisTargets ?? null,
     },
     primaryCategories: topEntries(primaryCounts, 20),
+    primaryCategoryDetails,
     evidenceLabels: topEntries(labelCounts, 40),
     dbEvidence,
     duplicateMissSurfaces: duplicateMissSurfaces.slice(0, 80),
@@ -1158,6 +1176,25 @@ function main(): void {
     24,
     (miss) => miss.verbId,
     2,
+  );
+  takeDossierMisses(
+    auditedMisses.filter((miss) => miss.primary === 'analyzer_valid_exact_absence'),
+    'primary: analyzer-valid exact absence',
+    5,
+  );
+  takeDossierMisses(
+    auditedMisses.filter((miss) => miss.primary === 'component_valid_phrase_absence'),
+    'primary: component-valid phrase absence',
+    12,
+    (miss) => miss.cellKey,
+    3,
+  );
+  takeDossierMisses(
+    auditedMisses.filter((miss) => miss.primary === 'lemma_outlier'),
+    'primary: lemma outlier',
+    24,
+    (miss) => miss.verbId,
+    3,
   );
   takeDossierMisses(
     auditedMisses.filter((miss) => topLemmaOutliers.has(miss.verbId)),
@@ -1409,6 +1446,15 @@ function main(): void {
     '| --- | ---: |',
     ...report.primaryCategories.map((row) => `| ${row.key} | ${row.count} |`),
     '',
+    '## Primary Category Details',
+    '',
+    '| Category | Misses | Top Labels | Sample Targets |',
+    '| --- | ---: | --- | --- |',
+    ...report.primaryCategoryDetails.map(
+      (row) =>
+        `| ${row.primary} | ${row.count} | ${mdCell(row.labels.map((label) => `${label.key} ${label.count}`).join(', '))} | ${mdCell(row.samples.map((sample) => `${sample.targetKey} (${sample.lemma})`).join(', '))} |`,
+    ),
+    '',
     '## Evidence Labels',
     '',
     'Labels are overlapping evidence flags, not mutually exclusive cause buckets.',
@@ -1501,9 +1547,22 @@ function main(): void {
     `- Analyzer analyzed targets: ${report.summary.morphologyAnalyzerAnalyzedTargets ?? 'unknown'}`,
     `- Analyzer no-token-analysis targets: ${report.summary.morphologyAnalyzerNoTokenAnalysisTargets ?? 'unknown'}`,
     '',
+    '## Selected By Primary',
+    '',
+    '| Primary | Selected Rows |',
+    '| --- | ---: |',
+    ...topEntries(
+      dossier.entries.reduce((counts, entry) => {
+        add(counts, entry.primary);
+        return counts;
+      }, new Map<string, number>()),
+      40,
+    ).map((row) => `| ${mdCell(row.key)} | ${row.count} |`),
+    '',
     '## Priority Samples',
     '',
     'Morphology columns are review hints. They refine the likely explanation for a miss but never change hit/miss counts.',
+    'Priority `lemma outlier` means sampled from a high-miss lemma; `primary: lemma outlier` means the row itself has primary category `lemma_outlier`.',
     '',
     '| Priority | Target | Lemma | Signature | Cell Hit Rate | Lemma Hit Rate | Primary | Morphology Form | Voice Eligibility | Proof | Scope | Morphology Reasons |',
     '| --- | --- | --- | --- | ---: | ---: | --- | --- | --- | --- | --- | --- |',
