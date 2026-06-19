@@ -75,12 +75,20 @@ interface ExternalMorphologyAudit {
   externalMorphology?: {
     uniparserLexemesStatus?: string;
     analyzerStatus?: string;
+    analyzerRowsLoaded?: number;
+    analyzerRowsMatched?: number;
+    analyzerRowsSkipped?: number;
+    analyzerDuplicateRows?: number;
     webCorporaStatus?: string;
   };
   summary?: {
     auditedMissTargets?: number;
     middlePassiveMissTargets?: number;
     lexemeMatchedLemmas?: number;
+    analyzerRowMatchedTargets?: number;
+    analyzerAnalyzedTargets?: number;
+    analyzerNoTokenAnalysisTargets?: number;
+    analyzerAcceptedTargets?: number;
   };
   targets?: Array<{
     targetId: string;
@@ -119,10 +127,18 @@ interface MorphologyEvidence {
     auditedMissTargets: number | null;
     middlePassiveMissTargets: number | null;
     lexemeMatchedLemmas: number | null;
+    analyzerRowMatchedTargets: number | null;
+    analyzerAnalyzedTargets: number | null;
+    analyzerNoTokenAnalysisTargets: number | null;
+    analyzerAcceptedTargets: number | null;
   };
   external: {
     uniparserLexemesStatus: string | null;
     analyzerStatus: string | null;
+    analyzerRowsLoaded: number | null;
+    analyzerRowsMatched: number | null;
+    analyzerRowsSkipped: number | null;
+    analyzerDuplicateRows: number | null;
     webCorporaStatus: string | null;
   };
   byTargetId: Map<string, MorphologyTargetVerdict>;
@@ -232,10 +248,18 @@ function emptyMorphologyEvidence(
       auditedMissTargets: null,
       middlePassiveMissTargets: null,
       lexemeMatchedLemmas: null,
+      analyzerRowMatchedTargets: null,
+      analyzerAnalyzedTargets: null,
+      analyzerNoTokenAnalysisTargets: null,
+      analyzerAcceptedTargets: null,
     },
     external: {
       uniparserLexemesStatus: null,
       analyzerStatus: null,
+      analyzerRowsLoaded: null,
+      analyzerRowsMatched: null,
+      analyzerRowsSkipped: null,
+      analyzerDuplicateRows: null,
       webCorporaStatus: null,
     },
     byTargetId: new Map(),
@@ -308,11 +332,21 @@ function readMorphologyEvidence(
       auditedMissTargets: audit.summary?.auditedMissTargets ?? null,
       middlePassiveMissTargets: audit.summary?.middlePassiveMissTargets ?? null,
       lexemeMatchedLemmas: audit.summary?.lexemeMatchedLemmas ?? null,
+      analyzerRowMatchedTargets: audit.summary?.analyzerRowMatchedTargets ?? null,
+      analyzerAnalyzedTargets: audit.summary?.analyzerAnalyzedTargets ?? null,
+      analyzerNoTokenAnalysisTargets:
+        audit.summary?.analyzerNoTokenAnalysisTargets ?? null,
+      analyzerAcceptedTargets: audit.summary?.analyzerAcceptedTargets ?? null,
     },
     external: {
       uniparserLexemesStatus:
         audit.externalMorphology?.uniparserLexemesStatus ?? null,
       analyzerStatus: audit.externalMorphology?.analyzerStatus ?? null,
+      analyzerRowsLoaded: audit.externalMorphology?.analyzerRowsLoaded ?? null,
+      analyzerRowsMatched: audit.externalMorphology?.analyzerRowsMatched ?? null,
+      analyzerRowsSkipped: audit.externalMorphology?.analyzerRowsSkipped ?? null,
+      analyzerDuplicateRows:
+        audit.externalMorphology?.analyzerDuplicateRows ?? null,
       webCorporaStatus: audit.externalMorphology?.webCorporaStatus ?? null,
     },
     byTargetId,
@@ -952,6 +986,18 @@ function main(): void {
       missesWithScannerVariantAlternants,
       morphologyStatus: morphologyEvidence.status,
       morphologyMatchedMissTargets: morphologyEvidence.matchedMissRows,
+      morphologyAnalyzerRowsLoaded:
+        morphologyEvidence.external.analyzerRowsLoaded ?? null,
+      morphologyAnalyzerRowsMatched:
+        morphologyEvidence.external.analyzerRowsMatched ?? null,
+      morphologyAnalyzerRowsSkipped:
+        morphologyEvidence.external.analyzerRowsSkipped ?? null,
+      morphologyAnalyzerAnalyzedTargets:
+        morphologyEvidence.summary.analyzerAnalyzedTargets ?? null,
+      morphologyAnalyzerAcceptedTargets:
+        morphologyEvidence.summary.analyzerAcceptedTargets ?? null,
+      morphologyAnalyzerNoTokenAnalysisTargets:
+        morphologyEvidence.summary.analyzerNoTokenAnalysisTargets ?? null,
     },
     primaryCategories: topEntries(primaryCounts, 20),
     evidenceLabels: topEntries(labelCounts, 40),
@@ -1223,6 +1269,12 @@ function main(): void {
     `Skipped stale/invalid rows: ${report.morphologyEvidence.skippedRows}`,
     `Duplicate target IDs skipped: ${report.morphologyEvidence.duplicateTargetIds}`,
     `Analyzer status: ${report.morphologyEvidence.external.analyzerStatus ?? 'unknown'}`,
+    `Analyzer rows loaded: ${report.morphologyEvidence.external.analyzerRowsLoaded ?? 'unknown'}`,
+    `Analyzer rows matched: ${report.morphologyEvidence.external.analyzerRowsMatched ?? 'unknown'}`,
+    `Analyzer skipped rows: ${report.morphologyEvidence.external.analyzerRowsSkipped ?? 'unknown'}`,
+    `Analyzer accepted targets: ${report.morphologyEvidence.summary.analyzerAcceptedTargets ?? 'unknown'}`,
+    `Analyzer analyzed targets: ${report.morphologyEvidence.summary.analyzerAnalyzedTargets ?? 'unknown'}`,
+    `Analyzer no-token-analysis targets: ${report.morphologyEvidence.summary.analyzerNoTokenAnalysisTargets ?? 'unknown'}`,
     `UniParser lexeme status: ${report.morphologyEvidence.external.uniparserLexemesStatus ?? 'unknown'}`,
     `Lexeme-matched lemmas in morphology artifact: ${report.morphologyEvidence.summary.lexemeMatchedLemmas ?? 'unknown'}`,
     '',
@@ -1350,6 +1402,9 @@ function main(): void {
     `- Unique surfaces fully absent in retained evidence: ${report.summary.fullyMissedSurfaces}`,
     `- Scanned candidates: ${report.summary.candidatesSeen}`,
     `- Stored occurrences: ${report.summary.storedOccurrences ?? 'unknown'}`,
+    `- Analyzer accepted targets: ${report.summary.morphologyAnalyzerAcceptedTargets ?? 'unknown'}`,
+    `- Analyzer analyzed targets: ${report.summary.morphologyAnalyzerAnalyzedTargets ?? 'unknown'}`,
+    `- Analyzer no-token-analysis targets: ${report.summary.morphologyAnalyzerNoTokenAnalysisTargets ?? 'unknown'}`,
     '',
     '## Priority Samples',
     '',
