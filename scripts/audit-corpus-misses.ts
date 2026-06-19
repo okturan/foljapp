@@ -230,6 +230,7 @@ interface DbEvidence {
   targetIdsAtMaxStoredOccurrences: number;
   mosTeTargetsMatchedInTeMosOrder: number;
   retainedSentencesWithSApostrophe: number;
+  sourceFamilies: SourceFamilyEvidenceRow[];
 }
 
 interface OccurrenceDbRow {
@@ -237,6 +238,30 @@ interface OccurrenceDbRow {
   target_key: string;
   variant_kind: string | null;
   sentence_id: number;
+}
+
+interface ResourceEvidenceRow {
+  resource_id: string;
+  candidates_seen: number | null;
+  sentences_inserted: number | null;
+  quality_rejected: number | null;
+}
+
+interface SentenceResourceRow {
+  id: number;
+  resource_id: string;
+}
+
+interface SourceFamilyEvidenceRow {
+  family: string;
+  partitions: number;
+  candidatesSeen: number;
+  scannerHitSentences: number;
+  qualityRejectedCandidates: number;
+  retainedSentences: number;
+  retainedOccurrences: number;
+  hitTargets: number;
+  hitSurfaces: number;
 }
 
 function valueAfter(prefix: string): string | undefined {
@@ -485,6 +510,23 @@ function sourceLevel(sources: string[]): string {
   return 'unknown-source';
 }
 
+function resourceFamily(resourceId: string): string {
+  if (resourceId.startsWith('hplt-v3-')) return 'HPLT v3';
+  if (resourceId.startsWith('mc4-')) return 'mC4';
+  if (resourceId.startsWith('opus-')) return 'OPUS';
+  if (resourceId.startsWith('fineweb2-')) return 'FineWeb2';
+  if (resourceId.startsWith('macocu-')) return 'MaCoCu';
+  if (resourceId.startsWith('cc100-')) return 'CC100';
+  if (resourceId.startsWith('hf-')) return 'Hugging Face';
+  if (resourceId.startsWith('wikimedia-')) return 'Wikimedia';
+  if (resourceId.startsWith('leipzig-')) return 'Leipzig';
+  if (resourceId.startsWith('seeuniversity-')) return 'SEEUniversity';
+  if (resourceId.startsWith('tatoeba-')) return 'Tatoeba';
+  if (resourceId.startsWith('ud-')) return 'Universal Dependencies';
+  const hashIndex = resourceId.indexOf('#');
+  return hashIndex === -1 ? resourceId : resourceId.slice(0, hashIndex);
+}
+
 function middlePassiveOverrideKeys(verb: VerbEntry | undefined): string[] {
   return Object.keys(verb?.cellOverrides ?? {})
     .filter((key) => key.includes('middle-passive'))
@@ -609,6 +651,82 @@ function readDbEvidence(dbPath: string, currentTargetIds: Set<string>): DbEviden
       "SELECT id FROM sentences WHERE sentence LIKE '%s''%' OR sentence LIKE '%s’%'",
     ).map((row) => row.id),
   );
+  const familyRows = sqliteJson<ResourceEvidenceRow>(
+    dbPath,
+    `
+    SELECT
+      r.id AS resource_id,
+      rs.candidates_seen,
+      rs.sentences_inserted,
+      rs.quality_rejected
+    FROM resources r
+    LEFT JOIN resource_stats rs ON rs.resource_id = r.id
+    GROUP BY r.id
+    `,
+  );
+  const sentenceResources = new Map(
+    sqliteJson<SentenceResourceRow>(
+      dbPath,
+      'SELECT id, resource_id FROM sentences',
+    ).map((row) => [row.id, row.resource_id]),
+  );
+  const familyTargets = new Map<string, Set<string>>();
+  const familySurfaces = new Map<string, Set<string>>();
+  const familySentences = new Map<string, Set<number>>();
+  const familyEvidence = new Map<string, SourceFamilyEvidenceRow>();
+  for (const row of familyRows) {
+    const family = resourceFamily(row.resource_id);
+    const current =
+      familyEvidence.get(family) ?? {
+        family,
+        partitions: 0,
+        candidatesSeen: 0,
+        scannerHitSentences: 0,
+        qualityRejectedCandidates: 0,
+        retainedSentences: 0,
+        retainedOccurrences: 0,
+        hitTargets: 0,
+        hitSurfaces: 0,
+      };
+    current.partitions += 1;
+    current.candidatesSeen += row.candidates_seen ?? 0;
+    current.scannerHitSentences += row.sentences_inserted ?? 0;
+    current.qualityRejectedCandidates += row.quality_rejected ?? 0;
+    familyEvidence.set(family, current);
+  }
+  for (const occurrence of retainedOccurrences) {
+    const resourceId = sentenceResources.get(occurrence.sentence_id);
+    if (!resourceId) continue;
+    const family = resourceFamily(resourceId);
+    const current =
+      familyEvidence.get(family) ?? {
+        family,
+        partitions: 0,
+        candidatesSeen: 0,
+        scannerHitSentences: 0,
+        qualityRejectedCandidates: 0,
+        retainedSentences: 0,
+        retainedOccurrences: 0,
+        hitTargets: 0,
+        hitSurfaces: 0,
+      };
+    const sentences = familySentences.get(family) ?? new Set<number>();
+    const targets = familyTargets.get(family) ?? new Set<string>();
+    const surfaces = familySurfaces.get(family) ?? new Set<string>();
+    sentences.add(occurrence.sentence_id);
+    targets.add(occurrence.target_id);
+    surfaces.add(occurrence.target_key);
+    current.retainedOccurrences += 1;
+    familySentences.set(family, sentences);
+    familyTargets.set(family, targets);
+    familySurfaces.set(family, surfaces);
+    familyEvidence.set(family, current);
+  }
+  for (const row of familyEvidence.values()) {
+    row.retainedSentences = familySentences.get(row.family)?.size ?? 0;
+    row.hitTargets = familyTargets.get(row.family)?.size ?? 0;
+    row.hitSurfaces = familySurfaces.get(row.family)?.size ?? 0;
+  }
 
   return {
     dbPath,
@@ -673,6 +791,12 @@ function readDbEvidence(dbPath: string, currentTargetIds: Set<string>): DbEviden
     retainedSentencesWithSApostrophe: [...sentenceIds].filter((sentenceId) =>
       sApostropheSentenceIds.has(sentenceId),
     ).length,
+    sourceFamilies: [...familyEvidence.values()].sort(
+      (a, b) =>
+        b.retainedOccurrences - a.retainedOccurrences ||
+        b.candidatesSeen - a.candidatesSeen ||
+        a.family.localeCompare(b.family),
+    ),
   };
 }
 
@@ -755,16 +879,17 @@ function labelMiss(
   if (lemma.total >= 100 && lemmaMissRate >= 0.75) labels.push('lemma_outlier');
   if (surface.total > 1) labels.push('duplicate_surface_targets');
 
-  if (labels.length > 0) return labels;
   if (morphology?.form === 'analyzer_accepted') {
-    return ['analyzer_accepted_exact_absence'];
+    labels.push('analyzer_accepted_exact_absence');
   }
+  if (labels.length > 0) return labels;
   if (target.tokens.length > 1 && morphology?.scope === 'head-token-only') {
-    return ['component_morphology_only_exact_absence'];
+    labels.push('component_morphology_only_exact_absence');
   }
   if (morphology?.form === 'not_validated') {
-    return ['morphology_not_validated_exact_absence'];
+    labels.push('morphology_not_validated_exact_absence');
   }
+  if (labels.length > 0) return labels;
   return ['unexplained_exact_absence'];
 }
 
@@ -1178,13 +1303,19 @@ function main(): void {
     2,
   );
   takeDossierMisses(
-    auditedMisses.filter((miss) => miss.primary === 'analyzer_valid_exact_absence'),
-    'primary: analyzer-valid exact absence',
-    5,
+    auditedMisses.filter((miss) =>
+      miss.labels.includes('analyzer_accepted_exact_absence'),
+    ),
+    'evidence: analyzer-accepted exact absence',
+    24,
+    (miss) => miss.verbId,
+    2,
   );
   takeDossierMisses(
-    auditedMisses.filter((miss) => miss.primary === 'component_valid_phrase_absence'),
-    'primary: component-valid phrase absence',
+    auditedMisses.filter((miss) =>
+      miss.labels.includes('component_morphology_only_exact_absence'),
+    ),
+    'evidence: component-valid phrase absence',
     12,
     (miss) => miss.cellKey,
     3,
@@ -1357,6 +1488,23 @@ function main(): void {
           'The SQLite DB was not available, so scanner cap/filter evidence could not be summarized.',
         ]),
     '',
+    ...(report.dbEvidence
+      ? [
+          '## Corpus Source-Family Contribution',
+          '',
+          'These rows group current SQLite resources by downloaded corpus family. Candidate and scanner-hit counts come from `resource_stats`; retained counts come from stored SQLite sentences and occurrences.',
+          '',
+          '| Family | Partitions | Candidates Seen | Scanner-Hit Sentences | Quality Rejected | Retained Sentences | Retained Occurrences | Hit Targets | Hit Surfaces |',
+          '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |',
+          ...report.dbEvidence.sourceFamilies.map(
+            (row) =>
+              `| ${row.family} | ${row.partitions} | ${row.candidatesSeen} | ${row.scannerHitSentences} | ${row.qualityRejectedCandidates} | ${row.retainedSentences} | ${row.retainedOccurrences} | ${row.hitTargets} | ${row.hitSurfaces} |`,
+          ),
+          '',
+          'Family contribution is aggregate evidence only. The current examples DB intentionally caps retained occurrences per target, so this table should not be read as raw-corpus diversity for any one form.',
+          '',
+        ]
+      : []),
     ...(report.dbEvidence?.hasOccurrenceVariantEvidence
       ? [
           '## Occurrence Variant Counts',

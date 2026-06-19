@@ -138,6 +138,15 @@ interface VoiceRow {
   middlePassiveMiss: number;
 }
 
+interface LemmaAnalyzerSummary {
+  accepted: number;
+  incompatible: number;
+  noTokenAnalysis: number;
+  notProvided: number;
+  compatibleRows: number;
+  acceptedSamples: string[];
+}
+
 function valueAfter(prefix: string): string | undefined {
   return process.argv.find((arg) => arg.startsWith(prefix))?.slice(prefix.length);
 }
@@ -752,6 +761,14 @@ function topCounts(map: Map<string, number>): Array<{ key: string; count: number
     .map(([key, count]) => ({ key, count }));
 }
 
+function flagsText(flags: Record<string, unknown>): string {
+  return Object.entries(flags)
+    .filter(([, value]) => value === true)
+    .map(([key]) => key)
+    .sort()
+    .join(', ');
+}
+
 function md(value: string): string {
   return value.replaceAll('|', '\\|').replaceAll('\n', ' ');
 }
@@ -929,6 +946,35 @@ function main(): void {
       );
     });
 
+  const analyzerByVerb = new Map<string, LemmaAnalyzerSummary>();
+  for (const audit of targetAudits) {
+    if (audit.expected.voice !== 'middle-passive') continue;
+    const summary =
+      analyzerByVerb.get(audit.verbId) ?? {
+        accepted: 0,
+        incompatible: 0,
+        noTokenAnalysis: 0,
+        notProvided: 0,
+        compatibleRows: 0,
+        acceptedSamples: [],
+      };
+    const analyzer = audit.external.uniparserAnalyzer;
+    if (analyzer.status === 'accepted') {
+      summary.accepted += 1;
+      if (summary.acceptedSamples.length < 2) {
+        summary.acceptedSamples.push(audit.targetKey);
+      }
+    } else if (analyzer.status === 'analyzed_incompatible') {
+      summary.incompatible += 1;
+    } else if (analyzer.status === 'no_token_analysis') {
+      summary.noTokenAnalysis += 1;
+    } else {
+      summary.notProvided += 1;
+    }
+    summary.compatibleRows += analyzer.compatibleRows;
+    analyzerByVerb.set(audit.verbId, summary);
+  }
+
   const lemmaReviews = verbs
     .map((verb) => {
       const sources = sourceKeys(verb);
@@ -966,6 +1012,15 @@ function main(): void {
         middlePassiveHitRate: pct(row.middlePassiveHit, row.middlePassiveTotal),
         lexeme,
         lexemeVoiceBucket: lexemeVoiceBucket(lexeme.tags),
+        analyzerSummary:
+          analyzerByVerb.get(verb.id) ?? {
+            accepted: 0,
+            incompatible: 0,
+            noTokenAnalysis: 0,
+            notProvided: 0,
+            compatibleRows: 0,
+            acceptedSamples: [],
+          },
         verdict: classifyVoice(fakeTarget, verb, lexeme, emptyAnalyzerEvidence(), row),
       };
     })
@@ -1183,11 +1238,11 @@ function main(): void {
       : []),
     '## Top Lemma Reviews',
     '',
-    '| Lemma | Verb ID | MP Misses | MP Hit Rate | Active Hit Rate | Source Level | Lexeme Bucket | Lexeme Tags | Voice Verdict | Action |',
-    '| --- | --- | ---: | ---: | ---: | --- | --- | --- | --- | --- |',
+    '| Lemma | Verb ID | Flags | MP Misses | MP Hit Rate | Active Hit Rate | Source Level | Lexeme Bucket | MP Analyzer Accepted | MP Analyzer Incompatible | Accepted Samples | Lexeme Tags | Voice Verdict | Action |',
+    '| --- | --- | --- | ---: | ---: | ---: | --- | --- | ---: | ---: | --- | --- | --- | --- |',
     ...report.verbs.slice(0, 60).map(
       (row) =>
-        `| ${md(row.lemma)} | ${md(row.verbId)} | ${row.middlePassiveMisses} | ${row.middlePassiveHitRate} | ${row.activeHitRate} | ${row.sourceLevel} | ${row.lexemeVoiceBucket} | ${md(row.lexeme.tags.join(', ') || '')} | ${row.verdict.voiceEligibility} | ${row.verdict.action} |`,
+        `| ${md(row.lemma)} | ${md(row.verbId)} | ${md(flagsText(row.flags))} | ${row.middlePassiveMisses} | ${row.middlePassiveHitRate} | ${row.activeHitRate} | ${row.sourceLevel} | ${row.lexemeVoiceBucket} | ${row.analyzerSummary.accepted} | ${row.analyzerSummary.incompatible} | ${md(row.analyzerSummary.acceptedSamples.join(', '))} | ${md(row.lexeme.tags.join(', ') || '')} | ${row.verdict.voiceEligibility} | ${row.verdict.action} |`,
     ),
     '',
     '## Top Target Reviews',
