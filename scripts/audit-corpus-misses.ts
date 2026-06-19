@@ -21,7 +21,11 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
 const DEFAULT_TARGETS = join(REPO_ROOT, '.cache', 'corpus-targets.json');
-const DEFAULT_COVERAGE = join(REPO_ROOT, '.cache', 'corpus-coverage-report.json');
+const DEFAULT_COVERAGE = join(
+  REPO_ROOT,
+  '.cache',
+  'corpus-coverage-report.json',
+);
 const DEFAULT_DB = join(REPO_ROOT, '.cache', 'corpus-local-full.sqlite');
 const DEFAULT_VERBS = join(REPO_ROOT, 'data', 'verbs', '_corpus.client.json');
 const DEFAULT_JSON_OUT = join(REPO_ROOT, '.cache', 'corpus-missing-audit.json');
@@ -266,7 +270,9 @@ interface SourceFamilyEvidenceRow {
 }
 
 function valueAfter(prefix: string): string | undefined {
-  return process.argv.find((arg) => arg.startsWith(prefix))?.slice(prefix.length);
+  return process.argv
+    .find((arg) => arg.startsWith(prefix))
+    ?.slice(prefix.length);
 }
 
 function readJson<T>(path: string): T {
@@ -274,13 +280,19 @@ function readJson<T>(path: string): T {
   return JSON.parse(readFileSync(path, 'utf8')) as T;
 }
 
-function requireFreshInputs(targetFile: TargetFile, coverage: CoverageReport): void {
-  if (!targetFile.generatedAt) throw new Error('Target file is missing generatedAt');
-  if (!targetFile.corpusVersion) throw new Error('Target file is missing corpusVersion');
+function requireFreshInputs(
+  targetFile: TargetFile,
+  coverage: CoverageReport,
+): void {
+  if (!targetFile.generatedAt)
+    throw new Error('Target file is missing generatedAt');
+  if (!targetFile.corpusVersion)
+    throw new Error('Target file is missing corpusVersion');
   if (!coverage.targetGeneratedAt) {
     throw new Error('Coverage report is missing targetGeneratedAt');
   }
-  if (!coverage.corpusVersion) throw new Error('Coverage report is missing corpusVersion');
+  if (!coverage.corpusVersion)
+    throw new Error('Coverage report is missing corpusVersion');
   if (coverage.targetGeneratedAt !== targetFile.generatedAt) {
     throw new Error(
       `Coverage target generation mismatch: ${coverage.targetGeneratedAt} != ${targetFile.generatedAt}`,
@@ -348,17 +360,25 @@ function readMorphologyEvidence(
     return emptyMorphologyEvidence('invalid', path);
   }
   if (!Array.isArray(audit.targets)) {
-    console.warn(`Ignoring optional morphology audit at ${path}: missing targets[]`);
+    console.warn(
+      `Ignoring optional morphology audit at ${path}: missing targets[]`,
+    );
     return emptyMorphologyEvidence('invalid', path);
   }
   if (!audit.inputs?.targetGeneratedAt) {
-    throw new Error(`Morphology audit is missing inputs.targetGeneratedAt: ${path}`);
+    throw new Error(
+      `Morphology audit is missing inputs.targetGeneratedAt: ${path}`,
+    );
   }
   if (!audit.inputs.coverageTargetGeneratedAt) {
-    throw new Error(`Morphology audit is missing inputs.coverageTargetGeneratedAt: ${path}`);
+    throw new Error(
+      `Morphology audit is missing inputs.coverageTargetGeneratedAt: ${path}`,
+    );
   }
   if (!audit.inputs.corpusVersion) {
-    throw new Error(`Morphology audit is missing inputs.corpusVersion: ${path}`);
+    throw new Error(
+      `Morphology audit is missing inputs.corpusVersion: ${path}`,
+    );
   }
   if (audit.inputs.targetGeneratedAt !== targetFile.generatedAt) {
     throw new Error(
@@ -380,18 +400,30 @@ function readMorphologyEvidence(
   const skippedRows = 0;
   const duplicateTargetIds = 0;
   for (const target of audit.targets ?? []) {
-    if (!target.targetId) throw new Error(`Morphology audit row is missing targetId: ${path}`);
-    if (!target.targetKey) throw new Error(`Morphology audit row is missing targetKey: ${path}`);
-    if (!target.signature) throw new Error(`Morphology audit row is missing signature: ${path}`);
+    if (!target.targetId)
+      throw new Error(`Morphology audit row is missing targetId: ${path}`);
+    if (!target.targetKey)
+      throw new Error(`Morphology audit row is missing targetKey: ${path}`);
+    if (!target.signature)
+      throw new Error(`Morphology audit row is missing signature: ${path}`);
     const current = targetsById.get(target.targetId);
     if (!current) {
-      throw new Error(`Morphology audit has unknown targetId ${target.targetId}: ${path}`);
+      throw new Error(
+        `Morphology audit has unknown targetId ${target.targetId}: ${path}`,
+      );
     }
-    if (target.targetKey !== current.targetKey || target.signature !== current.signature) {
-      throw new Error(`Morphology audit stale row for ${target.targetId}: ${path}`);
+    if (
+      target.targetKey !== current.targetKey ||
+      target.signature !== current.signature
+    ) {
+      throw new Error(
+        `Morphology audit stale row for ${target.targetId}: ${path}`,
+      );
     }
     if (byTargetId.has(target.targetId)) {
-      throw new Error(`Morphology audit has duplicate targetId ${target.targetId}: ${path}`);
+      throw new Error(
+        `Morphology audit has duplicate targetId ${target.targetId}: ${path}`,
+      );
     }
     byTargetId.set(target.targetId, {
       headToken: target.headToken ?? null,
@@ -399,7 +431,9 @@ function readMorphologyEvidence(
       form: target.verdict?.form ?? null,
       voiceEligibility: target.verdict?.voiceEligibility ?? null,
       proofLevel: target.verdict?.proofLevel ?? null,
-      reasons: Array.isArray(target.verdict?.reasons) ? target.verdict.reasons : [],
+      reasons: Array.isArray(target.verdict?.reasons)
+        ? target.verdict.reasons
+        : [],
       action: target.verdict?.action ?? null,
     });
   }
@@ -415,7 +449,8 @@ function readMorphologyEvidence(
       auditedMissTargets: audit.summary?.auditedMissTargets ?? null,
       middlePassiveMissTargets: audit.summary?.middlePassiveMissTargets ?? null,
       lexemeMatchedLemmas: audit.summary?.lexemeMatchedLemmas ?? null,
-      analyzerRowMatchedTargets: audit.summary?.analyzerRowMatchedTargets ?? null,
+      analyzerRowMatchedTargets:
+        audit.summary?.analyzerRowMatchedTargets ?? null,
       analyzerAnalyzedTargets: audit.summary?.analyzerAnalyzedTargets ?? null,
       analyzerNoTokenAnalysisTargets:
         audit.summary?.analyzerNoTokenAnalysisTargets ?? null,
@@ -426,8 +461,10 @@ function readMorphologyEvidence(
         audit.externalMorphology?.uniparserLexemesStatus ?? null,
       analyzerStatus: audit.externalMorphology?.analyzerStatus ?? null,
       analyzerRowsLoaded: audit.externalMorphology?.analyzerRowsLoaded ?? null,
-      analyzerRowsMatched: audit.externalMorphology?.analyzerRowsMatched ?? null,
-      analyzerRowsSkipped: audit.externalMorphology?.analyzerRowsSkipped ?? null,
+      analyzerRowsMatched:
+        audit.externalMorphology?.analyzerRowsMatched ?? null,
+      analyzerRowsSkipped:
+        audit.externalMorphology?.analyzerRowsSkipped ?? null,
       analyzerDuplicateRows:
         audit.externalMorphology?.analyzerDuplicateRows ?? null,
       webCorporaStatus: audit.externalMorphology?.webCorporaStatus ?? null,
@@ -457,7 +494,10 @@ function sqliteText(dbPath: string, sql: string): string | null {
 }
 
 function hasColumn(dbPath: string, table: string, column: string): boolean {
-  const rows = sqliteJson<{ name: string }>(dbPath, `PRAGMA table_info(${table})`);
+  const rows = sqliteJson<{ name: string }>(
+    dbPath,
+    `PRAGMA table_info(${table})`,
+  );
   return rows.some((row) => row.name === column);
 }
 
@@ -468,15 +508,7 @@ function pct(part: number, total: number): string {
 function cellKey(target: TargetRecord): string {
   const o = target.options;
   if (o.mood === 'non-finite') return `non-finite.${String(o.form ?? '')}`;
-  return [
-    o.mood,
-    o.tense,
-    o.voice,
-    o.polarity,
-    o.modality,
-    o.person,
-    o.number,
-  ]
+  return [o.mood, o.tense, o.voice, o.polarity, o.modality, o.person, o.number]
     .map((part) => String(part ?? ''))
     .join('.');
 }
@@ -501,7 +533,9 @@ function coverageRows(
 }
 
 function sourceKeys(verb: VerbEntry | undefined): string[] {
-  return [...new Set((verb?.sources ?? []).map((source) => source.source))].sort();
+  return [
+    ...new Set((verb?.sources ?? []).map((source) => source.source)),
+  ].sort();
 }
 
 function sourceLevel(sources: string[]): string {
@@ -571,7 +605,10 @@ function voiceCoverageRows(
     );
 }
 
-function readDbEvidence(dbPath: string, currentTargetIds: Set<string>): DbEvidence {
+function readDbEvidence(
+  dbPath: string,
+  currentTargetIds: Set<string>,
+): DbEvidence {
   const hasOccurrenceVariantEvidence =
     hasColumn(dbPath, 'occurrences', 'variant_kind') &&
     hasColumn(dbPath, 'occurrences', 'matched_pattern');
@@ -586,7 +623,9 @@ function readDbEvidence(dbPath: string, currentTargetIds: Set<string>): DbEviden
     `,
   ).filter((row) => currentTargetIds.has(row.target_id));
 
-  const sentenceIds = new Set(retainedOccurrences.map((row) => row.sentence_id));
+  const sentenceIds = new Set(
+    retainedOccurrences.map((row) => row.sentence_id),
+  );
   const targetKeys = new Set(retainedOccurrences.map((row) => row.target_key));
   const occurrencesByTarget = new Map<
     string,
@@ -642,7 +681,8 @@ function readDbEvidence(dbPath: string, currentTargetIds: Set<string>): DbEviden
     retainedOccurrences
       .filter(
         (row) =>
-          row.target_key.startsWith('mos të ') && teMosSentenceIds.has(row.sentence_id),
+          row.target_key.startsWith('mos të ') &&
+          teMosSentenceIds.has(row.sentence_id),
       )
       .map((row) => row.target_id),
   ).size;
@@ -677,18 +717,17 @@ function readDbEvidence(dbPath: string, currentTargetIds: Set<string>): DbEviden
   const familyEvidence = new Map<string, SourceFamilyEvidenceRow>();
   for (const row of familyRows) {
     const family = resourceFamily(row.resource_id);
-    const current =
-      familyEvidence.get(family) ?? {
-        family,
-        partitions: 0,
-        candidatesSeen: 0,
-        scannerHitSentences: 0,
-        qualityRejectedCandidates: 0,
-        retainedSentences: 0,
-        retainedOccurrences: 0,
-        hitTargets: 0,
-        hitSurfaces: 0,
-      };
+    const current = familyEvidence.get(family) ?? {
+      family,
+      partitions: 0,
+      candidatesSeen: 0,
+      scannerHitSentences: 0,
+      qualityRejectedCandidates: 0,
+      retainedSentences: 0,
+      retainedOccurrences: 0,
+      hitTargets: 0,
+      hitSurfaces: 0,
+    };
     current.partitions += 1;
     current.candidatesSeen += row.candidates_seen ?? 0;
     current.scannerHitSentences += row.sentences_inserted ?? 0;
@@ -699,18 +738,17 @@ function readDbEvidence(dbPath: string, currentTargetIds: Set<string>): DbEviden
     const resourceId = sentenceResources.get(occurrence.sentence_id);
     if (!resourceId) continue;
     const family = resourceFamily(resourceId);
-    const current =
-      familyEvidence.get(family) ?? {
-        family,
-        partitions: 0,
-        candidatesSeen: 0,
-        scannerHitSentences: 0,
-        qualityRejectedCandidates: 0,
-        retainedSentences: 0,
-        retainedOccurrences: 0,
-        hitTargets: 0,
-        hitSurfaces: 0,
-      };
+    const current = familyEvidence.get(family) ?? {
+      family,
+      partitions: 0,
+      candidatesSeen: 0,
+      scannerHitSentences: 0,
+      qualityRejectedCandidates: 0,
+      retainedSentences: 0,
+      retainedOccurrences: 0,
+      hitTargets: 0,
+      hitSurfaces: 0,
+    };
     const sentences = familySentences.get(family) ?? new Set<number>();
     const targets = familyTargets.get(family) ?? new Set<string>();
     const surfaces = familySurfaces.get(family) ?? new Set<string>();
@@ -836,10 +874,17 @@ function labelMiss(
   const hitRate = cell.total === 0 ? 0 : cell.hit / cell.total;
   const lemmaMissRate = lemma.total === 0 ? 0 : lemma.miss / lemma.total;
 
-  if (o.voice === 'middle-passive') labels.push('middle_passive_needs_attestation');
-  if (cell.total >= 100 && cell.hit <= 3) labels.push('near_empty_grammatical_cell');
-  else if (cell.total >= 100 && hitRate < 0.1) labels.push('low_coverage_grammatical_cell');
-  if (o.voice === 'active' && o.mood === 'admirative' && o.tense === 'present') {
+  if (o.voice === 'middle-passive')
+    labels.push('middle_passive_needs_attestation');
+  if (cell.total >= 100 && cell.hit <= 3)
+    labels.push('near_empty_grammatical_cell');
+  else if (cell.total >= 100 && hitRate < 0.1)
+    labels.push('low_coverage_grammatical_cell');
+  if (
+    o.voice === 'active' &&
+    o.mood === 'admirative' &&
+    o.tense === 'present'
+  ) {
     labels.push('rare_admirative_present');
   }
   if (o.mood === 'admirative' && o.tense !== 'present') {
@@ -926,10 +971,13 @@ function primaryCategory(labels: string[]): string {
   ) {
     return 'scanner_variant_checked_but_absent';
   }
-  if (labels.includes('long_exact_phrase')) return 'broader_phrase_search_needed';
+  if (labels.includes('long_exact_phrase'))
+    return 'broader_phrase_search_needed';
   if (labels.includes('lemma_outlier')) return 'lemma_outlier';
-  if (labels.includes('duplicate_surface_targets')) return 'duplicate_surface_target';
-  if (labels.includes('te_mos_order_variant_probe')) return 'variant_probe_candidate';
+  if (labels.includes('duplicate_surface_targets'))
+    return 'duplicate_surface_target';
+  if (labels.includes('te_mos_order_variant_probe'))
+    return 'variant_probe_candidate';
   if (labels.includes('analyzer_accepted_exact_absence')) {
     return 'analyzer_valid_exact_absence';
   }
@@ -1003,14 +1051,17 @@ function main(): void {
   const morphologyPath = valueAfter('--morphology=') ?? DEFAULT_MORPHOLOGY;
   const jsonOut = valueAfter('--json=') ?? DEFAULT_JSON_OUT;
   const mdOut = valueAfter('--md=') ?? DEFAULT_MD_OUT;
-  const dossierJsonOut = valueAfter('--dossier-json=') ?? DEFAULT_DOSSIER_JSON_OUT;
+  const dossierJsonOut =
+    valueAfter('--dossier-json=') ?? DEFAULT_DOSSIER_JSON_OUT;
   const dossierMdOut = valueAfter('--dossier-md=') ?? DEFAULT_DOSSIER_MD_OUT;
 
   const targetFile = readJson<TargetFile>(targetsPath);
   const coverage = readJson<CoverageReport>(coveragePath);
   requireFreshInputs(targetFile, coverage);
   const verbs = readJson<VerbEntry[]>(verbsPath);
-  const targetsById = new Map(targetFile.targets.map((target) => [target.id, target]));
+  const targetsById = new Map(
+    targetFile.targets.map((target) => [target.id, target]),
+  );
   const dbEvidence = existsSync(dbPath)
     ? readDbEvidence(dbPath, new Set(targetsById.keys()))
     : null;
@@ -1023,9 +1074,18 @@ function main(): void {
   const missingIds = new Set(coverage.misses.map((miss) => miss.id));
   const verbsById = new Map(verbs.map((verb) => [verb.id, verb]));
 
-  const byCell = new Map<string, { total: number; hit: number; miss: number }>();
-  const byLemma = new Map<string, { total: number; hit: number; miss: number }>();
-  const bySurface = new Map<string, { total: number; hit: number; miss: number }>();
+  const byCell = new Map<
+    string,
+    { total: number; hit: number; miss: number }
+  >();
+  const byLemma = new Map<
+    string,
+    { total: number; hit: number; miss: number }
+  >();
+  const bySurface = new Map<
+    string,
+    { total: number; hit: number; miss: number }
+  >();
   const byLemmaVoice = new Map<
     string,
     {
@@ -1051,16 +1111,18 @@ function main(): void {
       else row.hit += 1;
       map.set(key, row);
     }
-    if (target.options.voice === 'active' || target.options.voice === 'middle-passive') {
-      const row =
-        byLemmaVoice.get(target.verbId) ?? {
-          activeTotal: 0,
-          activeHit: 0,
-          activeMiss: 0,
-          middlePassiveTotal: 0,
-          middlePassiveHit: 0,
-          middlePassiveMiss: 0,
-        };
+    if (
+      target.options.voice === 'active' ||
+      target.options.voice === 'middle-passive'
+    ) {
+      const row = byLemmaVoice.get(target.verbId) ?? {
+        activeTotal: 0,
+        activeHit: 0,
+        activeMiss: 0,
+        middlePassiveTotal: 0,
+        middlePassiveHit: 0,
+        middlePassiveMiss: 0,
+      };
       if (target.options.voice === 'active') {
         row.activeTotal += 1;
         if (missed) row.activeMiss += 1;
@@ -1077,12 +1139,14 @@ function main(): void {
   const labelCounts = new Map<string, number>();
   const primaryCounts = new Map<string, number>();
   const scannerVariantsRecorded =
-    dbEvidence?.schemaVersion === '2' && dbEvidence.hasOccurrenceVariantEvidence;
+    dbEvidence?.schemaVersion === '2' &&
+    dbEvidence.hasOccurrenceVariantEvidence;
   const wordOrderAlternantCounts = new Map<string, number>();
   const scannerVariantCounts = new Map<string, number>();
   const auditedMisses = coverage.misses.map((miss) => {
     const target = targetsById.get(miss.id);
-    if (!target) throw new Error(`Coverage miss not found in targets: ${miss.id}`);
+    if (!target)
+      throw new Error(`Coverage miss not found in targets: ${miss.id}`);
     const morphology = morphologyEvidence.byTargetId.get(target.id);
     const labels = labelMiss(
       target,
@@ -1098,7 +1162,8 @@ function main(): void {
     const wordOrder = wordOrderAlternants(target);
     const scannerVariants = scannerVariantAlternants(target);
     for (const alternant of wordOrder) add(wordOrderAlternantCounts, alternant);
-    for (const alternant of scannerVariants) add(scannerVariantCounts, alternant);
+    for (const alternant of scannerVariants)
+      add(scannerVariantCounts, alternant);
     return {
       id: target.id,
       targetKey: target.targetKey,
@@ -1129,7 +1194,9 @@ function main(): void {
     (sum, row) => sum + Math.max(0, row.miss - 1),
     0,
   );
-  const duplicateMissSurfaces = uniqueMissedSurfaces.filter((row) => row.miss > 1);
+  const duplicateMissSurfaces = uniqueMissedSurfaces.filter(
+    (row) => row.miss > 1,
+  );
   const nearEmptyCells = coverageRows(byCell).filter(
     (row) => row.total >= 100 && row.hit <= 3,
   );
@@ -1182,23 +1249,25 @@ function main(): void {
   const missesWithScannerVariantAlternants = auditedMisses.filter(
     (miss) => miss.scannerVariantAlternants.length > 0,
   ).length;
-  const primaryCategoryDetails = topEntries(primaryCounts, 20).map((primary) => {
-    const rows = auditedMisses.filter((miss) => miss.primary === primary.key);
-    const labels = new Map<string, number>();
-    for (const row of rows) {
-      for (const label of row.labels) add(labels, label);
-    }
-    return {
-      primary: primary.key,
-      count: primary.count,
-      labels: topEntries(labels, 5),
-      samples: rows.slice(0, 5).map((row) => ({
-        targetKey: row.targetKey,
-        lemma: row.lemma,
-        signature: row.signature,
-      })),
-    };
-  });
+  const primaryCategoryDetails = topEntries(primaryCounts, 20).map(
+    (primary) => {
+      const rows = auditedMisses.filter((miss) => miss.primary === primary.key);
+      const labels = new Map<string, number>();
+      for (const row of rows) {
+        for (const label of row.labels) add(labels, label);
+      }
+      return {
+        primary: primary.key,
+        count: primary.count,
+        labels: topEntries(labels, 5),
+        samples: rows.slice(0, 5).map((row) => ({
+          targetKey: row.targetKey,
+          lemma: row.lemma,
+          signature: row.signature,
+        })),
+      };
+    },
+  );
   const analyzerAcceptedMisses = auditedMisses.filter(
     (miss) =>
       miss.labels.includes('analyzer_accepted_exact_absence') ||
@@ -1236,20 +1305,21 @@ function main(): void {
       ),
     }),
   );
-  const analyzerAcceptedByLemma = topEntries(analyzerAcceptedLemmaCounts, 20).map(
-    (row) => {
-      const verb = verbsById.get(row.key);
-      return {
-        ...row,
-        lemma: verb?.lemma ?? row.key,
-        translationEn: verb?.translationEn ?? '',
-        sourceLevel: sourceLevel(sourceKeys(verb)),
-        samples: analyzerAcceptedSamples(
-          analyzerAcceptedMisses.filter((miss) => miss.verbId === row.key),
-        ),
-      };
-    },
-  );
+  const analyzerAcceptedByLemma = topEntries(
+    analyzerAcceptedLemmaCounts,
+    20,
+  ).map((row) => {
+    const verb = verbsById.get(row.key);
+    return {
+      ...row,
+      lemma: verb?.lemma ?? row.key,
+      translationEn: verb?.translationEn ?? '',
+      sourceLevel: sourceLevel(sourceKeys(verb)),
+      samples: analyzerAcceptedSamples(
+        analyzerAcceptedMisses.filter((miss) => miss.verbId === row.key),
+      ),
+    };
+  });
   const worklistSamples = (rows: typeof auditedMisses) =>
     rows.slice(0, 5).map((row) => ({
       targetKey: row.targetKey,
@@ -1277,14 +1347,17 @@ function main(): void {
       'UniParser accepts these missing forms; current evidence says they are valid-looking but unattested in retained examples, not wrong.',
       analyzerAcceptedMisses.filter(
         (miss) =>
-          analyzerAcceptedClass(miss) === 'active rare mood: admirative/optative',
+          analyzerAcceptedClass(miss) ===
+          'active rare mood: admirative/optative',
       ),
     ),
     worklistRow(
       'review_middle_passive_voice_eligibility',
       'Review middle-passive voice eligibility by lemma',
       'These misses all come from generated middle-passive cells; inspect lemma voice semantics, local flags, and external morphology before suppressing output.',
-      auditedMisses.filter((miss) => miss.primary === 'needs_middle_passive_attestation'),
+      auditedMisses.filter(
+        (miss) => miss.primary === 'needs_middle_passive_attestation',
+      ),
     ),
     worklistRow(
       'review_scanner_variant_absences',
@@ -1310,7 +1383,9 @@ function main(): void {
       'review_component_valid_phrases',
       'Check full phrases whose head/component is morphologically supported',
       'Morphology evidence supports the token or lemma component, but retained corpus evidence does not attest the full generated phrase.',
-      auditedMisses.filter((miss) => miss.primary === 'component_valid_phrase_absence'),
+      auditedMisses.filter(
+        (miss) => miss.primary === 'component_valid_phrase_absence',
+      ),
     ),
   ].filter((row) => row.targetCount > 0);
   const middlePassiveReviewActionCounts = new Map<string, number>();
@@ -1354,6 +1429,73 @@ function main(): void {
       }),
     };
   });
+  const middlePassiveLemmaReviewQueue = [
+    ...middlePassiveReviewMisses
+      .reduce(
+        (groups, miss) => {
+          const action = miss.morphologyAction ?? 'unknown';
+          const key = `${action}\t${miss.verbId}`;
+          const group = groups.get(key) ?? {
+            action,
+            verbId: miss.verbId,
+            lemma: miss.lemma,
+            translationEn: miss.translationEn,
+            targetCount: 0,
+            samples: [] as ReturnType<typeof worklistSamples>,
+          };
+          group.targetCount += 1;
+          if (group.samples.length < 3) {
+            group.samples.push({
+              targetKey: miss.targetKey,
+              lemma: miss.lemma,
+              signature: miss.signature,
+              primary: miss.primary,
+            });
+          }
+          groups.set(key, group);
+          return groups;
+        },
+        new Map<
+          string,
+          {
+            action: string;
+            verbId: string;
+            lemma: string;
+            translationEn: string;
+            targetCount: number;
+            samples: ReturnType<typeof worklistSamples>;
+          }
+        >(),
+      )
+      .values(),
+  ]
+    .map((row) => {
+      const verb = verbsById.get(row.verbId);
+      const sources = sourceKeys(verb);
+      const voice = byLemmaVoice.get(row.verbId);
+      return {
+        ...row,
+        sourceLevel: sourceLevel(sources),
+        sources,
+        middlePassiveCoverage: voice
+          ? cellHitRate({
+              total: voice.middlePassiveTotal,
+              hit: voice.middlePassiveHit,
+            })
+          : 'unknown',
+        activeCoverage: voice
+          ? cellHitRate({ total: voice.activeTotal, hit: voice.activeHit })
+          : 'unknown',
+        hasNoMiddlePassiveFlag: Boolean(verb?.flags?.noMiddlePassive),
+        middlePassiveOverrideCount: middlePassiveOverrideKeys(verb).length,
+      };
+    })
+    .sort(
+      (a, b) =>
+        b.targetCount - a.targetCount ||
+        a.action.localeCompare(b.action) ||
+        a.lemma.localeCompare(b.lemma),
+    );
   const report = {
     generatedAt: new Date().toISOString(),
     targetsPath,
@@ -1386,12 +1528,19 @@ function main(): void {
         (dbEvidence?.selectedSources === 'all'
           ? 'all-configured-downloaded-resources'
           : 'selected-source-subset'),
-      selectedSources: coverage.summary.selectedSources ?? dbEvidence?.selectedSources ?? null,
+      selectedSources:
+        coverage.summary.selectedSources ?? dbEvidence?.selectedSources ?? null,
       indexMode: coverage.summary.indexMode ?? dbEvidence?.indexMode ?? null,
-      scannedResources: coverage.summary.scannedResources ?? dbEvidence?.scannedResources ?? null,
+      scannedResources:
+        coverage.summary.scannedResources ??
+        dbEvidence?.scannedResources ??
+        null,
       candidatesSeen: coverage.summary.candidatesSeen,
       storedSentences: dbEvidence?.retainedSentences ?? null,
-      storedOccurrences: coverage.summary.totalOccurrences ?? dbEvidence?.retainedOccurrences ?? null,
+      storedOccurrences:
+        coverage.summary.totalOccurrences ??
+        dbEvidence?.retainedOccurrences ??
+        null,
       targetIdsAtMaxStoredOccurrences:
         dbEvidence?.targetIdsAtMaxStoredOccurrences ?? null,
       qualityRejectedCandidates: dbEvidence?.qualityRejectedCandidates ?? null,
@@ -1437,6 +1586,7 @@ function main(): void {
     reviewWorklist,
     middlePassiveReviewActions,
     middlePassiveReviewLemmas,
+    middlePassiveLemmaReviewQueue,
     evidenceLabels: topEntries(labelCounts, 40),
     dbEvidence,
     duplicateMissSurfaces: duplicateMissSurfaces.slice(0, 80),
@@ -1466,7 +1616,10 @@ function main(): void {
 
   const dossierReasons = new Map<string, string[]>();
   const missesById = new Map(auditedMisses.map((miss) => [miss.id, miss]));
-  const addDossierMiss = (miss: (typeof auditedMisses)[number], reason: string) => {
+  const addDossierMiss = (
+    miss: (typeof auditedMisses)[number],
+    reason: string,
+  ) => {
     const reasons = dossierReasons.get(miss.id) ?? [];
     if (!reasons.includes(reason)) reasons.push(reason);
     dossierReasons.set(miss.id, reasons);
@@ -1507,9 +1660,10 @@ function main(): void {
     2,
   );
   takeDossierMisses(
-    auditedMisses.filter((miss) =>
-      miss.labels.includes('analyzer_accepted_exact_absence') ||
-      miss.labels.includes('analyzer_accepted_head_token_absence'),
+    auditedMisses.filter(
+      (miss) =>
+        miss.labels.includes('analyzer_accepted_exact_absence') ||
+        miss.labels.includes('analyzer_accepted_head_token_absence'),
     ),
     'evidence: analyzer-accepted missing form',
     24,
@@ -1618,7 +1772,11 @@ function main(): void {
     entries: dossierEntries,
   };
   mkdirSync(dirname(dossierJsonOut), { recursive: true });
-  writeFileSync(dossierJsonOut, JSON.stringify(dossier, null, 2) + '\n', 'utf8');
+  writeFileSync(
+    dossierJsonOut,
+    JSON.stringify(dossier, null, 2) + '\n',
+    'utf8',
+  );
 
   const md = [
     '# Corpus Missing Audit',
@@ -1806,17 +1964,21 @@ function main(): void {
     '',
     '| Cell | Analyzer-Accepted Misses | Samples |',
     '| --- | ---: | --- |',
-    ...report.analyzerAcceptedMisses.byCell.slice(0, 12).map(
-      (row) =>
-        `| ${mdCell(row.key)} | ${row.count} | ${mdCell(row.samples.map((sample) => `${sample.targetKey} (${sample.lemma})`).join(', '))} |`,
-    ),
+    ...report.analyzerAcceptedMisses.byCell
+      .slice(0, 12)
+      .map(
+        (row) =>
+          `| ${mdCell(row.key)} | ${row.count} | ${mdCell(row.samples.map((sample) => `${sample.targetKey} (${sample.lemma})`).join(', '))} |`,
+      ),
     '',
     '| Lemma | Verb ID | Analyzer-Accepted Misses | Source Level | Samples |',
     '| --- | --- | ---: | --- | --- |',
-    ...report.analyzerAcceptedMisses.byLemma.slice(0, 12).map(
-      (row) =>
-        `| ${mdCell(row.lemma)} | ${mdCell(row.key)} | ${row.count} | ${row.sourceLevel} | ${mdCell(row.samples.map((sample) => `${sample.targetKey} [${sample.primary}]`).join(', '))} |`,
-    ),
+    ...report.analyzerAcceptedMisses.byLemma
+      .slice(0, 12)
+      .map(
+        (row) =>
+          `| ${mdCell(row.lemma)} | ${mdCell(row.key)} | ${row.count} | ${row.sourceLevel} | ${mdCell(row.samples.map((sample) => `${sample.targetKey} [${sample.primary}]`).join(', '))} |`,
+      ),
     '',
     '## Next Review Worklist',
     '',
@@ -1851,6 +2013,17 @@ function main(): void {
         (row) =>
           `| ${mdCell(group.action)} | ${mdCell(row.lemma)} | ${mdCell(row.verbId)} | ${row.count} | ${row.sourceLevel} | ${mdCell(row.samples.map((sample) => `${sample.targetKey} (${sample.signature})`).join(', '))} |`,
       ),
+    ),
+    '',
+    '### Complete Middle-Passive Lemma Queue',
+    '',
+    'Every action-by-lemma group in the middle-passive review bucket. A lemma may appear more than once when different generated cells have different morphology actions.',
+    '',
+    '| Morphology Action | Lemma | Verb ID | Targets | Middle-Passive Coverage | Active Coverage | Source Level | Flags/Overrides | Samples |',
+    '| --- | --- | --- | ---: | --- | --- | --- | --- | --- |',
+    ...report.middlePassiveLemmaReviewQueue.map(
+      (row) =>
+        `| ${mdCell(row.action)} | ${mdCell(row.lemma)} | ${mdCell(row.verbId)} | ${row.targetCount} | ${row.middlePassiveCoverage} | ${row.activeCoverage} | ${row.sourceLevel} | ${row.hasNoMiddlePassiveFlag ? 'noMiddlePassive' : 'none'} / ${row.middlePassiveOverrideCount} MP overrides | ${mdCell(row.samples.map((sample) => `${sample.targetKey} (${sample.signature})`).join(', '))} |`,
     ),
     '',
     '## Corpus Source Levels',
@@ -1963,7 +2136,9 @@ function main(): void {
     '| --- | --- | --- |',
     ...report.unexplainedSample
       .slice(0, 40)
-      .map((miss) => `| ${miss.targetKey} | ${miss.lemma} | ${miss.signature} |`),
+      .map(
+        (miss) => `| ${miss.targetKey} | ${miss.lemma} | ${miss.signature} |`,
+      ),
     '',
   ].join('\n');
   writeFileSync(mdOut, md, 'utf8');

@@ -1,0 +1,612 @@
+{
+  "title": "Middle-passive eligibility review: intransitive-tagged candidates",
+  "status": "open",
+  "sourceArtifacts": {
+    "corpusMissingAudit": ".cache/corpus-missing-audit.json",
+    "corpusMissingAuditGeneratedAt": "2026-06-19T15:39:25.235Z",
+    "externalMorphologyAudit": ".cache/external-morphology-audit.json",
+    "externalMorphologyAuditGeneratedAt": "2026-06-19T15:34:44.744Z",
+    "targetGeneratedAt": "2026-06-19T13:58:35.608Z",
+    "coverageGeneratedAt": "2026-06-19T14:15:36.252Z",
+    "corpusVersion": "0.1.5",
+    "rerun": "npm run audit:corpus-misses:full"
+  },
+  "scope": "The cleanest middle-passive review bucket: generated middle-passive misses whose UniParser lexeme is vi-only, with no vt/med tag, and whose analyzer rows do not validate the requested middle-passive cell.",
+  "allowedDecisions": [
+    "keep",
+    "noMiddlePassive",
+    "middlePassiveThirdPersonOnly",
+    "needs_source"
+  ],
+  "decisionMeaning": {
+    "keep": "Retain generated middle-passive forms; evidence supports them or lack of examples is acceptable.",
+    "noMiddlePassive": "Add noMiddlePassive to the verb after source review confirms non-active forms should be suppressed.",
+    "middlePassiveThirdPersonOnly": "Restrict finite middle-passive output to third person after source review confirms only impersonal/third-person forms are valid.",
+    "needs_source": "Do not change generation yet; gather stronger source evidence."
+  },
+  "summary": {
+    "lemmas": 8,
+    "actionTargetMisses": 1296,
+    "totalMiddlePassiveMisses": 1372
+  },
+  "rows": [
+    {
+      "verbId": "abstenoj",
+      "lemma": "abstenoj",
+      "translationEn": "to abstain",
+      "decision": "needs_source",
+      "action": "review_vi_tagged_nonactive_candidate",
+      "actionTargetMisses": 219,
+      "middlePassiveCoverage": "30/264 (11.4%)",
+      "activeCoverage": "132/268 (49.3%)",
+      "sourceLevel": "lexicon-only",
+      "sources": ["kaikki", "manual"],
+      "currentFlags": {},
+      "middlePassiveOverrideKeys": [],
+      "totalMiddlePassiveTargets": 264,
+      "totalMiddlePassiveMisses": 234,
+      "lexemeVoiceBucket": "vi-only",
+      "uniparserLexeme": {
+        "found": true,
+        "matchKey": "abstenoj",
+        "matchKind": "exact_or_id",
+        "tags": ["V", "borr", "new", "rom", "vi"],
+        "paradigms": ["lexoj"],
+        "lexrefs": [],
+        "dialectOrRegister": [],
+        "entries": 1
+      },
+      "analyzerSummary": {
+        "accepted": 15,
+        "incompatible": 219,
+        "noTokenAnalysis": 0,
+        "notProvided": 0,
+        "compatibleRows": 15,
+        "acceptedSamples": ["abstenohemi", "abstenohesh"]
+      },
+      "verdict": {
+        "form": "not_validated",
+        "voiceEligibility": "ambiguous",
+        "proofLevel": "lexeme",
+        "reasons": [
+          "lexicon_only",
+          "no_middle_passive_overrides",
+          "high_middle_passive_miss_pressure",
+          "uniparser_lexeme_vi_no_vt_med"
+        ],
+        "action": "review_vi_tagged_nonactive_candidate"
+      },
+      "samples": [
+        {
+          "targetId": "abstenoj:conditional.present.3sg.middle-passive.affirmative.declarative:do_të_abstenohej",
+          "targetKey": "do të abstenohej",
+          "signature": "conditional.present.3sg.middle-passive.affirmative.declarative",
+          "headToken": "abstenohej",
+          "analyzerStatus": "analyzed_incompatible",
+          "analyzerCompatibleRows": 0
+        },
+        {
+          "targetId": "abstenoj:indicative.future-in-past.3sg.middle-passive.affirmative.declarative:do_të_abstenohej",
+          "targetKey": "do të abstenohej",
+          "signature": "indicative.future-in-past.3sg.middle-passive.affirmative.declarative",
+          "headToken": "abstenohej",
+          "analyzerStatus": "analyzed_incompatible",
+          "analyzerCompatibleRows": 0
+        },
+        {
+          "targetId": "abstenoj:indicative.future.1pl.middle-passive.affirmative.declarative:do_të_abstenohemi",
+          "targetKey": "do të abstenohemi",
+          "signature": "indicative.future.1pl.middle-passive.affirmative.declarative",
+          "headToken": "abstenohemi",
+          "analyzerStatus": "analyzed_incompatible",
+          "analyzerCompatibleRows": 0
+        }
+      ]
+    },
+    {
+      "verbId": "guxoj",
+      "lemma": "guxoj",
+      "translationEn": "to dare",
+      "decision": "needs_source",
+      "action": "review_vi_tagged_nonactive_candidate",
+      "actionTargetMisses": 196,
+      "middlePassiveCoverage": "53/264 (20.1%)",
+      "activeCoverage": "204/268 (76.1%)",
+      "sourceLevel": "lexicon-only",
+      "sources": ["kaikki", "manual"],
+      "currentFlags": {},
+      "middlePassiveOverrideKeys": [],
+      "totalMiddlePassiveTargets": 264,
+      "totalMiddlePassiveMisses": 211,
+      "lexemeVoiceBucket": "vi-only",
+      "uniparserLexeme": {
+        "found": true,
+        "matchKey": "guxoj",
+        "matchKind": "exact_or_id",
+        "tags": ["V", "borr", "lat", "vi"],
+        "paradigms": ["lexoj"],
+        "lexrefs": [],
+        "dialectOrRegister": [],
+        "entries": 1
+      },
+      "analyzerSummary": {
+        "accepted": 15,
+        "incompatible": 196,
+        "noTokenAnalysis": 0,
+        "notProvided": 0,
+        "compatibleRows": 15,
+        "acceptedSamples": ["guxohem", "guxohemi"]
+      },
+      "verdict": {
+        "form": "not_validated",
+        "voiceEligibility": "ambiguous",
+        "proofLevel": "lexeme",
+        "reasons": [
+          "lexicon_only",
+          "no_middle_passive_overrides",
+          "high_middle_passive_miss_pressure",
+          "uniparser_lexeme_vi_no_vt_med"
+        ],
+        "action": "review_vi_tagged_nonactive_candidate"
+      },
+      "samples": [
+        {
+          "targetId": "guxoj:indicative.future.1sg.middle-passive.affirmative.declarative:do_të_guxohem",
+          "targetKey": "do të guxohem",
+          "signature": "indicative.future.1sg.middle-passive.affirmative.declarative",
+          "headToken": "guxohem",
+          "analyzerStatus": "analyzed_incompatible",
+          "analyzerCompatibleRows": 0
+        },
+        {
+          "targetId": "guxoj:indicative.future.1pl.middle-passive.affirmative.declarative:do_të_guxohemi",
+          "targetKey": "do të guxohemi",
+          "signature": "indicative.future.1pl.middle-passive.affirmative.declarative",
+          "headToken": "guxohemi",
+          "analyzerStatus": "analyzed_incompatible",
+          "analyzerCompatibleRows": 0
+        },
+        {
+          "targetId": "guxoj:indicative.future.3pl.middle-passive.affirmative.declarative:do_të_guxohen",
+          "targetKey": "do të guxohen",
+          "signature": "indicative.future.3pl.middle-passive.affirmative.declarative",
+          "headToken": "guxohen",
+          "analyzerStatus": "analyzed_incompatible",
+          "analyzerCompatibleRows": 0
+        }
+      ]
+    },
+    {
+      "verbId": "banoj",
+      "lemma": "banoj",
+      "translationEn": "to reside",
+      "decision": "needs_source",
+      "action": "review_vi_tagged_nonactive_candidate",
+      "actionTargetMisses": 184,
+      "middlePassiveCoverage": "71/264 (26.9%)",
+      "activeCoverage": "169/268 (63.1%)",
+      "sourceLevel": "lexicon-only",
+      "sources": ["kaikki", "manual"],
+      "currentFlags": {},
+      "middlePassiveOverrideKeys": [],
+      "totalMiddlePassiveTargets": 264,
+      "totalMiddlePassiveMisses": 193,
+      "lexemeVoiceBucket": "vi-only",
+      "uniparserLexeme": {
+        "found": true,
+        "matchKey": "banoj",
+        "matchKind": "exact_or_id",
+        "tags": ["V", "alb", "deriv", "vi"],
+        "paradigms": ["lexoj"],
+        "lexrefs": [],
+        "dialectOrRegister": [],
+        "entries": 1
+      },
+      "analyzerSummary": {
+        "accepted": 9,
+        "incompatible": 184,
+        "noTokenAnalysis": 0,
+        "notProvided": 0,
+        "compatibleRows": 9,
+        "acceptedSamples": ["banohem", "banoheshim"]
+      },
+      "verdict": {
+        "form": "not_validated",
+        "voiceEligibility": "ambiguous",
+        "proofLevel": "lexeme",
+        "reasons": [
+          "lexicon_only",
+          "no_middle_passive_overrides",
+          "uniparser_lexeme_vi_no_vt_med"
+        ],
+        "action": "review_vi_tagged_nonactive_candidate"
+      },
+      "samples": [
+        {
+          "targetId": "banoj:indicative.future.1sg.middle-passive.affirmative.declarative:do_të_banohem",
+          "targetKey": "do të banohem",
+          "signature": "indicative.future.1sg.middle-passive.affirmative.declarative",
+          "headToken": "banohem",
+          "analyzerStatus": "analyzed_incompatible",
+          "analyzerCompatibleRows": 0
+        },
+        {
+          "targetId": "banoj:indicative.future.1pl.middle-passive.affirmative.declarative:do_të_banohemi",
+          "targetKey": "do të banohemi",
+          "signature": "indicative.future.1pl.middle-passive.affirmative.declarative",
+          "headToken": "banohemi",
+          "analyzerStatus": "analyzed_incompatible",
+          "analyzerCompatibleRows": 0
+        },
+        {
+          "targetId": "banoj:indicative.future.2pl.middle-passive.affirmative.declarative:do_të_banoheni",
+          "targetKey": "do të banoheni",
+          "signature": "indicative.future.2pl.middle-passive.affirmative.declarative",
+          "headToken": "banoheni",
+          "analyzerStatus": "analyzed_incompatible",
+          "analyzerCompatibleRows": 0
+        }
+      ]
+    },
+    {
+      "verbId": "veproj",
+      "lemma": "veproj",
+      "translationEn": "to act",
+      "decision": "needs_source",
+      "action": "review_vi_tagged_nonactive_candidate",
+      "actionTargetMisses": 178,
+      "middlePassiveCoverage": "73/264 (27.7%)",
+      "activeCoverage": "209/268 (78.0%)",
+      "sourceLevel": "lexicon-only",
+      "sources": ["kaikki", "manual"],
+      "currentFlags": {},
+      "middlePassiveOverrideKeys": [],
+      "totalMiddlePassiveTargets": 264,
+      "totalMiddlePassiveMisses": 191,
+      "lexemeVoiceBucket": "vi-only",
+      "uniparserLexeme": {
+        "found": true,
+        "matchKey": "veproj",
+        "matchKind": "exact_or_id",
+        "tags": ["V", "borr", "deriv", "lat", "vi"],
+        "paradigms": ["lexoj"],
+        "lexrefs": [],
+        "dialectOrRegister": [],
+        "entries": 1
+      },
+      "analyzerSummary": {
+        "accepted": 13,
+        "incompatible": 178,
+        "noTokenAnalysis": 0,
+        "notProvided": 0,
+        "compatibleRows": 13,
+        "acceptedSamples": ["nuk veprohem", "nuk veprohemi"]
+      },
+      "verdict": {
+        "form": "not_validated",
+        "voiceEligibility": "ambiguous",
+        "proofLevel": "lexeme",
+        "reasons": [
+          "lexicon_only",
+          "no_middle_passive_overrides",
+          "uniparser_lexeme_vi_no_vt_med"
+        ],
+        "action": "review_vi_tagged_nonactive_candidate"
+      },
+      "samples": [
+        {
+          "targetId": "veproj:conditional.perfect.2sg.middle-passive.affirmative.declarative:do_të_ishe_vepruar",
+          "targetKey": "do të ishe vepruar",
+          "signature": "conditional.perfect.2sg.middle-passive.affirmative.declarative",
+          "headToken": "vepruar",
+          "analyzerStatus": "analyzed_incompatible",
+          "analyzerCompatibleRows": 0
+        },
+        {
+          "targetId": "veproj:indicative.future-perfect-in-past.2sg.middle-passive.affirmative.declarative:do_të_ishe_vepruar",
+          "targetKey": "do të ishe vepruar",
+          "signature": "indicative.future-perfect-in-past.2sg.middle-passive.affirmative.declarative",
+          "headToken": "vepruar",
+          "analyzerStatus": "analyzed_incompatible",
+          "analyzerCompatibleRows": 0
+        },
+        {
+          "targetId": "veproj:conditional.perfect.1pl.middle-passive.affirmative.declarative:do_të_ishim_vepruar",
+          "targetKey": "do të ishim vepruar",
+          "signature": "conditional.perfect.1pl.middle-passive.affirmative.declarative",
+          "headToken": "vepruar",
+          "analyzerStatus": "analyzed_incompatible",
+          "analyzerCompatibleRows": 0
+        }
+      ]
+    },
+    {
+      "verbId": "dyshoj",
+      "lemma": "dyshoj",
+      "translationEn": "to doubt",
+      "decision": "needs_source",
+      "action": "review_vi_tagged_nonactive_candidate",
+      "actionTargetMisses": 176,
+      "middlePassiveCoverage": "83/264 (31.4%)",
+      "activeCoverage": "181/268 (67.5%)",
+      "sourceLevel": "lexicon-only",
+      "sources": ["kaikki", "manual"],
+      "currentFlags": {},
+      "middlePassiveOverrideKeys": [],
+      "totalMiddlePassiveTargets": 264,
+      "totalMiddlePassiveMisses": 181,
+      "lexemeVoiceBucket": "vi-only",
+      "uniparserLexeme": {
+        "found": true,
+        "matchKey": "dyshoj",
+        "matchKind": "exact_or_id",
+        "tags": ["V", "alb", "deriv", "vi"],
+        "paradigms": ["lexoj"],
+        "lexrefs": [],
+        "dialectOrRegister": [],
+        "entries": 1
+      },
+      "analyzerSummary": {
+        "accepted": 5,
+        "incompatible": 176,
+        "noTokenAnalysis": 0,
+        "notProvided": 0,
+        "compatibleRows": 5,
+        "acceptedSamples": ["nuk dyshohemi", "nuk dyshohesha"]
+      },
+      "verdict": {
+        "form": "not_validated",
+        "voiceEligibility": "ambiguous",
+        "proofLevel": "lexeme",
+        "reasons": [
+          "lexicon_only",
+          "no_middle_passive_overrides",
+          "uniparser_lexeme_vi_no_vt_med"
+        ],
+        "action": "review_vi_tagged_nonactive_candidate"
+      },
+      "samples": [
+        {
+          "targetId": "dyshoj:indicative.future.1pl.middle-passive.affirmative.declarative:do_të_dyshohemi",
+          "targetKey": "do të dyshohemi",
+          "signature": "indicative.future.1pl.middle-passive.affirmative.declarative",
+          "headToken": "dyshohemi",
+          "analyzerStatus": "analyzed_incompatible",
+          "analyzerCompatibleRows": 0
+        },
+        {
+          "targetId": "dyshoj:indicative.future.2sg.middle-passive.affirmative.declarative:do_të_dyshohesh",
+          "targetKey": "do të dyshohesh",
+          "signature": "indicative.future.2sg.middle-passive.affirmative.declarative",
+          "headToken": "dyshohesh",
+          "analyzerStatus": "analyzed_incompatible",
+          "analyzerCompatibleRows": 0
+        },
+        {
+          "targetId": "dyshoj:conditional.present.2sg.middle-passive.affirmative.declarative:do_të_dyshoheshe",
+          "targetKey": "do të dyshoheshe",
+          "signature": "conditional.present.2sg.middle-passive.affirmative.declarative",
+          "headToken": "dyshoheshe",
+          "analyzerStatus": "analyzed_incompatible",
+          "analyzerCompatibleRows": 0
+        }
+      ]
+    },
+    {
+      "verbId": "shkoj",
+      "lemma": "shkoj",
+      "translationEn": "to go",
+      "decision": "needs_source",
+      "action": "review_vi_tagged_nonactive_candidate",
+      "actionTargetMisses": 147,
+      "middlePassiveCoverage": "108/264 (40.9%)",
+      "activeCoverage": "231/268 (86.2%)",
+      "sourceLevel": "husic-backed",
+      "sources": ["husic", "kaikki", "manual"],
+      "currentFlags": {},
+      "middlePassiveOverrideKeys": [],
+      "totalMiddlePassiveTargets": 264,
+      "totalMiddlePassiveMisses": 156,
+      "lexemeVoiceBucket": "vi-only",
+      "uniparserLexeme": {
+        "found": true,
+        "matchKey": "shkoj",
+        "matchKind": "exact_or_id",
+        "tags": ["V", "alb", "deriv", "vi"],
+        "paradigms": ["lexoj"],
+        "lexrefs": [],
+        "dialectOrRegister": [],
+        "entries": 1
+      },
+      "analyzerSummary": {
+        "accepted": 9,
+        "incompatible": 147,
+        "noTokenAnalysis": 0,
+        "notProvided": 0,
+        "compatibleRows": 9,
+        "acceptedSamples": ["nuk shkohem", "nuk shkohemi"]
+      },
+      "verdict": {
+        "form": "not_validated",
+        "voiceEligibility": "ambiguous",
+        "proofLevel": "lexeme",
+        "reasons": [
+          "no_middle_passive_overrides",
+          "uniparser_lexeme_vi_no_vt_med"
+        ],
+        "action": "review_vi_tagged_nonactive_candidate"
+      },
+      "samples": [
+        {
+          "targetId": "shkoj:conditional.perfect.2sg.middle-passive.affirmative.declarative:do_të_ishe_shkuar",
+          "targetKey": "do të ishe shkuar",
+          "signature": "conditional.perfect.2sg.middle-passive.affirmative.declarative",
+          "headToken": "shkuar",
+          "analyzerStatus": "analyzed_incompatible",
+          "analyzerCompatibleRows": 0
+        },
+        {
+          "targetId": "shkoj:indicative.future-perfect-in-past.2sg.middle-passive.affirmative.declarative:do_të_ishe_shkuar",
+          "targetKey": "do të ishe shkuar",
+          "signature": "indicative.future-perfect-in-past.2sg.middle-passive.affirmative.declarative",
+          "headToken": "shkuar",
+          "analyzerStatus": "analyzed_incompatible",
+          "analyzerCompatibleRows": 0
+        },
+        {
+          "targetId": "shkoj:conditional.perfect.2pl.middle-passive.affirmative.declarative:do_të_ishit_shkuar",
+          "targetKey": "do të ishit shkuar",
+          "signature": "conditional.perfect.2pl.middle-passive.affirmative.declarative",
+          "headToken": "shkuar",
+          "analyzerStatus": "analyzed_incompatible",
+          "analyzerCompatibleRows": 0
+        }
+      ]
+    },
+    {
+      "verbId": "votoj",
+      "lemma": "votoj",
+      "translationEn": "to vote",
+      "decision": "needs_source",
+      "action": "review_vi_tagged_nonactive_candidate",
+      "actionTargetMisses": 123,
+      "middlePassiveCoverage": "137/264 (51.9%)",
+      "activeCoverage": "213/268 (79.5%)",
+      "sourceLevel": "lexicon-only",
+      "sources": ["kaikki", "manual"],
+      "currentFlags": {},
+      "middlePassiveOverrideKeys": [],
+      "totalMiddlePassiveTargets": 264,
+      "totalMiddlePassiveMisses": 127,
+      "lexemeVoiceBucket": "vi-only",
+      "uniparserLexeme": {
+        "found": true,
+        "matchKey": "votoj",
+        "matchKind": "exact_or_id",
+        "tags": ["V", "borr", "deriv", "new", "rom", "vi"],
+        "paradigms": ["lexoj"],
+        "lexrefs": [],
+        "dialectOrRegister": [],
+        "entries": 1
+      },
+      "analyzerSummary": {
+        "accepted": 4,
+        "incompatible": 123,
+        "noTokenAnalysis": 0,
+        "notProvided": 0,
+        "compatibleRows": 4,
+        "acceptedSamples": ["nuk votohesha", "nuk votoheshe"]
+      },
+      "verdict": {
+        "form": "not_validated",
+        "voiceEligibility": "ambiguous",
+        "proofLevel": "lexeme",
+        "reasons": [
+          "lexicon_only",
+          "no_middle_passive_overrides",
+          "uniparser_lexeme_vi_no_vt_med"
+        ],
+        "action": "review_vi_tagged_nonactive_candidate"
+      },
+      "samples": [
+        {
+          "targetId": "votoj:conditional.perfect.2sg.middle-passive.affirmative.declarative:do_të_ishe_votuar",
+          "targetKey": "do të ishe votuar",
+          "signature": "conditional.perfect.2sg.middle-passive.affirmative.declarative",
+          "headToken": "votuar",
+          "analyzerStatus": "analyzed_incompatible",
+          "analyzerCompatibleRows": 0
+        },
+        {
+          "targetId": "votoj:indicative.future-perfect-in-past.2sg.middle-passive.affirmative.declarative:do_të_ishe_votuar",
+          "targetKey": "do të ishe votuar",
+          "signature": "indicative.future-perfect-in-past.2sg.middle-passive.affirmative.declarative",
+          "headToken": "votuar",
+          "analyzerStatus": "analyzed_incompatible",
+          "analyzerCompatibleRows": 0
+        },
+        {
+          "targetId": "votoj:conditional.perfect.1pl.middle-passive.affirmative.declarative:do_të_ishim_votuar",
+          "targetKey": "do të ishim votuar",
+          "signature": "conditional.perfect.1pl.middle-passive.affirmative.declarative",
+          "headToken": "votuar",
+          "analyzerStatus": "analyzed_incompatible",
+          "analyzerCompatibleRows": 0
+        }
+      ]
+    },
+    {
+      "verbId": "caloj",
+      "lemma": "çaloj",
+      "translationEn": "to limp",
+      "decision": "needs_source",
+      "action": "review_vi_tagged_nonactive_candidate",
+      "actionTargetMisses": 73,
+      "middlePassiveCoverage": "9/88 (10.2%)",
+      "activeCoverage": "90/268 (33.6%)",
+      "sourceLevel": "lexicon-only",
+      "sources": ["kaikki", "manual"],
+      "currentFlags": { "middlePassiveThirdPersonOnly": true },
+      "middlePassiveOverrideKeys": [],
+      "totalMiddlePassiveTargets": 88,
+      "totalMiddlePassiveMisses": 79,
+      "lexemeVoiceBucket": "vi-only",
+      "uniparserLexeme": {
+        "found": true,
+        "matchKey": "çaloj",
+        "matchKind": "exact_or_id",
+        "tags": ["V", "alb", "deriv", "vi"],
+        "paradigms": ["lexoj"],
+        "lexrefs": [],
+        "dialectOrRegister": [],
+        "entries": 1
+      },
+      "analyzerSummary": {
+        "accepted": 6,
+        "incompatible": 73,
+        "noTokenAnalysis": 0,
+        "notProvided": 0,
+        "compatibleRows": 12,
+        "acceptedSamples": ["çaloheshin", "nuk çalohej"]
+      },
+      "verdict": {
+        "form": "not_validated",
+        "voiceEligibility": "ambiguous",
+        "proofLevel": "lexeme",
+        "reasons": [
+          "lexicon_only",
+          "no_middle_passive_overrides",
+          "high_middle_passive_miss_pressure",
+          "uniparser_lexeme_vi_no_vt_med"
+        ],
+        "action": "review_vi_tagged_nonactive_candidate"
+      },
+      "samples": [
+        {
+          "targetId": "caloj:conditional.present.3sg.middle-passive.affirmative.declarative:do_të_çalohej",
+          "targetKey": "do të çalohej",
+          "signature": "conditional.present.3sg.middle-passive.affirmative.declarative",
+          "headToken": "çalohej",
+          "analyzerStatus": "analyzed_incompatible",
+          "analyzerCompatibleRows": 0
+        },
+        {
+          "targetId": "caloj:indicative.future-in-past.3sg.middle-passive.affirmative.declarative:do_të_çalohej",
+          "targetKey": "do të çalohej",
+          "signature": "indicative.future-in-past.3sg.middle-passive.affirmative.declarative",
+          "headToken": "çalohej",
+          "analyzerStatus": "analyzed_incompatible",
+          "analyzerCompatibleRows": 0
+        },
+        {
+          "targetId": "caloj:indicative.future.3pl.middle-passive.affirmative.declarative:do_të_çalohen",
+          "targetKey": "do të çalohen",
+          "signature": "indicative.future.3pl.middle-passive.affirmative.declarative",
+          "headToken": "çalohen",
+          "analyzerStatus": "analyzed_incompatible",
+          "analyzerCompatibleRows": 0
+        }
+      ]
+    }
+  ]
+}
