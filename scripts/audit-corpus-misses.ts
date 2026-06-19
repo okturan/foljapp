@@ -944,7 +944,6 @@ function primaryCategory(labels: string[]): string {
 function analyzerAcceptedClass(miss: {
   labels: string[];
   cellKey: string;
-  signature: string;
 }): string {
   if (miss.cellKey.includes('.middle-passive.')) return 'middle-passive';
   if (
@@ -1333,6 +1332,27 @@ function main(): void {
       samples: worklistSamples(rows),
     };
   });
+  const middlePassiveReviewLemmas = middlePassiveReviewActions.map((action) => {
+    const actionRows = middlePassiveReviewMisses.filter(
+      (miss) => (miss.morphologyAction ?? 'unknown') === action.key,
+    );
+    const lemmaCounts = new Map<string, number>();
+    for (const miss of actionRows) add(lemmaCounts, miss.verbId);
+    return {
+      action: action.key,
+      lemmas: topEntries(lemmaCounts, 6).map((row) => {
+        const verb = verbsById.get(row.key);
+        const rows = actionRows.filter((miss) => miss.verbId === row.key);
+        return {
+          verbId: row.key,
+          lemma: verb?.lemma ?? row.key,
+          count: row.count,
+          sourceLevel: sourceLevel(sourceKeys(verb)),
+          samples: worklistSamples(rows),
+        };
+      }),
+    };
+  });
   const report = {
     generatedAt: new Date().toISOString(),
     targetsPath,
@@ -1402,6 +1422,7 @@ function main(): void {
     },
     reviewWorklist,
     middlePassiveReviewActions,
+    middlePassiveReviewLemmas,
     evidenceLabels: topEntries(labelCounts, 40),
     dbEvidence,
     duplicateMissSurfaces: duplicateMissSurfaces.slice(0, 80),
@@ -1785,6 +1806,19 @@ function main(): void {
     ...report.middlePassiveReviewActions.map(
       (row) =>
         `| ${mdCell(row.key)} | ${row.count} | ${row.lemmaCount} | ${mdCell(row.samples.map((sample) => `${sample.targetKey} (${sample.lemma}; ${sample.signature})`).join(', '))} |`,
+    ),
+    '',
+    '### Middle-Passive Lemma Shortlist',
+    '',
+    'Top lemmas per morphology action, ordered by missed middle-passive targets.',
+    '',
+    '| Morphology Action | Lemma | Verb ID | Targets | Source Level | Samples |',
+    '| --- | --- | --- | ---: | --- | --- |',
+    ...report.middlePassiveReviewLemmas.flatMap((group) =>
+      group.lemmas.map(
+        (row) =>
+          `| ${mdCell(group.action)} | ${mdCell(row.lemma)} | ${mdCell(row.verbId)} | ${row.count} | ${row.sourceLevel} | ${mdCell(row.samples.map((sample) => `${sample.targetKey} (${sample.signature})`).join(', '))} |`,
+      ),
     ),
     '',
     '## Corpus Source Levels',
