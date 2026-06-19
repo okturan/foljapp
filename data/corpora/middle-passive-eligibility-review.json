@@ -3,9 +3,7 @@
   "status": "open",
   "sourceArtifacts": {
     "corpusMissingAudit": ".cache/corpus-missing-audit.json",
-    "corpusMissingAuditGeneratedAt": "2026-06-19T15:39:25.235Z",
     "externalMorphologyAudit": ".cache/external-morphology-audit.json",
-    "externalMorphologyAuditGeneratedAt": "2026-06-19T15:34:44.744Z",
     "targetGeneratedAt": "2026-06-19T13:58:35.608Z",
     "coverageGeneratedAt": "2026-06-19T14:15:36.252Z",
     "corpusVersion": "0.1.5",

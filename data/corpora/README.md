@@ -145,6 +145,13 @@ target IDs, UniParser lexeme/analyzer evidence, and an explicit `decision`
 placeholder. Do not change generation from this file alone; use it as the
 review queue for source-backed voice-eligibility decisions.
 
+After rerunning the full local audit, validate that tracked review queue against
+the current ignored `.cache` artifacts:
+
+```bash
+npm run check:middle-passive-review
+```
+
 Trace raw scanner-stage provenance for selected target IDs or forms:
 
 ```bash
