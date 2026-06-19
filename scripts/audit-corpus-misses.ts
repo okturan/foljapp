@@ -64,6 +64,10 @@ interface CoverageReport {
     hitTargets: number;
     missedTargets: number;
     candidatesSeen: number;
+    evidenceScope?: string;
+    selectedSources?: string | null;
+    indexMode?: string | null;
+    scannedResources?: number;
   };
   misses: Array<{ id: string; targetKey: string; bucket: string }>;
 }
@@ -968,6 +972,14 @@ function main(): void {
       fullyMissedSurfaces: fullyMissedSurfaces.length,
       mixedHitMissSurfaces: mixedHitMissSurfaces.length,
       duplicateMissRowsCollapsed,
+      evidenceScope:
+        coverage.summary.evidenceScope ??
+        (dbEvidence?.selectedSources === 'all'
+          ? 'all-configured-downloaded-resources'
+          : 'selected-source-subset'),
+      selectedSources: coverage.summary.selectedSources ?? dbEvidence?.selectedSources ?? null,
+      indexMode: coverage.summary.indexMode ?? dbEvidence?.indexMode ?? null,
+      scannedResources: coverage.summary.scannedResources ?? dbEvidence?.scannedResources ?? null,
       candidatesSeen: coverage.summary.candidatesSeen,
       storedSentences: dbEvidence?.retainedSentences ?? null,
       storedOccurrences: dbEvidence?.retainedOccurrences ?? null,
@@ -1171,6 +1183,10 @@ function main(): void {
     `- Unique surface misses: ${report.summary.uniqueMissedSurfaces} / ${report.summary.uniqueSurfaces}`,
     `- Duplicate target misses collapsed by surface: ${report.summary.duplicateMissRowsCollapsed}`,
     `- Fully absent in retained evidence: ${report.summary.fullyMissedSurfaces}; mixed hit/miss surfaces: ${report.summary.mixedHitMissSurfaces}`,
+    `- Evidence scope: ${report.summary.evidenceScope}`,
+    `- Selected sources: ${report.summary.selectedSources ?? 'unknown'}`,
+    `- Index mode: ${report.summary.indexMode ?? 'unknown'}`,
+    `- Resource partitions: ${report.summary.scannedResources ?? 'unknown'}`,
     `- Candidates scanned in source coverage run: ${report.summary.candidatesSeen}`,
     report.dbEvidence
       ? `- Stored examples: ${report.dbEvidence.retainedSentences} sentences, ${report.dbEvidence.retainedOccurrences} occurrences`
@@ -1210,7 +1226,7 @@ function main(): void {
           '',
           '| Stage | Count | Evidence Meaning |',
           '| --- | ---: | --- |',
-          `| Raw candidates seen | ${report.dbEvidence.candidatesSeen} | All source candidates streamed by scanner workers. |`,
+          `| Raw candidates seen | ${report.dbEvidence.candidatesSeen} | Candidates streamed by scanner workers for the selected source scope. |`,
           `| Rejected before target match | ${report.dbEvidence.unmatchedRejectedCandidates} | Candidates with no generated target match. |`,
           `| Rejected by quality filters | ${report.dbEvidence.qualityRejectedCandidates} | Target-matching candidates dropped before retention. |`,
           `| Matched quality candidates before DB writer cap | ${report.dbEvidence.matchedSentenceCandidatesBeforeWriterCap} | Worker-emitted hit sentences before the central writer applies the global per-target cap. |`,
@@ -1400,6 +1416,9 @@ function main(): void {
     `- Selected misses: ${dossier.entries.length}`,
     `- Total target misses: ${report.summary.missedTargets} / ${report.summary.totalTargets}`,
     `- Unique surfaces fully absent in retained evidence: ${report.summary.fullyMissedSurfaces}`,
+    `- Evidence scope: ${report.summary.evidenceScope}`,
+    `- Selected sources: ${report.summary.selectedSources ?? 'unknown'}`,
+    `- Resource partitions: ${report.summary.scannedResources ?? 'unknown'}`,
     `- Scanned candidates: ${report.summary.candidatesSeen}`,
     `- Stored occurrences: ${report.summary.storedOccurrences ?? 'unknown'}`,
     `- Analyzer accepted targets: ${report.summary.morphologyAnalyzerAcceptedTargets ?? 'unknown'}`,

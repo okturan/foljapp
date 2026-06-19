@@ -61,6 +61,10 @@ interface CountRow {
   count: number;
 }
 
+interface TextRow {
+  value: string;
+}
+
 function valueAfter(prefix: string): string | undefined {
   return process.argv.find((arg) => arg.startsWith(prefix))?.slice(prefix.length);
 }
@@ -71,6 +75,16 @@ function sqliteJson<T>(dbPath: string, sql: string): T[] {
     maxBuffer: 1024 * 1024 * 128,
   }).trim();
   return output ? (JSON.parse(output) as T[]) : [];
+}
+
+function sqliteText(dbPath: string, sql: string): string | null {
+  return sqliteJson<TextRow>(dbPath, sql)[0]?.value ?? null;
+}
+
+function evidenceScope(selectedSources: string | null): string {
+  return selectedSources === 'all'
+    ? 'all-configured-downloaded-resources'
+    : 'selected-source-subset';
 }
 
 function groupKey(target: TargetRecord): string {
@@ -166,6 +180,18 @@ function main(): void {
   const sentenceCount = Number(
     sqliteJson<CountRow>(dbPath, 'SELECT count(*) AS count FROM sentences')[0]?.count ?? 0,
   );
+  const schemaVersion = sqliteText(
+    dbPath,
+    "SELECT value FROM metadata WHERE key = 'schema_version'",
+  );
+  const indexMode = sqliteText(
+    dbPath,
+    "SELECT value FROM metadata WHERE key = 'index_mode'",
+  );
+  const selectedSources = sqliteText(
+    dbPath,
+    "SELECT value FROM metadata WHERE key = 'selected_sources'",
+  );
 
   const hitsByTarget = new Map(
     occurrenceRows.map((row) => [
@@ -246,6 +272,10 @@ function main(): void {
       hitTargets,
       missedTargets: targetFile.targets.length - hitTargets,
       hitRate: pct(hitTargets, targetFile.targets.length),
+      evidenceScope: evidenceScope(selectedSources),
+      selectedSources,
+      indexMode,
+      schemaVersion,
       totalOccurrences,
       scannedResources: resourceStats.length,
       candidatesSeen: resourceStats.reduce(
@@ -286,6 +316,9 @@ function main(): void {
     `- Targets: ${report.summary.totalTargets}`,
     `- Hit targets: ${report.summary.hitTargets} (${report.summary.hitRate})`,
     `- Missed targets: ${report.summary.missedTargets}`,
+    `- Evidence scope: ${report.summary.evidenceScope}`,
+    `- Selected sources: ${report.summary.selectedSources ?? 'unknown'}`,
+    `- Index mode: ${report.summary.indexMode ?? 'unknown'}`,
     `- Stored occurrences: ${report.summary.totalOccurrences}`,
     `- Scanned resource partitions: ${report.summary.scannedResources}`,
     `- Candidates seen: ${report.summary.candidatesSeen}`,
