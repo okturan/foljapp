@@ -27,7 +27,7 @@ The verifier probes both active and middle-passive voice across every
 supported mood/tense combination since `verify-engine-voice-coverage`
 (2026-04-28).
 
-| Match rate | 19100 / 19109 cells across 204 verbs | 99.95% |
+| Historical match rate | 19100 / 19109 cells across the former 204-verb corpus | 99.95% |
 |            | (15467 Kaikki + 539 Husić-direct +    |        |
 |            | 2482 Husić-derived + 306 from         |        |
 |            | engine-throws-with-no-source under    |        |
@@ -50,8 +50,8 @@ standard Albanian (Newmark/Hubbard/Prifti 1982 + Husić 2002):
 9. **`laj` MP optative 2pl** — Kaikki: `u lafshit` (mirrors #8). Engine: `u lafshi`.
 | Verified   | v0.1 seed (20) + tier-1 (30 -oj) +    |        |
 |            | tier-2 (50) + tier-3 (104: 100 Class 1 |       |
-|            | -oj continuation + 4 Class 2 hand-fixed) | 204/204 |
-| Husić cache | 99 of 204 verbs with Husić data      |        |
+|            | -oj continuation + 4 Class 2 hand-fixed) | historical 204/204 |
+| Husić cache | 99 former corpus verbs with Husić data |        |
 |            | via paradigm-model + glossary cross-  |        |
 |            | resolution                            |        |
 

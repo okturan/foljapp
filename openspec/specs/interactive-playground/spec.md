@@ -231,9 +231,9 @@ The client-side engine SHALL be configured at module load with the full corpus â
 
 #### Scenario: Verb-page lemma list and playground lemma list match
 
-- **GIVEN** the corpus index `data/verbs/index.json` lists 204 lemmas
+- **GIVEN** the corpus index `data/verbs/index.json` lists `N` lemmas
 - **WHEN** the playground configures its client-side engine on first load
-- **THEN** the engine's `listVerbs()` SHALL return 204 entries
+- **THEN** the engine's `listVerbs()` SHALL return `N` entries
 - **AND** for every lemma `L` rendered as a static `/verb/<L>` page, `/playground?verb=<L>` SHALL conjugate `L` without throwing `UnknownVerbError`
 
 ### Requirement: Compact option groups pack into a responsive parent grid
@@ -326,4 +326,3 @@ The following controls SHALL apply feasibility-based disabling: **Mood**, **Tens
 - **WHEN** the page renders
 - **THEN** both Polarity pills (`affirmative`, `negative`) SHALL be enabled
 - **AND** both Modality pills (`declarative`, `interrogative`) SHALL be enabled
-

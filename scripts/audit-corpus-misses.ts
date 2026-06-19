@@ -68,6 +68,7 @@ interface CoverageReport {
     hitTargets: number;
     missedTargets: number;
     candidatesSeen: number;
+    totalOccurrences?: number;
     evidenceScope?: string;
     selectedSources?: string | null;
     indexMode?: string | null;
@@ -1022,7 +1023,7 @@ function main(): void {
       scannedResources: coverage.summary.scannedResources ?? dbEvidence?.scannedResources ?? null,
       candidatesSeen: coverage.summary.candidatesSeen,
       storedSentences: dbEvidence?.retainedSentences ?? null,
-      storedOccurrences: dbEvidence?.retainedOccurrences ?? null,
+      storedOccurrences: coverage.summary.totalOccurrences ?? dbEvidence?.retainedOccurrences ?? null,
       targetIdsAtMaxStoredOccurrences:
         dbEvidence?.targetIdsAtMaxStoredOccurrences ?? null,
       qualityRejectedCandidates: dbEvidence?.qualityRejectedCandidates ?? null,
