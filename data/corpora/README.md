@@ -92,6 +92,18 @@ The same audit command also writes a compact missing-form dossier to
 The audit explains retained-evidence misses in `.cache/corpus-local-full.sqlite`;
 it is not a proof that a form is absent from every scanned raw sentence.
 
+Trace raw scanner-stage provenance for selected target IDs or forms:
+
+```bash
+npm run trace:corpus-targets -- --forms='mos të ledhatojë,punuakam' --sources=all --jobs=12
+```
+
+This writes `.cache/corpus-target-provenance.json` and
+`.cache/corpus-target-provenance.md`. It scans the raw local resources for only
+the selected generated targets and separates raw pattern matches,
+variant-guard rejects, source-partition cap drops, quality rejects,
+worker-emitted matches, and retained SQLite occurrences.
+
 Build an optional local morphology review artifact:
 
 ```bash
@@ -109,6 +121,49 @@ npm run audit:external-morphology -- --uniparser-lexemes=/path/to/uniparser-gram
 This writes `.cache/external-morphology-audit.json` and
 `.cache/external-morphology-audit.md`. It is review evidence only: it does not
 run in the app, prove real usage, or auto-edit `data/verbs/*.json`.
+
+If a local UniParser analyzer pass has already been normalized to JSONL, join it
+by target ID. Analyzer evidence is never auto-loaded; pass it explicitly:
+
+```bash
+npm run build:uniparser-analysis-requests
+npm run audit:external-morphology -- --uniparser-analysis=.cache/uniparser-analysis.jsonl
+```
+
+`build:uniparser-analysis-requests` writes
+`.cache/uniparser-analysis-requests.jsonl` and a Markdown companion. By default
+it includes active, single-token corpus misses, keeping one request row per
+target ID and ranking with `.cache/corpus-missing-audit.json` when that audit
+exists. Use
+`-- --kind=all`, `-- --kind=middle-passive`, `-- --kind=raw-zero-traced`,
+`-- --forms=punuakam,abstenuakam`, `-- --limit=1000`, `-- --per-verb=2`, or
+`-- --dedupe-target-key=true` for smaller triage batches. Fill the emitted
+`analyses: []` arrays with normalized UniParser output, then save that filled
+file as `.cache/uniparser-analysis.jsonl` before rerunning the external
+morphology audit.
+
+If the `uniparser-albanian` Python package is installed locally, the runner can
+fill the request file directly:
+
+```bash
+pip3 install uniparser-albanian
+npm run run:uniparser-analysis
+npm run audit:external-morphology -- --uniparser-analysis=.cache/uniparser-analysis.jsonl
+```
+
+The runner uses UniParser's documented `AlbanianAnalyzer` modes: `strict` for
+standard orthography and `nodiacritics` for folded `ë`/`ç` request rows. It
+caches duplicate token/mode lookups while still writing one row per target ID.
+
+The JSONL shape is one row per generated target and mode:
+
+```json
+{"targetId":"punoj:admirative.present.1sg.active.affirmative.declarative:punuakam","targetKey":"punuakam","signature":"admirative.present.1sg.active.affirmative.declarative","targetGeneratedAt":"2026-06-19T00:49:28.079Z","corpusVersion":"0.1.5","coverageTargetGeneratedAt":"2026-06-19T00:49:28.079Z","mode":"strict","token":"punuakam","analyses":[{"lemma":"punoj","pos":"V","tags":["V","adm","pres","1","sg","act"]}]}
+```
+
+For multiword targets, `token` is the generated head token, not the full phrase.
+Rows whose `targetKey`, `signature`, generation metadata, corpus version, or
+token do not match the current target are skipped as stale evidence.
 
 Build a focused smoke-test index:
 

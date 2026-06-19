@@ -1,9 +1,9 @@
 /**
  * Build a local-only morphology review artifact for corpus misses.
  *
- * This does not run a morphological analyzer and does not edit verb data. If a
- * UniParser Albanian verb lexeme file is provided, it uses lemma-level tags as
- * evidence only.
+ * This does not run a morphological analyzer and does not edit verb data. If
+ * UniParser Albanian lexeme or analyzer-output files are provided, it uses them
+ * as review evidence only.
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -34,10 +34,14 @@ interface TargetRecord {
 }
 
 interface TargetFile {
+  generatedAt?: string;
+  corpusVersion?: string;
   targets: TargetRecord[];
 }
 
 interface CoverageReport {
+  targetGeneratedAt?: string;
+  corpusVersion?: string;
   summary: {
     totalTargets: number;
     hitTargets: number;
@@ -68,6 +72,60 @@ interface LexemeIndex {
   entries: LexemeEntry[];
   byLex: Map<string, LexemeEntry[]>;
   byFoldedLex: Map<string, LexemeEntry[]>;
+}
+
+interface AnalyzerEntry {
+  wf: string | null;
+  lemma: string | null;
+  gramm: string | null;
+  pos: string | null;
+  tags: string[];
+}
+
+interface AnalyzerRow {
+  targetId: string;
+  targetKey: string | null;
+  signature: string | null;
+  targetGeneratedAt: string | null;
+  corpusVersion: string | null;
+  coverageTargetGeneratedAt: string | null;
+  mode: 'strict' | 'no_diacritics';
+  token: string;
+  analyses: AnalyzerEntry[];
+}
+
+interface AnalyzerMatch {
+  token: string;
+  wf: string | null;
+  lemma: string | null;
+  gramm: string | null;
+  pos: string | null;
+  tags: string[];
+  mode: string;
+  lemmaMatches: boolean;
+  missingExpectedTags: string[];
+  compatible: boolean;
+}
+
+interface AnalyzerEvidence {
+  status: string;
+  strict: AnalyzerMatch[];
+  noDiacritics: AnalyzerMatch[];
+  accepted: boolean;
+  analyzedRows: number;
+  compatibleRows: number;
+}
+
+interface AnalyzerEvidenceFile {
+  status: string;
+  path: string | null;
+  source: string;
+  searchedPaths: string[];
+  rowsLoaded: number;
+  rowsMatched: number;
+  rowsSkipped: number;
+  duplicateRows: number;
+  byTargetId: Map<string, AnalyzerEvidence>;
 }
 
 interface VoiceRow {
@@ -104,6 +162,42 @@ function resolveUniparserLexemes(
     searchedPaths: DEFAULT_UNIPARSER_LEXEME_PATHS,
     source: found ? 'auto' : 'default-search',
   };
+}
+
+function resolveUniparserAnalysis(
+  explicitPath: string | undefined,
+): { path: string | null; searchedPaths: string[]; source: string } {
+  if (!explicitPath) {
+    return {
+      path: null,
+      searchedPaths: [],
+      source: 'not-provided',
+    };
+  }
+  return {
+    path: existsSync(explicitPath) ? explicitPath : null,
+    searchedPaths: [explicitPath],
+    source: 'explicit',
+  };
+}
+
+function requireFreshInputs(targetFile: TargetFile, coverage: CoverageReport): void {
+  if (!targetFile.generatedAt) throw new Error('Target file is missing generatedAt');
+  if (!targetFile.corpusVersion) throw new Error('Target file is missing corpusVersion');
+  if (!coverage.targetGeneratedAt) {
+    throw new Error('Coverage report is missing targetGeneratedAt');
+  }
+  if (!coverage.corpusVersion) throw new Error('Coverage report is missing corpusVersion');
+  if (coverage.targetGeneratedAt !== targetFile.generatedAt) {
+    throw new Error(
+      `Coverage target generation mismatch: ${coverage.targetGeneratedAt} != ${targetFile.generatedAt}`,
+    );
+  }
+  if (coverage.corpusVersion !== targetFile.corpusVersion) {
+    throw new Error(
+      `Coverage corpus version mismatch: ${coverage.corpusVersion} != ${targetFile.corpusVersion}`,
+    );
+  }
 }
 
 function pct(part: number, total: number): string {
@@ -166,6 +260,170 @@ function parseUniparserLexemes(path: string): LexemeIndex {
   return { entries, byLex, byFoldedLex };
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function parseTags(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return unique(value.flatMap((item) => parseTags(item)));
+  }
+  if (typeof value !== 'string') return [];
+  return unique(
+    value
+      .split(/[,\s;|]+/g)
+      .map((tag) => tag.trim())
+      .filter(Boolean),
+  );
+}
+
+function optionalString(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+function analyzerEntryFromRecord(row: Record<string, unknown>): AnalyzerEntry | null {
+  const tags = unique([
+    ...parseTags(row.tags),
+    ...parseTags(row.gramm),
+    ...parseTags(row.grammar),
+    ...parseTags(row.tag),
+    ...parseTags(row.pos),
+  ]);
+  if (tags.length === 0) return null;
+  return {
+    wf: optionalString(row.wf),
+    lemma: optionalString(row.lemma) ?? optionalString(row.lex) ?? optionalString(row.lexeme),
+    gramm: optionalString(row.gramm) ?? optionalString(row.grammar),
+    pos: optionalString(row.pos),
+    tags,
+  };
+}
+
+function analyzerRowFromRecord(row: unknown): AnalyzerRow | null {
+  if (!isRecord(row)) return null;
+  const targetId = optionalString(row.targetId);
+  const targetKey = optionalString(row.targetKey);
+  const signature = optionalString(row.signature);
+  const targetGeneratedAt = optionalString(row.targetGeneratedAt);
+  const corpusVersion = optionalString(row.corpusVersion);
+  const coverageTargetGeneratedAt = optionalString(row.coverageTargetGeneratedAt);
+  const mode = row.mode;
+  const token = optionalString(row.token);
+  if (
+    !targetId ||
+    !targetKey ||
+    !signature ||
+    !targetGeneratedAt ||
+    !corpusVersion ||
+    !coverageTargetGeneratedAt ||
+    !token ||
+    (mode !== 'strict' && mode !== 'no_diacritics') ||
+    !Array.isArray(row.analyses)
+  ) {
+    return null;
+  }
+  return {
+    targetId,
+    targetKey,
+    signature,
+    targetGeneratedAt,
+    corpusVersion,
+    coverageTargetGeneratedAt,
+    mode,
+    token,
+    analyses: row.analyses
+      .map((analysis) => (isRecord(analysis) ? analyzerEntryFromRecord(analysis) : null))
+      .filter((analysis): analysis is AnalyzerEntry => Boolean(analysis)),
+  };
+}
+
+function analyzerRowMatchesTarget(row: AnalyzerRow, target: TargetRecord): boolean {
+  const headToken = target.tokens[target.tokens.length - 1] ?? target.targetKey;
+  return row.mode === 'strict'
+    ? row.token === headToken
+    : noDiacritics(row.token) === noDiacritics(headToken);
+}
+
+function emptyAnalyzerFile(
+  status: string,
+  location: ReturnType<typeof resolveUniparserAnalysis>,
+): AnalyzerEvidenceFile {
+  return {
+    status,
+    path: location.path,
+    source: location.source,
+    searchedPaths: location.searchedPaths,
+    rowsLoaded: 0,
+    rowsMatched: 0,
+    rowsSkipped: 0,
+    duplicateRows: 0,
+    byTargetId: new Map(),
+  };
+}
+
+function loadAnalyzerEvidenceFile(
+  location: ReturnType<typeof resolveUniparserAnalysis>,
+  targetsById: Map<string, TargetRecord>,
+  targetFile: TargetFile,
+  coverage: CoverageReport,
+): AnalyzerEvidenceFile {
+  if (!location.path) {
+    return emptyAnalyzerFile(
+      location.source === 'not-provided' ? 'not_provided' : 'missing',
+      location,
+    );
+  }
+  const output = emptyAnalyzerFile('loaded', location);
+  const rowsByTarget = new Map<string, { strict: AnalyzerRow | null; noDiacritics: AnalyzerRow | null }>();
+
+  for (const line of readFileSync(location.path, 'utf8').replaceAll('\r', '\n').split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(trimmed);
+    } catch {
+      output.rowsSkipped += 1;
+      continue;
+    }
+    const row = analyzerRowFromRecord(parsed);
+    const target = row ? targetsById.get(row.targetId) : null;
+    if (
+      !row ||
+      !target ||
+      row.targetKey !== target.targetKey ||
+      row.signature !== target.signature ||
+      row.targetGeneratedAt !== targetFile.generatedAt ||
+      row.corpusVersion !== targetFile.corpusVersion ||
+      row.coverageTargetGeneratedAt !== coverage.targetGeneratedAt ||
+      !analyzerRowMatchesTarget(row, target)
+    ) {
+      output.rowsSkipped += 1;
+      continue;
+    }
+    const current = rowsByTarget.get(row.targetId) ?? {
+      strict: null,
+      noDiacritics: null,
+    };
+    const key = row.mode === 'strict' ? 'strict' : 'noDiacritics';
+    if (current[key]) {
+      output.duplicateRows += 1;
+      continue;
+    }
+    current[key] = row;
+    rowsByTarget.set(row.targetId, current);
+    output.rowsLoaded += 1;
+  }
+
+  for (const [targetId, rows] of rowsByTarget) {
+    const target = targetsById.get(targetId);
+    if (!target) continue;
+    output.byTargetId.set(targetId, analyzerEvidence(target, rows));
+    output.rowsMatched += 1;
+  }
+  return output;
+}
+
 function lexemeEvidence(
   verb: VerbEntry | undefined,
   lexemes: LexemeIndex | null,
@@ -212,6 +470,83 @@ function lexemeEvidence(
   };
 }
 
+function expectedTags(target: TargetRecord): string[] {
+  const expected = expectedFromOptions(target);
+  return Array.isArray(expected.tags) ? (expected.tags as string[]) : [];
+}
+
+function analyzerMatches(
+  target: TargetRecord,
+  row: AnalyzerRow | null,
+): AnalyzerMatch[] {
+  if (!row) return [];
+  const expected = expectedTags(target);
+  const expectedLemma = noDiacritics(target.lemma);
+  const expectedId = noDiacritics(target.verbId);
+  return row.analyses.map((entry) => {
+    const entryLemma = entry.lemma ? noDiacritics(entry.lemma) : '';
+    const lemmaMatches = entryLemma === expectedLemma || entryLemma === expectedId;
+    const missingExpectedTags = expected.filter((tag) => !entry.tags.includes(tag));
+    return {
+      token: row.token,
+      wf: entry.wf,
+      lemma: entry.lemma,
+      gramm: entry.gramm,
+      pos: entry.pos,
+      tags: entry.tags,
+      mode: row.mode,
+      lemmaMatches,
+      missingExpectedTags,
+      compatible: lemmaMatches && missingExpectedTags.length === 0,
+    };
+  });
+}
+
+function analyzerEvidence(
+  target: TargetRecord,
+  rows: { strict: AnalyzerRow | null; noDiacritics: AnalyzerRow | null } | null,
+): AnalyzerEvidence {
+  if (!rows) {
+    return {
+      status: 'not_provided',
+      strict: [],
+      noDiacritics: [],
+      accepted: false,
+      analyzedRows: 0,
+      compatibleRows: 0,
+    };
+  }
+
+  const strict = analyzerMatches(target, rows.strict);
+  const noDiacriticsMatches = analyzerMatches(target, rows.noDiacritics);
+  const all = [...strict, ...noDiacriticsMatches];
+  const compatibleRows = all.filter((match) => match.compatible).length;
+  return {
+    status:
+      compatibleRows > 0
+        ? 'accepted'
+        : all.length > 0
+          ? 'analyzed_incompatible'
+          : 'no_token_analysis',
+    strict,
+    noDiacritics: noDiacriticsMatches,
+    accepted: compatibleRows > 0,
+    analyzedRows: all.length,
+    compatibleRows,
+  };
+}
+
+function emptyAnalyzerEvidence(): AnalyzerEvidence {
+  return {
+    status: 'not_provided',
+    strict: [],
+    noDiacritics: [],
+    accepted: false,
+    analyzedRows: 0,
+    compatibleRows: 0,
+  };
+}
+
 function expectedFromOptions(target: TargetRecord): Record<string, unknown> {
   const o = target.options;
   const moodTags: Record<string, string> = {
@@ -253,6 +588,7 @@ function classifyVoice(
   target: TargetRecord,
   verb: VerbEntry | undefined,
   lexeme: ReturnType<typeof lexemeEvidence>,
+  analyzer: AnalyzerEvidence,
   row: VoiceRow,
 ): {
   form: string;
@@ -275,17 +611,34 @@ function classifyVoice(
   }
   if (mpMissRate >= 0.75) reasons.push('high_middle_passive_miss_pressure');
   if (!lexeme.found) reasons.push(lexeme.matchKind === 'not_provided' ? 'no_external_lexeme_file' : 'no_external_lexeme_match');
+  if (analyzer.accepted) {
+    reasons.push('uniparser_analyzer_accepts_head_token');
+  } else if (analyzer.status === 'analyzed_incompatible') {
+    reasons.push('uniparser_analyzer_incompatible_head_token');
+  } else if (analyzer.status === 'no_token_analysis') {
+    reasons.push('uniparser_analyzer_no_head_token_analysis');
+  }
   if (lexeme.dialectOrRegister.length > 0) {
     reasons.push(`dialect_or_register:${lexeme.dialectOrRegister.join(',')}`);
   }
 
   if (target.options.voice !== 'middle-passive') {
     return {
-      form: 'not_validated',
+      form: analyzer.accepted ? 'analyzer_accepted' : 'not_validated',
       voiceEligibility: 'not_applicable_active',
-      proofLevel: lexeme.found ? 'lexeme' : localProof,
+      proofLevel: analyzer.accepted ? 'analyzer' : lexeme.found ? 'lexeme' : localProof,
       reasons,
       action: 'none',
+    };
+  }
+
+  if (analyzer.accepted) {
+    return {
+      form: 'analyzer_accepted',
+      voiceEligibility: 'morphologically_accepted',
+      proofLevel: 'analyzer',
+      reasons,
+      action: 'review_as_analyzer_accepted',
     };
   }
 
@@ -337,6 +690,16 @@ function classifyVoice(
     };
   }
 
+  if (analyzer.status === 'analyzed_incompatible') {
+    return {
+      form: 'analyzer_incompatible',
+      voiceEligibility: 'ambiguous',
+      proofLevel: 'analyzer',
+      reasons,
+      action: 'review_analyzer_rejection',
+    };
+  }
+
   return {
     form: 'not_validated',
     voiceEligibility: 'unknown',
@@ -383,19 +746,34 @@ function main(): void {
   const verbsPath = valueAfter('--verbs=') ?? DEFAULT_VERBS;
   const lexemesInput =
     valueAfter('--uniparser-lexemes=') ?? process.env.FOLJAPP_UNIPARSER_LEXEMES;
+  const analyzerInput =
+    valueAfter('--uniparser-analysis=') ??
+    valueAfter('--uniparser-analyzer=') ??
+    process.env.FOLJAPP_UNIPARSER_ANALYZER ??
+    process.env.FOLJAPP_UNIPARSER_ANALYSIS;
   const lexemesInputProvided = Boolean(lexemesInput);
+  const analyzerInputProvided = Boolean(analyzerInput);
   const lexemesLocation = resolveUniparserLexemes(lexemesInput);
+  const analyzerLocation = resolveUniparserAnalysis(analyzerInput);
   const lexemesPath = lexemesLocation.path;
   const jsonOut = valueAfter('--json=') ?? DEFAULT_JSON_OUT;
   const mdOut = valueAfter('--md=') ?? DEFAULT_MD_OUT;
 
   const targetFile = readJson<TargetFile>(targetsPath);
   const coverage = readJson<CoverageReport>(coveragePath);
+  requireFreshInputs(targetFile, coverage);
   const verbs = readJson<VerbEntry[]>(verbsPath);
   const targetsById = new Map(targetFile.targets.map((target) => [target.id, target]));
   const missingIds = new Set(coverage.misses.map((miss) => miss.id));
   const verbsById = new Map(verbs.map((verb) => [verb.id, verb]));
   const lexemes = lexemesPath ? parseUniparserLexemes(lexemesPath) : null;
+  if (lexemesPath && lexemes?.entries.length === 0) {
+    throw new Error(`UniParser lexeme file contained no entries: ${lexemesPath}`);
+  }
+  const analyzerFile =
+    analyzerInputProvided && !analyzerLocation.path
+      ? emptyAnalyzerFile('path_missing', analyzerLocation)
+      : loadAnalyzerEvidenceFile(analyzerLocation, targetsById, targetFile, coverage);
 
   const byLemmaVoice = new Map<string, VoiceRow>();
   for (const target of targetFile.targets) {
@@ -443,7 +821,8 @@ function main(): void {
           middlePassiveMiss: 0,
         };
       const lexeme = lexemeByVerb.get(target.verbId) ?? lexemeEvidence(verb, lexemes);
-      const verdict = classifyVoice(target, verb, lexeme, voiceRow);
+      const analyzer = analyzerFile.byTargetId.get(target.id) ?? emptyAnalyzerEvidence();
+      const verdict = classifyVoice(target, verb, lexeme, analyzer, voiceRow);
       return {
         targetId: target.id,
         targetKey: target.targetKey,
@@ -477,9 +856,15 @@ function main(): void {
           ),
         },
         external: {
-          uniparserStrict: [],
-          uniparserNoDiacritics: [],
+          uniparserStrict: analyzer.strict,
+          uniparserNoDiacritics: analyzer.noDiacritics,
           uniparserLexeme: lexeme,
+          uniparserAnalyzer: {
+            status: analyzer.status,
+            accepted: analyzer.accepted,
+            analyzedRows: analyzer.analyzedRows,
+            compatibleRows: analyzer.compatibleRows,
+          },
           wordlist: null,
         },
         verdict,
@@ -532,7 +917,7 @@ function main(): void {
         middlePassiveMisses: row.middlePassiveMiss,
         middlePassiveHitRate: pct(row.middlePassiveHit, row.middlePassiveTotal),
         lexeme,
-        verdict: classifyVoice(fakeTarget, verb, lexeme, row),
+        verdict: classifyVoice(fakeTarget, verb, lexeme, emptyAnalyzerEvidence(), row),
       };
     })
     .filter((row) => row.middlePassiveTargets > 0)
@@ -558,9 +943,9 @@ function main(): void {
   const report = {
     run: {
       generatedAt: new Date().toISOString(),
-      analyzerStatus: 'not_run',
-      strictMode: false,
-      noDiacriticsMode: false,
+      analyzerStatus: analyzerFile.status,
+      strictMode: analyzerFile.rowsLoaded > 0,
+      noDiacriticsMode: analyzerFile.rowsLoaded > 0,
       tool: 'scripts/audit-external-morphology.ts',
     },
     inputs: {
@@ -570,6 +955,9 @@ function main(): void {
       uniparserLexemesPath: lexemesPath ?? null,
       uniparserLexemesSearchedPaths: lexemesLocation.searchedPaths,
       uniparserLexemesSource: lexemesLocation.source,
+      uniparserAnalyzerPath: analyzerFile.path,
+      uniparserAnalyzerSearchedPaths: analyzerFile.searchedPaths,
+      uniparserAnalyzerSource: analyzerFile.source,
     },
     externalMorphology: {
       uniparserLexemesStatus: lexemes
@@ -578,7 +966,11 @@ function main(): void {
           ? 'path_missing'
           : 'missing',
       uniparserLexemeEntries: lexemes?.entries.length ?? 0,
-      analyzerStatus: 'not_run',
+      analyzerStatus: analyzerFile.status,
+      analyzerRowsLoaded: analyzerFile.rowsLoaded,
+      analyzerRowsMatched: analyzerFile.rowsMatched,
+      analyzerRowsSkipped: analyzerFile.rowsSkipped,
+      analyzerDuplicateRows: analyzerFile.duplicateRows,
       webCorporaStatus: 'not_provided',
     },
     boundaries: [
@@ -597,6 +989,18 @@ function main(): void {
         (audit) => audit.expected.voice === 'middle-passive',
       ).length,
       lexemeMatchedLemmas: lemmaReviews.filter((row) => row.lexeme.found).length,
+      analyzerRowMatchedTargets: targetAudits.filter(
+        (audit) => audit.external.uniparserAnalyzer.status !== 'not_provided',
+      ).length,
+      analyzerAnalyzedTargets: targetAudits.filter(
+        (audit) => audit.external.uniparserAnalyzer.analyzedRows > 0,
+      ).length,
+      analyzerNoTokenAnalysisTargets: targetAudits.filter(
+        (audit) => audit.external.uniparserAnalyzer.status === 'no_token_analysis',
+      ).length,
+      analyzerAcceptedTargets: targetAudits.filter(
+        (audit) => audit.external.uniparserAnalyzer.accepted,
+      ).length,
     },
     formVerdictCounts: topCounts(formCounts),
     voiceEligibilityCounts: topCounts(verdictCounts),
@@ -628,12 +1032,20 @@ function main(): void {
     `- Lexeme-matched foljapp lemmas: ${report.summary.lexemeMatchedLemmas}`,
     `- UniParser lexeme source: ${report.inputs.uniparserLexemesSource}`,
     `- UniParser lexeme searched paths: ${report.inputs.uniparserLexemesSearchedPaths.join(', ')}`,
+    `- UniParser analyzer status: ${report.externalMorphology.analyzerStatus}`,
+    `- UniParser analyzer rows loaded: ${report.externalMorphology.analyzerRowsLoaded}`,
+    `- UniParser analyzer row-matched targets: ${report.summary.analyzerRowMatchedTargets}`,
+    `- UniParser analyzer analyzed targets: ${report.summary.analyzerAnalyzedTargets}`,
+    `- UniParser analyzer no-token-analysis targets: ${report.summary.analyzerNoTokenAnalysisTargets}`,
+    `- UniParser analyzer accepted targets: ${report.summary.analyzerAcceptedTargets}`,
+    `- UniParser analyzer skipped rows: ${report.externalMorphology.analyzerRowsSkipped}`,
+    `- UniParser analyzer duplicate rows: ${report.externalMorphology.analyzerDuplicateRows}`,
     '',
     '## Caveats',
     '',
     '- Analyzer acceptance would not be corpus attestation.',
     '- Analyzer rejection would not prove impossibility.',
-    '- This first artifact uses optional lemma-level lexeme tags only.',
+    '- Analyzer rows are target-id joined head-token checks, not whole-phrase validation.',
     '- Multiword targets are marked `head-token-only`; their full foljapp signature is not a token-level analyzer expectation.',
     '',
     '## Voice Eligibility Counts',
@@ -665,11 +1077,11 @@ function main(): void {
     '',
     'Balanced sample: at most three targets per lemma.',
     '',
-    '| Target | Lemma | Signature | Scope | Voice Verdict | Proof | Reasons |',
-    '| --- | --- | --- | --- | --- | --- | --- |',
+    '| Target | Lemma | Signature | Scope | Analyzer | Voice Verdict | Proof | Reasons |',
+    '| --- | --- | --- | --- | --- | --- | --- | --- |',
     ...markdownTargets.map(
       (row) =>
-        `| ${md(row.targetKey)} | ${md(row.lemma)} | ${md(row.signature)} | ${row.scope} | ${row.verdict.voiceEligibility} | ${row.verdict.proofLevel} | ${md(row.verdict.reasons.join(', '))} |`,
+        `| ${md(row.targetKey)} | ${md(row.lemma)} | ${md(row.signature)} | ${row.scope} | ${md(row.external.uniparserAnalyzer.status)} | ${row.verdict.voiceEligibility} | ${row.verdict.proofLevel} | ${md(row.verdict.reasons.join(', '))} |`,
     ),
     '',
   ].join('\n');

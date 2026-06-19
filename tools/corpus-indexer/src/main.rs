@@ -12,7 +12,7 @@ use quality::{keep_sentence, quality_flags};
 use rusqlite::{params, Connection, OpenFlags};
 use serde::Serialize;
 use sources::{expand_resource_partitions, load_downloaded_resources, open_resource, ResourceSpec};
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command as ProcessCommand;
@@ -25,7 +25,7 @@ use tantivy::schema::{
     Field, IndexRecordOption, Schema, TantivyDocument, Value, INDEXED, STORED, STRING, TEXT,
 };
 use tantivy::{doc, Index, Term};
-use targets::{load_targets, MatchKind, TargetMatcher, VariantKind};
+use targets::{load_targets, MatchKind, Target, TargetMatcher, VariantKind};
 use text::normalized_text;
 
 const ALL_SOURCE_IDS: &[&str] = &[
@@ -60,6 +60,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Command {
     Match(MatchArgs),
+    TraceTargets(TraceTargetsArgs),
     Bench(BenchArgs),
     BuildSearchIndex(BuildSearchIndexArgs),
     SearchIndex(SearchIndexArgs),
@@ -79,6 +80,30 @@ struct MatchArgs {
     append: bool,
     #[arg(long, default_value_t = 0)]
     jobs: usize,
+}
+
+#[derive(Args)]
+struct TraceTargetsArgs {
+    #[arg(long, default_value = ".cache/corpus-targets.json")]
+    targets: PathBuf,
+    #[arg(long, default_value = "")]
+    target_ids: String,
+    #[arg(long, default_value = "")]
+    forms: String,
+    #[arg(long, default_value = ".cache/corpus-local-full.sqlite")]
+    source_db: PathBuf,
+    #[arg(long, default_value = ".cache/corpus-target-provenance.json")]
+    out_json: PathBuf,
+    #[arg(long, default_value = ".cache/corpus-target-provenance.md")]
+    out_md: PathBuf,
+    #[arg(long, default_value = "all")]
+    sources: String,
+    #[arg(long, default_value_t = 3)]
+    max_per_target: usize,
+    #[arg(long, default_value_t = 0)]
+    jobs: usize,
+    #[arg(long, default_value_t = 5)]
+    sample_limit: usize,
 }
 
 #[derive(Args)]
@@ -153,6 +178,7 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
     match cli.command {
         Command::Match(args) => match_targets(args),
+        Command::TraceTargets(args) => trace_targets(args),
         Command::Bench(args) => bench(args),
         Command::BuildSearchIndex(args) => build_search_index(args),
         Command::SearchIndex(args) => search_index(args),
@@ -200,6 +226,97 @@ struct SearchHit {
     domain: Option<String>,
     sentence: String,
     normalized: String,
+}
+
+#[derive(Debug, Clone, Default, Serialize)]
+struct TraceCounts {
+    raw_pattern_matches: usize,
+    variant_supported_matches: usize,
+    variant_rejected_matches: usize,
+    local_cap_dropped_matches: usize,
+    quality_rejected_matches: usize,
+    emitted_matches_before_writer_cap: usize,
+}
+
+impl TraceCounts {
+    fn add(&mut self, other: &Self) {
+        self.raw_pattern_matches += other.raw_pattern_matches;
+        self.variant_supported_matches += other.variant_supported_matches;
+        self.variant_rejected_matches += other.variant_rejected_matches;
+        self.local_cap_dropped_matches += other.local_cap_dropped_matches;
+        self.quality_rejected_matches += other.quality_rejected_matches;
+        self.emitted_matches_before_writer_cap += other.emitted_matches_before_writer_cap;
+    }
+}
+
+#[derive(Debug, Clone, Default, Serialize)]
+struct TraceRetainedEvidence {
+    retained_occurrences: usize,
+    retained_resources: usize,
+    retained_variants: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct TraceSample {
+    target_id: String,
+    stage: String,
+    resource_id: String,
+    doc_id: String,
+    title: Option<String>,
+    url: Option<String>,
+    variant_kind: String,
+    matched_pattern: String,
+    flags: Vec<String>,
+    sentence: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct TraceResourceOutput {
+    resource_id: String,
+    counts: TraceCounts,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct TraceTargetOutput {
+    target_id: String,
+    target_key: String,
+    lemma: String,
+    signature: String,
+    counts: TraceCounts,
+    retained: TraceRetainedEvidence,
+    resources: Vec<TraceResourceOutput>,
+    samples: Vec<TraceSample>,
+}
+
+#[derive(Debug, Serialize)]
+struct TraceReport {
+    generated_at: String,
+    targets_path: String,
+    source_db: String,
+    selected_sources: String,
+    resource_partitions: usize,
+    max_per_target: usize,
+    sample_limit: usize,
+    candidates_seen: usize,
+    empty_candidates: usize,
+    duration_ms: u128,
+    boundaries: Vec<&'static str>,
+    targets: Vec<TraceTargetOutput>,
+}
+
+#[derive(Debug)]
+struct TraceResourceStats {
+    resource_id: String,
+    candidates_seen: usize,
+    empty_candidates: usize,
+    duration_ms: u128,
+    counts_by_target: HashMap<String, TraceCounts>,
+    samples: Vec<TraceSample>,
+}
+
+enum TraceEvent {
+    Done(TraceResourceStats),
+    Error(String),
 }
 
 #[derive(Debug, Serialize)]
@@ -373,6 +490,580 @@ fn search_index(args: SearchIndexArgs) -> Result<()> {
     };
     println!("{}", serde_json::to_string_pretty(&output)?);
     Ok(())
+}
+
+fn trace_targets(args: TraceTargetsArgs) -> Result<()> {
+    if args.max_per_target == 0 {
+        bail!("--max-per-target must be greater than zero");
+    }
+
+    let repo_root = std::env::current_dir().context("read current directory")?;
+    let selected_resources = select_resources(&repo_root, &args.sources)?;
+    if selected_resources.is_empty() {
+        bail!(
+            "no matching downloaded resources for --sources={}",
+            args.sources
+        );
+    }
+    let mut resources = Vec::new();
+    for resource in selected_resources {
+        resources.extend(expand_resource_partitions(&resource)?);
+    }
+
+    let all_targets = load_targets(&args.targets)
+        .with_context(|| format!("load targets from {}", args.targets.display()))?;
+    let selected_targets = select_trace_targets(&all_targets, &args)?;
+    if selected_targets.is_empty() {
+        bail!("no targets matched --target-ids or --forms");
+    }
+    let selected_ids = selected_targets
+        .iter()
+        .map(|target| target.id.clone())
+        .collect::<HashSet<_>>();
+    let target_matcher = Arc::new(TargetMatcher::new(selected_targets.clone())?);
+    let (tx, rx) = mpsc::channel();
+    let started = Instant::now();
+
+    println!(
+        "Trace target scan: {} source partition(s), {} selected target row(s)",
+        resources.len(),
+        selected_targets.len()
+    );
+
+    let jobs = match args.jobs {
+        0 => thread::available_parallelism()
+            .map(|count| count.get())
+            .unwrap_or(4),
+        explicit => explicit,
+    }
+    .clamp(1, resources.len().max(1));
+    let work = Arc::new(Mutex::new(
+        resources.clone().into_iter().collect::<VecDeque<_>>(),
+    ));
+    let selected_ids = Arc::new(selected_ids);
+    let mut handles = Vec::new();
+    for _ in 0..jobs {
+        let worker_tx = tx.clone();
+        let worker_matcher = Arc::clone(&target_matcher);
+        let worker_work = Arc::clone(&work);
+        let worker_selected_ids = Arc::clone(&selected_ids);
+        let max_per_target = args.max_per_target;
+        let sample_limit = args.sample_limit;
+        handles.push(thread::spawn(move || loop {
+            let Some(resource) = worker_work.lock().expect("work queue").pop_front() else {
+                break;
+            };
+            trace_resource(
+                resource,
+                Arc::clone(&worker_matcher),
+                Arc::clone(&worker_selected_ids),
+                max_per_target,
+                sample_limit,
+                worker_tx.clone(),
+            );
+        }));
+    }
+    drop(tx);
+
+    let mut counts_by_target = HashMap::<String, TraceCounts>::new();
+    let mut resource_counts_by_target = HashMap::<String, HashMap<String, TraceCounts>>::new();
+    let mut samples_by_target = HashMap::<String, Vec<TraceSample>>::new();
+    let mut candidates_seen = 0usize;
+    let mut empty_candidates = 0usize;
+    let mut errors = Vec::new();
+
+    for event in rx {
+        match event {
+            TraceEvent::Done(stats) => {
+                candidates_seen += stats.candidates_seen;
+                empty_candidates += stats.empty_candidates;
+                println!(
+                    "  {}: {} candidates in {:.1}s",
+                    stats.resource_id,
+                    stats.candidates_seen,
+                    stats.duration_ms as f64 / 1000.0
+                );
+                for (target_id, counts) in stats.counts_by_target {
+                    counts_by_target
+                        .entry(target_id.clone())
+                        .or_default()
+                        .add(&counts);
+                    resource_counts_by_target
+                        .entry(target_id)
+                        .or_default()
+                        .insert(stats.resource_id.clone(), counts);
+                }
+                for sample in stats.samples {
+                    let target_samples = samples_by_target
+                        .entry(sample.target_id.clone())
+                        .or_default();
+                    if target_samples.len() < args.sample_limit {
+                        target_samples.push(sample);
+                    }
+                }
+            }
+            TraceEvent::Error(err) => errors.push(err),
+        }
+    }
+
+    for handle in handles {
+        handle.join().expect("trace worker thread panicked");
+    }
+    if !errors.is_empty() {
+        bail!(
+            "{} trace worker(s) failed:\n{}",
+            errors.len(),
+            errors.join("\n")
+        );
+    }
+
+    let retained = retained_trace_evidence(&args.source_db, &selected_targets)?;
+    let mut target_outputs = Vec::new();
+    for target in &selected_targets {
+        let mut resources = resource_counts_by_target
+            .remove(&target.id)
+            .unwrap_or_default()
+            .into_iter()
+            .map(|(resource_id, counts)| TraceResourceOutput {
+                resource_id,
+                counts,
+            })
+            .collect::<Vec<_>>();
+        resources.sort_by(|a, b| {
+            b.counts
+                .raw_pattern_matches
+                .cmp(&a.counts.raw_pattern_matches)
+                .then_with(|| a.resource_id.cmp(&b.resource_id))
+        });
+        target_outputs.push(TraceTargetOutput {
+            target_id: target.id.clone(),
+            target_key: target.target_key.clone(),
+            lemma: target.lemma.clone(),
+            signature: target.signature.clone(),
+            counts: counts_by_target.remove(&target.id).unwrap_or_default(),
+            retained: retained.get(&target.id).cloned().unwrap_or_default(),
+            resources,
+            samples: samples_by_target.remove(&target.id).unwrap_or_default(),
+        });
+    }
+
+    let report = TraceReport {
+        generated_at: current_timestamp()?,
+        targets_path: args.targets.display().to_string(),
+        source_db: args.source_db.display().to_string(),
+        selected_sources: args.sources,
+        resource_partitions: resources.len(),
+        max_per_target: args.max_per_target,
+        sample_limit: args.sample_limit,
+        candidates_seen,
+        empty_candidates,
+        duration_ms: started.elapsed().as_millis(),
+        boundaries: vec![
+            "Raw pattern matches are scanner matches for selected generated target patterns only.",
+            "Variant-supported matches apply the same variant guard as the production scanner.",
+            "Local cap drops mean one source partition already emitted --max-per-target matches for that target; this is not the global SQLite writer cap.",
+            "Quality-rejected matches failed the current sentence quality filters before writer retention.",
+            "Emitted matches are worker output before the global SQLite writer cap.",
+            "Retained occurrences are read from the supplied SQLite DB and may come from an earlier scan.",
+        ],
+        targets: target_outputs,
+    };
+
+    if let Some(parent) = args.out_json.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    if let Some(parent) = args.out_md.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    fs::write(
+        &args.out_json,
+        serde_json::to_string_pretty(&report)? + "\n",
+    )?;
+    fs::write(&args.out_md, trace_markdown(&report))?;
+    println!("Wrote {}", args.out_json.display());
+    println!("Wrote {}", args.out_md.display());
+    Ok(())
+}
+
+fn select_trace_targets(targets: &[Target], args: &TraceTargetsArgs) -> Result<Vec<Target>> {
+    let requested_id_values = split_csv(&args.target_ids);
+    let requested_form_values = split_csv(&args.forms);
+    let requested_ids = requested_id_values.iter().cloned().collect::<HashSet<_>>();
+    let requested_forms = requested_form_values
+        .iter()
+        .map(|form| normalized_text(&form))
+        .collect::<HashSet<_>>();
+    if requested_ids.is_empty() && requested_forms.is_empty() {
+        bail!("provide --target-ids or --forms");
+    }
+
+    let selected = targets
+        .iter()
+        .filter(|target| {
+            requested_ids.contains(&target.id)
+                || requested_forms.contains(&normalized_text(&target.target_key))
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+
+    let found_ids = selected
+        .iter()
+        .map(|target| target.id.clone())
+        .collect::<HashSet<_>>();
+    let missing_ids = requested_ids
+        .into_iter()
+        .filter(|id| !found_ids.contains(id))
+        .collect::<Vec<_>>();
+    if !missing_ids.is_empty() {
+        bail!("unknown target id(s): {}", missing_ids.join(", "));
+    }
+    let found_forms = selected
+        .iter()
+        .map(|target| normalized_text(&target.target_key))
+        .collect::<HashSet<_>>();
+    let missing_forms = requested_form_values
+        .into_iter()
+        .filter(|form| !found_forms.contains(&normalized_text(form)))
+        .collect::<Vec<_>>();
+    if !missing_forms.is_empty() {
+        bail!("unknown form(s): {}", missing_forms.join(", "));
+    }
+
+    Ok(selected)
+}
+
+fn split_csv(value: &str) -> Vec<String> {
+    value
+        .split(',')
+        .map(str::trim)
+        .filter(|part| !part.is_empty())
+        .map(ToOwned::to_owned)
+        .collect()
+}
+
+fn trace_resource(
+    resource: ResourceSpec,
+    target_matcher: Arc<TargetMatcher>,
+    selected_ids: Arc<HashSet<String>>,
+    max_per_target: usize,
+    sample_limit: usize,
+    tx: mpsc::Sender<TraceEvent>,
+) {
+    let resource_id = resource.id.clone();
+    if let Err(err) = trace_resource_inner(
+        resource,
+        target_matcher,
+        selected_ids,
+        max_per_target,
+        sample_limit,
+        &tx,
+    ) {
+        let _ = tx.send(TraceEvent::Error(format!("{resource_id}: {err:#}")));
+    }
+}
+
+fn trace_resource_inner(
+    resource: ResourceSpec,
+    target_matcher: Arc<TargetMatcher>,
+    selected_ids: Arc<HashSet<String>>,
+    max_per_target: usize,
+    sample_limit: usize,
+    tx: &mpsc::Sender<TraceEvent>,
+) -> Result<()> {
+    let started = Instant::now();
+    let mut candidates_seen = 0usize;
+    let mut empty_candidates = 0usize;
+    let mut local_counts = HashMap::<String, usize>::new();
+    let mut counts_by_target = HashMap::<String, TraceCounts>::new();
+    let mut samples = Vec::<TraceSample>::new();
+    let mut sample_counts = HashMap::<String, usize>::new();
+    let stream =
+        open_resource(&resource).with_context(|| format!("open source {}", resource.id))?;
+
+    for item in stream {
+        let candidate = item.with_context(|| format!("read source {}", resource.id))?;
+        candidates_seen += 1;
+        if candidates_seen.is_multiple_of(1_000_000) {
+            println!("  {}: {candidates_seen} trace candidates", resource.id);
+        }
+
+        let normalized = normalized_text(&candidate.sentence);
+        if normalized.is_empty() {
+            empty_candidates += 1;
+            continue;
+        }
+
+        let raw_matches = target_matcher
+            .matches_normalized(&normalized)
+            .into_iter()
+            .filter(|matched| selected_ids.contains(matched.id))
+            .collect::<Vec<_>>();
+        if raw_matches.is_empty() {
+            continue;
+        }
+
+        let mut quality_candidates = Vec::new();
+        for matched in raw_matches {
+            let counts = counts_by_target.entry(matched.id.to_owned()).or_default();
+            counts.raw_pattern_matches += 1;
+
+            if !variant_supported_by_raw_sentence(matched.variant_kind, &candidate.sentence) {
+                counts.variant_rejected_matches += 1;
+                push_trace_sample(
+                    &mut samples,
+                    &mut sample_counts,
+                    sample_limit,
+                    &candidate,
+                    &matched,
+                    "variant_rejected",
+                    &[],
+                );
+                continue;
+            }
+            counts.variant_supported_matches += 1;
+
+            if local_counts.get(matched.id).copied().unwrap_or(0) >= max_per_target {
+                counts.local_cap_dropped_matches += 1;
+                push_trace_sample(
+                    &mut samples,
+                    &mut sample_counts,
+                    sample_limit,
+                    &candidate,
+                    &matched,
+                    "local_cap_dropped",
+                    &[],
+                );
+                continue;
+            }
+            quality_candidates.push(matched);
+        }
+        if quality_candidates.is_empty() {
+            continue;
+        }
+
+        let flags = quality_flags(
+            &candidate.sentence,
+            &normalized,
+            candidate.quality.as_deref(),
+        );
+        if !keep_sentence(&flags) {
+            for matched in quality_candidates {
+                counts_by_target
+                    .entry(matched.id.to_owned())
+                    .or_default()
+                    .quality_rejected_matches += 1;
+                push_trace_sample(
+                    &mut samples,
+                    &mut sample_counts,
+                    sample_limit,
+                    &candidate,
+                    &matched,
+                    "quality_rejected",
+                    &flags,
+                );
+            }
+            continue;
+        }
+
+        for matched in quality_candidates {
+            *local_counts.entry(matched.id.to_owned()).or_insert(0) += 1;
+            counts_by_target
+                .entry(matched.id.to_owned())
+                .or_default()
+                .emitted_matches_before_writer_cap += 1;
+            push_trace_sample(
+                &mut samples,
+                &mut sample_counts,
+                sample_limit,
+                &candidate,
+                &matched,
+                "emitted",
+                &flags,
+            );
+        }
+    }
+
+    tx.send(TraceEvent::Done(TraceResourceStats {
+        resource_id: resource.id,
+        candidates_seen,
+        empty_candidates,
+        duration_ms: started.elapsed().as_millis(),
+        counts_by_target,
+        samples,
+    }))
+    .context("send trace resource stats")?;
+    Ok(())
+}
+
+fn push_trace_sample(
+    samples: &mut Vec<TraceSample>,
+    sample_counts: &mut HashMap<String, usize>,
+    sample_limit: usize,
+    candidate: &sources::Candidate,
+    matched: &targets::TargetMatch<'_>,
+    stage: &str,
+    flags: &[String],
+) {
+    if sample_limit == 0 {
+        return;
+    }
+    let used = sample_counts.get(matched.id).copied().unwrap_or(0);
+    if used >= sample_limit {
+        return;
+    }
+    sample_counts.insert(matched.id.to_owned(), used + 1);
+    samples.push(TraceSample {
+        target_id: matched.id.to_owned(),
+        stage: stage.to_owned(),
+        resource_id: candidate.resource_id.clone(),
+        doc_id: candidate.doc_id.clone(),
+        title: candidate.title.clone(),
+        url: candidate.url.clone(),
+        variant_kind: matched.variant_kind.as_str().to_owned(),
+        matched_pattern: matched.matched_pattern.to_owned(),
+        flags: flags.to_vec(),
+        sentence: candidate.sentence.clone(),
+    });
+}
+
+fn retained_trace_evidence(
+    source_db: &Path,
+    targets: &[Target],
+) -> Result<HashMap<String, TraceRetainedEvidence>> {
+    if !source_db.exists() {
+        return Ok(HashMap::new());
+    }
+    let con = readonly_connection(source_db)?;
+    let has_variant_kind = occurrences_has_variant_kind(&con)?;
+    let mut retained = HashMap::new();
+    for target in targets {
+        let row = if has_variant_kind {
+            let mut stmt = con.prepare(
+                r#"
+                SELECT count(o.id), count(DISTINCT s.resource_id),
+                       coalesce(group_concat(DISTINCT o.variant_kind), '')
+                FROM occurrences o
+                JOIN sentences s ON s.id = o.sentence_id
+                WHERE o.target_id = ?
+                "#,
+            )?;
+            stmt.query_row([target.id.as_str()], |row| {
+                let variants: String = row.get(2)?;
+                Ok(TraceRetainedEvidence {
+                    retained_occurrences: row.get(0)?,
+                    retained_resources: row.get(1)?,
+                    retained_variants: variants
+                        .split(',')
+                        .filter(|part| !part.is_empty())
+                        .map(ToOwned::to_owned)
+                        .collect(),
+                })
+            })?
+        } else {
+            let mut stmt = con.prepare(
+                r#"
+                SELECT count(o.id), count(DISTINCT s.resource_id)
+                FROM occurrences o
+                JOIN sentences s ON s.id = o.sentence_id
+                WHERE o.target_id = ?
+                "#,
+            )?;
+            stmt.query_row([target.id.as_str()], |row| {
+                Ok(TraceRetainedEvidence {
+                    retained_occurrences: row.get(0)?,
+                    retained_resources: row.get(1)?,
+                    retained_variants: Vec::new(),
+                })
+            })?
+        };
+        retained.insert(target.id.clone(), row);
+    }
+    Ok(retained)
+}
+
+fn occurrences_has_variant_kind(con: &Connection) -> Result<bool> {
+    let mut stmt = con.prepare("PRAGMA table_info(occurrences)")?;
+    let columns = stmt.query_map([], |row| row.get::<_, String>(1))?;
+    for column in columns {
+        if column? == "variant_kind" {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
+fn trace_markdown(report: &TraceReport) -> String {
+    let mut lines = vec![
+        "# Corpus Target Provenance Trace".to_owned(),
+        String::new(),
+        format!("Generated: {}", report.generated_at),
+        String::new(),
+        "## Summary".to_owned(),
+        String::new(),
+        format!("- Selected sources: {}", report.selected_sources),
+        format!(
+            "- Resource partitions scanned: {}",
+            report.resource_partitions
+        ),
+        format!("- Candidates scanned: {}", report.candidates_seen),
+        format!("- Empty normalized candidates: {}", report.empty_candidates),
+        format!("- Duration: {} ms", report.duration_ms),
+        format!("- Max per target: {}", report.max_per_target),
+        String::new(),
+        "## Boundaries".to_owned(),
+        String::new(),
+    ];
+    for boundary in &report.boundaries {
+        lines.push(format!("- {boundary}"));
+    }
+    lines.extend([
+        String::new(),
+        "## Targets".to_owned(),
+        String::new(),
+        "| Target | Signature | Raw | Variant Supported | Variant Rejected | Local Partition Cap Dropped | Quality Rejected | Emitted | Retained | Retained Variants |".to_owned(),
+        "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |".to_owned(),
+    ]);
+    for target in &report.targets {
+        lines.push(format!(
+            "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |",
+            md_escape(&target.target_key),
+            md_escape(&target.signature),
+            target.counts.raw_pattern_matches,
+            target.counts.variant_supported_matches,
+            target.counts.variant_rejected_matches,
+            target.counts.local_cap_dropped_matches,
+            target.counts.quality_rejected_matches,
+            target.counts.emitted_matches_before_writer_cap,
+            target.retained.retained_occurrences,
+            md_escape(&target.retained.retained_variants.join(", ")),
+        ));
+    }
+    lines.extend([String::new(), "## Samples".to_owned(), String::new()]);
+    for target in &report.targets {
+        if target.samples.is_empty() {
+            continue;
+        }
+        lines.push(format!("### {} ({})", target.target_key, target.signature));
+        lines.push(String::new());
+        lines.push("| Stage | Variant | Resource | Flags | Sentence |".to_owned());
+        lines.push("| --- | --- | --- | --- | --- |".to_owned());
+        for sample in &target.samples {
+            lines.push(format!(
+                "| {} | {} | {} | {} | {} |",
+                md_escape(&sample.stage),
+                md_escape(&sample.variant_kind),
+                md_escape(&sample.resource_id),
+                md_escape(&sample.flags.join(", ")),
+                md_escape(&sample.sentence),
+            ));
+        }
+        lines.push(String::new());
+    }
+    lines.join("\n")
+}
+
+fn md_escape(value: &str) -> String {
+    value.replace('|', "\\|").replace('\n', " ")
 }
 
 fn load_search_index_sentences(path: &Path, limit: usize) -> Result<Vec<SearchIndexSentence>> {
