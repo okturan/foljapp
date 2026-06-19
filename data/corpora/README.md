@@ -87,6 +87,11 @@ Explain the misses without rerunning the raw-corpus scan:
 npm run audit:corpus-misses
 ```
 
+The same audit command also writes a compact missing-form dossier to
+`.cache/corpus-missing-dossier.json` and `.cache/corpus-missing-dossier.md`.
+The audit explains retained-evidence misses in `.cache/corpus-local-full.sqlite`;
+it is not a proof that a form is absent from every scanned raw sentence.
+
 Build a focused smoke-test index:
 
 ```bash

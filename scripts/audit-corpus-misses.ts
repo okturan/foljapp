@@ -9,6 +9,8 @@
  * Outputs:
  *   .cache/corpus-missing-audit.json
  *   .cache/corpus-missing-audit.md
+ *   .cache/corpus-missing-dossier.json
+ *   .cache/corpus-missing-dossier.md
  */
 
 import { execFileSync } from 'node:child_process';
@@ -24,6 +26,16 @@ const DEFAULT_DB = join(REPO_ROOT, '.cache', 'corpus-local-full.sqlite');
 const DEFAULT_VERBS = join(REPO_ROOT, 'data', 'verbs', '_corpus.client.json');
 const DEFAULT_JSON_OUT = join(REPO_ROOT, '.cache', 'corpus-missing-audit.json');
 const DEFAULT_MD_OUT = join(REPO_ROOT, '.cache', 'corpus-missing-audit.md');
+const DEFAULT_DOSSIER_JSON_OUT = join(
+  REPO_ROOT,
+  '.cache',
+  'corpus-missing-dossier.json',
+);
+const DEFAULT_DOSSIER_MD_OUT = join(
+  REPO_ROOT,
+  '.cache',
+  'corpus-missing-dossier.md',
+);
 
 interface TargetRecord {
   id: string;
@@ -91,6 +103,10 @@ interface DbEvidence {
   selectedSources: string | null;
   hasOccurrenceVariantEvidence: boolean;
   occurrenceVariantCounts: CountRow[];
+  canonicalHitTargets: number;
+  variantHitTargets: number;
+  variantOnlyHitTargets: number;
+  variantOnlyTargetCounts: CountRow[];
   scannedResources: number;
   candidatesSeen: number;
   unmatchedRejectedCandidates: number;
@@ -180,6 +196,30 @@ function readDbEvidence(dbPath: string): DbEvidence {
   const hasOccurrenceVariantEvidence =
     hasColumn(dbPath, 'occurrences', 'variant_kind') &&
     hasColumn(dbPath, 'occurrences', 'matched_pattern');
+  const variantTargetCounts = hasOccurrenceVariantEvidence
+    ? sqliteJson<{
+        canonical_hit_targets: number;
+        variant_hit_targets: number;
+        variant_only_hit_targets: number;
+      }>(
+        dbPath,
+        `
+        WITH target_variant AS (
+          SELECT
+            target_id,
+            max(CASE WHEN variant_kind = 'canonical' THEN 1 ELSE 0 END) AS canonical_hit,
+            max(CASE WHEN variant_kind <> 'canonical' THEN 1 ELSE 0 END) AS variant_hit
+          FROM occurrences
+          GROUP BY target_id
+        )
+        SELECT
+          coalesce(sum(canonical_hit), 0) AS canonical_hit_targets,
+          coalesce(sum(variant_hit), 0) AS variant_hit_targets,
+          coalesce(sum(CASE WHEN canonical_hit = 0 AND variant_hit = 1 THEN 1 ELSE 0 END), 0) AS variant_only_hit_targets
+        FROM target_variant
+        `,
+      )[0]
+    : null;
   const maxStoredOccurrencesPerTarget = sqliteCount(
     dbPath,
     `
@@ -215,6 +255,32 @@ function readDbEvidence(dbPath: string): DbEvidence {
           FROM occurrences
           GROUP BY variant_kind
           ORDER BY count(*) DESC, variant_kind ASC
+          `,
+        ).map((row) => ({ key: row.variant_kind, count: Number(row.count) }))
+      : [],
+    canonicalHitTargets: Number(variantTargetCounts?.canonical_hit_targets ?? 0),
+    variantHitTargets: Number(variantTargetCounts?.variant_hit_targets ?? 0),
+    variantOnlyHitTargets: Number(
+      variantTargetCounts?.variant_only_hit_targets ?? 0,
+    ),
+    variantOnlyTargetCounts: hasOccurrenceVariantEvidence
+      ? sqliteJson<VariantCountRow>(
+          dbPath,
+          `
+          WITH target_variant AS (
+            SELECT
+              target_id,
+              max(CASE WHEN variant_kind = 'canonical' THEN 1 ELSE 0 END) AS canonical_hit
+            FROM occurrences
+            GROUP BY target_id
+          )
+          SELECT o.variant_kind, count(DISTINCT o.target_id) AS count
+          FROM occurrences o
+          JOIN target_variant tv ON tv.target_id = o.target_id
+          WHERE tv.canonical_hit = 0
+            AND o.variant_kind <> 'canonical'
+          GROUP BY o.variant_kind
+          ORDER BY count(DISTINCT o.target_id) DESC, o.variant_kind ASC
           `,
         ).map((row) => ({ key: row.variant_kind, count: Number(row.count) }))
       : [],
@@ -293,7 +359,7 @@ function noDiacritics(text: string): string {
   return text.replaceAll('ë', 'e').replaceAll('ç', 'c');
 }
 
-function activeAlternants(target: TargetRecord): string[] {
+function wordOrderAlternants(target: TargetRecord): string[] {
   const out = new Set<string>();
   if (target.tokens[0] === 'mos' && target.tokens[1] === 'të') {
     out.add(['të', 'mos', ...target.tokens.slice(2)].join(' '));
@@ -301,7 +367,7 @@ function activeAlternants(target: TargetRecord): string[] {
   return [...out].sort();
 }
 
-function variantProbeAlternants(target: TargetRecord): string[] {
+function scannerVariantAlternants(target: TargetRecord): string[] {
   const out = new Set<string>();
   if (target.tokens[0] === 'nuk' && target.tokens.length > 1) {
     out.add(['s', ...target.tokens.slice(1)].join(' '));
@@ -316,6 +382,7 @@ function labelMiss(
   cell: { total: number; hit: number; miss: number },
   lemma: { total: number; hit: number; miss: number },
   surface: { total: number; hit: number; miss: number },
+  scannerVariantsRecorded: boolean,
 ): string[] {
   const labels: string[] = [];
   const o = target.options;
@@ -337,13 +404,25 @@ function labelMiss(
   if (o.tense === 'past-anterior') labels.push('past_anterior');
   if (target.tokens.length >= 4) labels.push('long_exact_phrase');
   if (target.tokens[0] === 'mos' && target.tokens[1] === 'të') {
-    labels.push('active_scanner_alternant_already_checked');
+    labels.push(
+      scannerVariantsRecorded
+        ? 'te_mos_order_scanner_variant_checked'
+        : 'te_mos_order_variant_probe',
+    );
   }
   if (target.tokens[0] === 'nuk') {
-    labels.push('apostrophe_negative_variant_probe');
+    labels.push(
+      scannerVariantsRecorded
+        ? 's_negative_scanner_variant_checked'
+        : 'apostrophe_negative_variant_probe',
+    );
   }
   if (target.targetKey !== noDiacritics(target.targetKey)) {
-    labels.push('diacriticless_variant_probe');
+    labels.push(
+      scannerVariantsRecorded
+        ? 'diacritic_fold_scanner_variant_checked'
+        : 'diacriticless_variant_probe',
+    );
   }
   if (lemma.total >= 100 && lemmaMissRate >= 0.75) labels.push('lemma_outlier');
   if (surface.total > 1) labels.push('duplicate_surface_targets');
@@ -370,13 +449,54 @@ function primaryCategory(labels: string[]): string {
   ) {
     return 'variant_probe_candidate';
   }
+  if (
+    labels.includes('te_mos_order_scanner_variant_checked') ||
+    labels.includes('s_negative_scanner_variant_checked') ||
+    labels.includes('diacritic_fold_scanner_variant_checked')
+  ) {
+    return 'scanner_variant_checked_but_absent';
+  }
   if (labels.includes('long_exact_phrase')) return 'broader_phrase_search_needed';
   if (labels.includes('lemma_outlier')) return 'lemma_outlier';
   if (labels.includes('duplicate_surface_targets')) return 'duplicate_surface_target';
-  if (labels.includes('active_scanner_alternant_already_checked')) {
-    return 'active_alternant_already_scanned_but_absent';
-  }
+  if (labels.includes('te_mos_order_variant_probe')) return 'variant_probe_candidate';
   return 'unexplained_exact_absence';
+}
+
+function sql(value: string): string {
+  return `'${value.replaceAll("'", "''")}'`;
+}
+
+function lookupSql(miss: {
+  targetKey: string;
+  verbId: string;
+  signature: string;
+}): Record<string, string> {
+  return {
+    exactTarget:
+      'SELECT o.variant_kind, o.matched_pattern, t.target_key, t.signature, r.title, s.url, s.sentence ' +
+      'FROM occurrences o JOIN targets t ON t.id = o.target_id ' +
+      'JOIN sentences s ON s.id = o.sentence_id JOIN resources r ON r.id = s.resource_id ' +
+      `WHERE t.target_key = ${sql(miss.targetKey)} ORDER BY o.score DESC LIMIT 10;`,
+    sameLemma:
+      'SELECT o.variant_kind, o.target_key, t.signature, count(*) occurrences, count(DISTINCT s.resource_id) resources ' +
+      'FROM occurrences o JOIN targets t ON t.id = o.target_id JOIN sentences s ON s.id = o.sentence_id ' +
+      `WHERE t.verb_id = ${sql(miss.verbId)} ` +
+      'GROUP BY o.variant_kind, o.target_key, t.signature ORDER BY occurrences DESC, resources DESC LIMIT 20;',
+    sameCell:
+      'SELECT o.variant_kind, o.target_key, t.lemma, count(*) occurrences, count(DISTINCT s.resource_id) resources ' +
+      'FROM occurrences o JOIN targets t ON t.id = o.target_id JOIN sentences s ON s.id = o.sentence_id ' +
+      `WHERE t.signature = ${sql(miss.signature)} ` +
+      'GROUP BY o.variant_kind, o.target_key, t.lemma ORDER BY occurrences DESC, resources DESC LIMIT 20;',
+  };
+}
+
+function cellHitRate(row: { total: number; hit: number }): string {
+  return `${row.hit}/${row.total} (${pct(row.hit, row.total)})`;
+}
+
+function mdCell(value: string): string {
+  return value.replaceAll('|', '\\|').replaceAll('\n', ' ');
 }
 
 function main(): void {
@@ -416,8 +536,10 @@ function main(): void {
 
   const labelCounts = new Map<string, number>();
   const primaryCounts = new Map<string, number>();
-  const activeAlternantCounts = new Map<string, number>();
-  const variantProbeCounts = new Map<string, number>();
+  const scannerVariantsRecorded =
+    dbEvidence?.schemaVersion === '2' && dbEvidence.hasOccurrenceVariantEvidence;
+  const wordOrderAlternantCounts = new Map<string, number>();
+  const scannerVariantCounts = new Map<string, number>();
   const auditedMisses = coverage.misses.map((miss) => {
     const target = targetsById.get(miss.id);
     if (!target) throw new Error(`Coverage miss not found in targets: ${miss.id}`);
@@ -426,14 +548,15 @@ function main(): void {
       byCell.get(cellKey(target))!,
       byLemma.get(target.verbId)!,
       bySurface.get(target.targetKey)!,
+      scannerVariantsRecorded,
     );
     for (const label of labels) add(labelCounts, label);
     const primary = primaryCategory(labels);
     add(primaryCounts, primary);
-    const active = activeAlternants(target);
-    const unscanned = variantProbeAlternants(target);
-    for (const alternant of active) add(activeAlternantCounts, alternant);
-    for (const alternant of unscanned) add(variantProbeCounts, alternant);
+    const wordOrder = wordOrderAlternants(target);
+    const scannerVariants = scannerVariantAlternants(target);
+    for (const alternant of wordOrder) add(wordOrderAlternantCounts, alternant);
+    for (const alternant of scannerVariants) add(scannerVariantCounts, alternant);
     return {
       id: target.id,
       targetKey: target.targetKey,
@@ -445,8 +568,8 @@ function main(): void {
       bucket: miss.bucket,
       primary,
       labels,
-      activeAlternants: active,
-      variantProbeAlternants: unscanned,
+      wordOrderAlternants: wordOrder,
+      scannerVariantAlternants: scannerVariants,
     };
   });
 
@@ -482,11 +605,11 @@ function main(): void {
   const unexplained = auditedMisses.filter(
     (miss) => miss.primary === 'unexplained_exact_absence',
   );
-  const missesWithActiveScannerAlternants = auditedMisses.filter(
-    (miss) => miss.activeAlternants.length > 0,
+  const missesWithWordOrderAlternants = auditedMisses.filter(
+    (miss) => miss.wordOrderAlternants.length > 0,
   ).length;
-  const missesWithUnscannedAlternants = auditedMisses.filter(
-    (miss) => miss.variantProbeAlternants.length > 0,
+  const missesWithScannerVariantAlternants = auditedMisses.filter(
+    (miss) => miss.scannerVariantAlternants.length > 0,
   ).length;
   const report = {
     generatedAt: new Date().toISOString(),
@@ -511,8 +634,9 @@ function main(): void {
       nearEmptyCellCount: nearEmptyCells.length,
       lemmaOutlierCount: lemmaOutliers.length,
       unexplainedMisses: unexplained.length,
-      missesWithActiveScannerAlternants,
-      missesWithUnscannedAlternants,
+      scannerVariantsRecorded,
+      missesWithWordOrderAlternants,
+      missesWithScannerVariantAlternants,
     },
     primaryCategories: topEntries(primaryCounts, 20),
     evidenceLabels: topEntries(labelCounts, 40),
@@ -520,14 +644,130 @@ function main(): void {
     duplicateMissSurfaces: duplicateMissSurfaces.slice(0, 80),
     nearEmptyCells: nearEmptyCells.slice(0, 80),
     lemmaOutliers: lemmaOutliers.slice(0, 80),
-    activeAlternantsAlreadyScanned: topEntries(activeAlternantCounts, 100),
-    variantProbeCandidates: topEntries(variantProbeCounts, 100),
+    wordOrderAlternants: topEntries(wordOrderAlternantCounts, 100),
+    scannerVariantAlternants: topEntries(scannerVariantCounts, 100),
     unexplainedSample: unexplained.slice(0, 100),
     misses: auditedMisses,
   };
 
   mkdirSync(dirname(jsonOut), { recursive: true });
   writeFileSync(jsonOut, JSON.stringify(report, null, 2) + '\n', 'utf8');
+
+  const dossierReasons = new Map<string, string[]>();
+  const missesById = new Map(auditedMisses.map((miss) => [miss.id, miss]));
+  const addDossierMiss = (miss: (typeof auditedMisses)[number], reason: string) => {
+    const reasons = dossierReasons.get(miss.id) ?? [];
+    if (!reasons.includes(reason)) reasons.push(reason);
+    dossierReasons.set(miss.id, reasons);
+  };
+  const takeDossierMisses = (
+    candidates: typeof auditedMisses,
+    reason: string,
+    maxTotal: number,
+    groupKey?: (miss: (typeof auditedMisses)[number]) => string,
+    maxPerGroup = 1,
+  ) => {
+    const byGroup = new Map<string, number>();
+    let added = 0;
+    for (const miss of candidates) {
+      if (added >= maxTotal) break;
+      if (dossierReasons.size >= 120) break;
+      const group = groupKey?.(miss) ?? miss.id;
+      const groupCount = byGroup.get(group) ?? 0;
+      if (groupCount >= maxPerGroup) continue;
+      addDossierMiss(miss, reason);
+      byGroup.set(group, groupCount + 1);
+      added += 1;
+    }
+  };
+
+  const topLemmaOutliers = new Set(
+    report.lemmaOutliers.slice(0, 20).map((row) => row.key),
+  );
+  const topNearEmptyCells = new Set(
+    report.nearEmptyCells.slice(0, 20).map((row) => row.key),
+  );
+
+  takeDossierMisses(
+    unexplained,
+    'unexplained exact absence',
+    24,
+    (miss) => miss.verbId,
+    2,
+  );
+  takeDossierMisses(
+    auditedMisses.filter((miss) => topLemmaOutliers.has(miss.verbId)),
+    'lemma outlier',
+    36,
+    (miss) => miss.verbId,
+    2,
+  );
+  takeDossierMisses(
+    auditedMisses.filter((miss) => miss.scannerVariantAlternants.length > 0),
+    scannerVariantsRecorded
+      ? 'scanner variant checked but absent'
+      : 'scanner variant probe',
+    24,
+    (miss) =>
+      miss.labels.find((label) => label.includes('scanner_variant')) ??
+      miss.labels.find((label) => label.includes('variant_probe')) ??
+      miss.primary,
+    8,
+  );
+  takeDossierMisses(
+    auditedMisses.filter((miss) =>
+      miss.labels.includes('middle_passive_needs_attestation'),
+    ),
+    'middle-passive attestation check',
+    24,
+    (miss) => miss.verbId,
+    1,
+  );
+  takeDossierMisses(
+    auditedMisses.filter((miss) => topNearEmptyCells.has(miss.cellKey)),
+    'near-empty grammatical cell',
+    36,
+    (miss) => miss.cellKey,
+    3,
+  );
+
+  const dossierEntries = [...dossierReasons.entries()].map(([id, reasons]) => {
+    const miss = missesById.get(id);
+    if (!miss) throw new Error(`Dossier miss not found: ${id}`);
+    const cell = byCell.get(miss.cellKey) ?? { total: 0, hit: 0, miss: 0 };
+    const lemma = byLemma.get(miss.verbId) ?? { total: 0, hit: 0, miss: 0 };
+    return {
+      priority: reasons,
+      targetKey: miss.targetKey,
+      lemma: miss.lemma,
+      verbId: miss.verbId,
+      translationEn: miss.translationEn,
+      signature: miss.signature,
+      cellKey: miss.cellKey,
+      primary: miss.primary,
+      labels: miss.labels,
+      cellHitRate: cellHitRate(cell),
+      lemmaHitRate: cellHitRate(lemma),
+      sameLemmaHitTargets: lemma.hit,
+      wordOrderAlternants: miss.wordOrderAlternants,
+      scannerVariantAlternants: miss.scannerVariantAlternants,
+      lookupSql: lookupSql(miss),
+    };
+  });
+  const dossier = {
+    generatedAt: report.generatedAt,
+    summary: {
+      ...report.summary,
+      selectedMisses: dossierEntries.length,
+    },
+    variantCounts: report.dbEvidence?.occurrenceVariantCounts ?? [],
+    entries: dossierEntries,
+  };
+  writeFileSync(
+    DEFAULT_DOSSIER_JSON_OUT,
+    JSON.stringify(dossier, null, 2) + '\n',
+    'utf8',
+  );
 
   const md = [
     '# Corpus Missing Audit',
@@ -539,7 +779,7 @@ function main(): void {
     `- Target misses: ${report.summary.missedTargets} / ${report.summary.totalTargets}`,
     `- Unique surface misses: ${report.summary.uniqueMissedSurfaces} / ${report.summary.uniqueSurfaces}`,
     `- Duplicate target misses collapsed by surface: ${report.summary.duplicateMissRowsCollapsed}`,
-    `- Fully absent surfaces: ${report.summary.fullyMissedSurfaces}; mixed hit/miss surfaces: ${report.summary.mixedHitMissSurfaces}`,
+    `- Fully absent in retained evidence: ${report.summary.fullyMissedSurfaces}; mixed hit/miss surfaces: ${report.summary.mixedHitMissSurfaces}`,
     `- Candidates scanned in source coverage run: ${report.summary.candidatesSeen}`,
     report.dbEvidence
       ? `- Stored examples: ${report.dbEvidence.retainedSentences} sentences, ${report.dbEvidence.retainedOccurrences} occurrences`
@@ -550,8 +790,9 @@ function main(): void {
     report.dbEvidence
       ? `- Quality-rejected candidates: ${report.dbEvidence.qualityRejectedCandidates}`
       : '- Quality-rejected candidates: unknown',
-    `- Misses with active scanner alternants already checked: ${report.summary.missesWithActiveScannerAlternants}`,
-    `- Misses with scanner-variant probe candidates: ${report.summary.missesWithUnscannedAlternants}`,
+    `- Scanner variant evidence recorded: ${report.summary.scannerVariantsRecorded ? 'yes' : 'no'}`,
+    `- Misses with word-order alternants: ${report.summary.missesWithWordOrderAlternants}`,
+    `- Misses with scanner variant alternants: ${report.summary.missesWithScannerVariantAlternants}`,
     `- Near-empty grammatical cells: ${report.summary.nearEmptyCellCount}`,
     `- Lemma outliers at >=75% miss rate: ${report.summary.lemmaOutlierCount}`,
     `- Unexplained exact absences after heuristics: ${report.summary.unexplainedMisses}`,
@@ -561,7 +802,7 @@ function main(): void {
     'This audit reads the existing generated target list, coverage report, and optional SQLite example DB. It does not rescan raw corpora.',
     'A target miss is a generated target ID with no retained occurrence. A unique surface miss deduplicates those misses by normalized `targetKey`, so repeated forms across cells or lemmas do not inflate the surface count.',
     'Evidence labels overlap; the primary category is a single prioritized bucket per missed target.',
-    'Exact stored absence is not universal absence. Ungenerated alternants, diacritic-free spellings, OCR/tokenization variants, filtered examples, and examples dropped by the per-target cap can all remain outside the retained SQLite evidence.',
+    'Exact retained absence is not universal raw-corpus absence. Ungenerated alternants, OCR/tokenization variants, filtered examples, and examples dropped by the per-target cap can all remain outside the retained SQLite evidence.',
     '',
     '## DB Cap/Filter Evidence',
     '',
@@ -581,6 +822,9 @@ function main(): void {
           `| Retained occurrences in SQLite | ${report.dbEvidence.retainedOccurrences} | Stored target-occurrence rows. |`,
           `| Distinct retained target IDs | ${report.dbEvidence.distinctHitTargets} | Target IDs with at least one stored occurrence. |`,
           `| Distinct retained surfaces | ${report.dbEvidence.distinctHitSurfaces} | Normalized target surfaces with at least one stored occurrence. |`,
+          `| Canonical-hit target IDs | ${report.dbEvidence.canonicalHitTargets} | Target IDs with at least one exact canonical occurrence. |`,
+          `| Variant-hit target IDs | ${report.dbEvidence.variantHitTargets} | Target IDs with at least one non-canonical scanner variant occurrence. |`,
+          `| Variant-only target IDs | ${report.dbEvidence.variantOnlyHitTargets} | Target IDs whose retained evidence is only non-canonical scanner variants. |`,
           '',
           `Observed max stored occurrences per target is ${report.dbEvidence.maxStoredOccurrencesPerTarget}; ${report.dbEvidence.targetIdsAtMaxStoredOccurrences} target IDs are at that observed cap.`,
         ]
@@ -598,6 +842,12 @@ function main(): void {
             (row) => `| ${row.key} | ${row.count} |`,
           ),
           '',
+          '| Variant Kind | Variant-Only Target IDs |',
+          '| --- | ---: |',
+          ...report.dbEvidence.variantOnlyTargetCounts.map(
+            (row) => `| ${row.key} | ${row.count} |`,
+          ),
+          '',
         ]
       : [
           '## Occurrence Variant Counts',
@@ -611,8 +861,8 @@ function main(): void {
       ? `The Rust matcher already expands canonical \`mos të ...\` targets to scan active \`të mos ...\` order; retained SQLite evidence includes ${report.dbEvidence.mosTeTargetsMatchedInTeMosOrder} such target IDs matched in \`të mos ...\` sentences.`
       : 'The Rust matcher expands canonical `mos të ...` targets to scan active `të mos ...` order, but SQLite evidence was unavailable for counts.',
     report.dbEvidence
-      ? `Retained sentences include ${report.dbEvidence.retainedSentencesWithSApostrophe} apostrophe-negation examples. New scanner builds can probe normalized \`s ...\` alternants for generated \`nuk ...\` targets, but this existing DB only proves those probes were checked if occurrence variant evidence is present.`
-      : 'New scanner builds can probe normalized `s ...` alternants for generated `nuk ...` targets, but SQLite evidence was unavailable for counts.',
+      ? `Schema-2 Rust scans also record \`s ...\` negative variants and diacritic-fold variants. Retained sentences include ${report.dbEvidence.retainedSentencesWithSApostrophe} apostrophe-negation examples; variant-only hits are lower-confidence evidence than canonical hits.`
+      : 'Schema-2 Rust scans also record `s ...` negative variants and diacritic-fold variants, but SQLite evidence was unavailable for counts.',
     '',
     '## Primary Categories',
     '',
@@ -658,23 +908,25 @@ function main(): void {
           `| ${row.lemma} | ${row.key} | ${row.total} | ${row.hit} | ${row.miss} | ${row.hitRate} |`,
       ),
     '',
-    '## Top Scanner-Variant Probe Candidates',
+    '## Scanner Variant Alternants On Misses',
     '',
-    'These are normalized strings the scanner can probe as variants. They only count as checked in a DB that has occurrence variant evidence from a post-variant scan.',
+    report.summary.scannerVariantsRecorded
+      ? 'These normalized alternants were part of the schema-2 scanner surface space. Their remaining misses are retained-evidence absences, not unscanned alternants.'
+      : 'These normalized alternants require a schema-2 scan before they can be treated as checked.',
     '',
-    '| Normalized Probe | Misses It Could Probe |',
+    '| Normalized Alternant | Misses It Could Probe |',
     '| --- | ---: |',
-    ...report.variantProbeCandidates
+    ...report.scannerVariantAlternants
       .slice(0, 40)
       .map((row) => `| ${row.key} | ${row.count} |`),
     '',
-    '## Already-Scanned Alternants',
+    '## Word-Order Alternants On Misses',
     '',
-    'These alternants are already handled by the scanner, so their remaining misses should not be treated as unscanned word-order gaps.',
+    'These `të mos ...` alternants are handled by the scanner for canonical `mos të ...` targets.',
     '',
     '| Alternant | Misses Still Open |',
     '| --- | ---: |',
-    ...report.activeAlternantsAlreadyScanned
+    ...report.wordOrderAlternants
       .slice(0, 20)
       .map((row) => `| ${row.key} | ${row.count} |`),
     '',
@@ -689,8 +941,47 @@ function main(): void {
   ].join('\n');
   writeFileSync(mdOut, md, 'utf8');
 
+  const dossierMd = [
+    '# Corpus Missing Dossier',
+    '',
+    `Generated: ${dossier.generatedAt}`,
+    '',
+    'This is a bounded triage view over the aggregate missing-form audit. It does not rescan raw corpora.',
+    '',
+    '## Summary',
+    '',
+    `- Selected misses: ${dossier.entries.length}`,
+    `- Total target misses: ${report.summary.missedTargets} / ${report.summary.totalTargets}`,
+    `- Unique surfaces fully absent in retained evidence: ${report.summary.fullyMissedSurfaces}`,
+    `- Scanned candidates: ${report.summary.candidatesSeen}`,
+    `- Stored occurrences: ${report.summary.storedOccurrences ?? 'unknown'}`,
+    '',
+    '## Priority Samples',
+    '',
+    '| Priority | Target | Lemma | Signature | Cell Hit Rate | Lemma Hit Rate | Primary |',
+    '| --- | --- | --- | --- | ---: | ---: | --- |',
+    ...dossier.entries.map(
+      (entry) =>
+        `| ${mdCell(entry.priority.join(', '))} | ${mdCell(entry.targetKey)} | ${mdCell(entry.lemma)} | ${mdCell(entry.signature)} | ${entry.cellHitRate} | ${entry.lemmaHitRate} | ${mdCell(entry.primary)} |`,
+    ),
+    '',
+    '## SQLite Lookup Anchors',
+    '',
+    'Each JSON dossier entry includes `lookupSql.exactTarget`, `lookupSql.sameLemma`, and `lookupSql.sameCell` for targeted inspection against `.cache/corpus-local-full.sqlite`.',
+    '',
+    'Example:',
+    '',
+    '```bash',
+    'sqlite3 -readonly .cache/corpus-local-full.sqlite "<lookupSql.sameLemma>"',
+    '```',
+    '',
+  ].join('\n');
+  writeFileSync(DEFAULT_DOSSIER_MD_OUT, dossierMd, 'utf8');
+
   console.log(`Wrote ${jsonOut}`);
   console.log(`Wrote ${mdOut}`);
+  console.log(`Wrote ${DEFAULT_DOSSIER_JSON_OUT}`);
+  console.log(`Wrote ${DEFAULT_DOSSIER_MD_OUT}`);
 }
 
 main();
