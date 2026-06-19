@@ -21,6 +21,8 @@
     "build:corpus-targets": "tsx scripts/build-corpus-targets.ts",
     "build:local-corpus-index": "npm run build:corpus-targets && npm run scan:local-corpus",
     "scan:local-corpus": "CARGO_TARGET_DIR=.cache/cargo-target cargo run --release --manifest-path tools/corpus-indexer/Cargo.toml -- match --out=.cache/corpus-local-full.sqlite --sources=all --max-per-target=3 --jobs=12",
+    "build:corpus-candidate-cache": "CARGO_TARGET_DIR=.cache/cargo-target cargo run --release --manifest-path tools/corpus-indexer/Cargo.toml -- build-candidate-cache --sources=all --jobs=12",
+    "scan:local-corpus:cached": "CARGO_TARGET_DIR=.cache/cargo-target cargo run --release --manifest-path tools/corpus-indexer/Cargo.toml -- match --out=.cache/corpus-local-full.sqlite --sources=all --max-per-target=3 --jobs=12 --candidate-cache-dir=.cache/corpus-candidate-shards/v1 --require-candidate-cache",
     "trace:corpus-targets": "CARGO_TARGET_DIR=.cache/cargo-target cargo run --release --manifest-path tools/corpus-indexer/Cargo.toml -- trace-targets",
     "report:corpus-coverage": "tsx scripts/report-corpus-coverage.ts",
     "audit:external-morphology": "node --experimental-strip-types scripts/audit-external-morphology.ts",

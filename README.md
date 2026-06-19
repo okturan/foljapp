@@ -54,6 +54,8 @@ corpora and is not committed.
 npm run build:corpus-targets      # generated foljapp forms to search for
 npm run scan:local-corpus         # Rust generated-form classifier over downloaded corpora
 npm run build:local-corpus-index  # both steps above
+npm run build:corpus-candidate-cache # optional parsed-candidate cache for reruns
+npm run scan:local-corpus:cached  # classifier using the complete candidate cache
 npm run build:corpus-search-index # Tantivy phrase-search index from retained examples
 npm run search:corpus -- --query="të punoj"
 ```

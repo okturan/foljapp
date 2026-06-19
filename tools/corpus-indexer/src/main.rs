@@ -1,3 +1,4 @@
+mod candidate_cache;
 mod db;
 mod quality;
 mod sources;
@@ -6,6 +7,7 @@ mod text;
 
 use aho_corasick::AhoCorasick;
 use anyhow::{bail, Context, Result};
+use candidate_cache::{build_resource_cache, open_candidate_stream, CacheBuildStats};
 use clap::{Args, Parser, Subcommand};
 use db::ExampleDb;
 use quality::{keep_sentence, quality_flags};
@@ -62,6 +64,7 @@ enum Command {
     Match(MatchArgs),
     TraceTargets(TraceTargetsArgs),
     Bench(BenchArgs),
+    BuildCandidateCache(BuildCandidateCacheArgs),
     BuildSearchIndex(BuildSearchIndexArgs),
     SearchIndex(SearchIndexArgs),
 }
@@ -80,6 +83,22 @@ struct MatchArgs {
     append: bool,
     #[arg(long, default_value_t = 0)]
     jobs: usize,
+    #[arg(long)]
+    candidate_cache_dir: Option<PathBuf>,
+    #[arg(long)]
+    require_candidate_cache: bool,
+}
+
+#[derive(Args)]
+struct BuildCandidateCacheArgs {
+    #[arg(long, default_value = ".cache/corpus-candidate-shards/v1")]
+    cache_dir: PathBuf,
+    #[arg(long, default_value = "all")]
+    sources: String,
+    #[arg(long, default_value_t = 0)]
+    jobs: usize,
+    #[arg(long)]
+    refresh: bool,
 }
 
 #[derive(Args)]
@@ -182,6 +201,7 @@ fn main() -> Result<()> {
         Command::Match(args) => match_targets(args),
         Command::TraceTargets(args) => trace_targets(args),
         Command::Bench(args) => bench(args),
+        Command::BuildCandidateCache(args) => build_candidate_cache(args),
         Command::BuildSearchIndex(args) => build_search_index(args),
         Command::SearchIndex(args) => search_index(args),
     }
@@ -1642,6 +1662,8 @@ fn match_targets(args: MatchArgs) -> Result<()> {
         let worker_work = Arc::clone(&work);
         let worker_saturated_targets = Arc::clone(&saturated_targets);
         let max_per_target = args.max_per_target;
+        let candidate_cache_dir = args.candidate_cache_dir.clone();
+        let require_candidate_cache = args.require_candidate_cache;
         handles.push(thread::spawn(move || loop {
             let Some(resource) = worker_work.lock().expect("work queue").pop_front() else {
                 break;
@@ -1651,6 +1673,8 @@ fn match_targets(args: MatchArgs) -> Result<()> {
                 Arc::clone(&worker_matcher),
                 Arc::clone(&worker_saturated_targets),
                 max_per_target,
+                candidate_cache_dir.clone(),
+                require_candidate_cache,
                 worker_tx.clone(),
             );
         }));
@@ -1760,11 +1784,98 @@ fn match_targets(args: MatchArgs) -> Result<()> {
     Ok(())
 }
 
+fn build_candidate_cache(args: BuildCandidateCacheArgs) -> Result<()> {
+    let repo_root = std::env::current_dir().context("read current directory")?;
+    let selected_resources = select_resources(&repo_root, &args.sources)?;
+    if selected_resources.is_empty() {
+        bail!(
+            "no matching downloaded resources for --sources={}",
+            args.sources
+        );
+    }
+    let mut resources = Vec::new();
+    for resource in selected_resources {
+        resources.extend(expand_resource_partitions(&resource)?);
+    }
+
+    println!(
+        "Building candidate cache: {} source partition(s) -> {}",
+        resources.len(),
+        args.cache_dir.display()
+    );
+
+    let jobs = match args.jobs {
+        0 => thread::available_parallelism()
+            .map(|count| count.get())
+            .unwrap_or(4),
+        explicit => explicit,
+    }
+    .clamp(1, resources.len().max(1));
+    let work = Arc::new(Mutex::new(resources.into_iter().collect::<VecDeque<_>>()));
+    let (tx, rx) = mpsc::channel::<Result<CacheBuildStats>>();
+    let mut handles = Vec::new();
+    let started = Instant::now();
+
+    for _ in 0..jobs {
+        let worker_work = Arc::clone(&work);
+        let worker_tx = tx.clone();
+        let cache_dir = args.cache_dir.clone();
+        let refresh = args.refresh;
+        handles.push(thread::spawn(move || loop {
+            let Some(resource) = worker_work.lock().expect("work queue").pop_front() else {
+                break;
+            };
+            let result = build_resource_cache(&resource, &cache_dir, refresh)
+                .with_context(|| format!("build candidate cache for {}", resource.id));
+            if worker_tx.send(result).is_err() {
+                break;
+            }
+        }));
+    }
+    drop(tx);
+
+    let mut partitions = 0usize;
+    let mut candidates = 0usize;
+    let mut empty = 0usize;
+    let mut errors = Vec::new();
+    for event in rx {
+        match event {
+            Ok(stats) => {
+                partitions += 1;
+                candidates += stats.candidates_seen;
+                empty += stats.empty_candidates;
+                println!(
+                    "  {}: {} candidates, {} empty normalized",
+                    stats.resource_id, stats.candidates_seen, stats.empty_candidates
+                );
+            }
+            Err(err) => errors.push(format!("{err:#}")),
+        }
+    }
+
+    for handle in handles {
+        if handle.join().is_err() {
+            errors.push("worker thread panicked".to_owned());
+        }
+    }
+    if !errors.is_empty() {
+        bail!("{}", errors.join("\n"));
+    }
+
+    println!(
+        "Cached {candidates} candidate(s) from {partitions} partition(s), {empty} empty normalized in {:.1}s",
+        started.elapsed().as_secs_f64()
+    );
+    Ok(())
+}
+
 fn scan_resource_for_matches(
     resource: ResourceSpec,
     target_matcher: Arc<TargetMatcher>,
     saturated_targets: Arc<RwLock<HashSet<String>>>,
     max_per_target: usize,
+    candidate_cache_dir: Option<PathBuf>,
+    require_candidate_cache: bool,
     tx: mpsc::Sender<MatchEvent>,
 ) {
     let resource_id = resource.id.clone();
@@ -1773,6 +1884,8 @@ fn scan_resource_for_matches(
         target_matcher,
         saturated_targets,
         max_per_target,
+        candidate_cache_dir,
+        require_candidate_cache,
         &tx,
     ) {
         let _ = tx.send(MatchEvent::Error(format!("{resource_id}: {err:#}")));
@@ -1784,6 +1897,8 @@ fn scan_resource_for_matches_inner(
     target_matcher: Arc<TargetMatcher>,
     saturated_targets: Arc<RwLock<HashSet<String>>>,
     max_per_target: usize,
+    candidate_cache_dir: Option<PathBuf>,
+    require_candidate_cache: bool,
     tx: &mpsc::Sender<MatchEvent>,
 ) -> Result<()> {
     let started = Instant::now();
@@ -1793,11 +1908,17 @@ fn scan_resource_for_matches_inner(
     let mut quality_rejected = 0usize;
     let mut unmatched_rejected = 0usize;
     let mut local_counts = HashMap::<String, usize>::new();
-    let stream =
-        open_resource(&resource).with_context(|| format!("open source {}", resource.id))?;
+    let stream = open_candidate_stream(
+        &resource,
+        candidate_cache_dir.as_deref(),
+        require_candidate_cache,
+    )
+    .with_context(|| format!("open candidates for {}", resource.id))?;
 
     for item in stream {
-        let candidate = item.with_context(|| format!("read source {}", resource.id))?;
+        let cached = item.with_context(|| format!("read source {}", resource.id))?;
+        let candidate = cached.candidate;
+        let normalized = cached.normalized;
         candidates_seen += 1;
         if candidates_seen.is_multiple_of(1_000_000) {
             println!(
@@ -1806,7 +1927,6 @@ fn scan_resource_for_matches_inner(
             );
         }
 
-        let normalized = normalized_text(&candidate.sentence);
         if normalized.is_empty() {
             empty_candidates += 1;
             continue;

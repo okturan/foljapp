@@ -72,12 +72,27 @@ Build local examples from every downloaded corpus:
 npm run build:local-corpus-index
 ```
 
-Changing the target set requires rescanning raw corpora, because the fast path does not store non-matching sentences:
+Changing the target set requires rescanning raw corpora when no candidate cache
+exists, because the examples DB stores only matching sentences:
 
 ```bash
 npm run build:corpus-targets
 npm run scan:local-corpus
 ```
+
+For repeated full-corpus work, first materialize the target-independent
+candidate cache. It stores each parsed candidate sentence with its normalized
+text in compressed local shards under `.cache/corpus-candidate-shards/v1`;
+target matches, quality decisions, scores, and occurrences are still computed
+fresh by the scanner.
+
+```bash
+npm run build:corpus-candidate-cache
+npm run scan:local-corpus:cached
+```
+
+The cached scan fails if any selected resource partition is missing or stale in
+the cache. Use `npm run scan:local-corpus` to fall back to raw resources.
 
 After a full scan, write the hit/miss coverage report:
 
@@ -183,7 +198,9 @@ npm run build:corpus-targets -- '--forms=punuakam' --out=.cache/corpus-targets.p
 npm run scan:local-corpus -- --append --out=.cache/corpus-local-full.sqlite --targets=.cache/corpus-targets.punuakam.json --sources=cc100 --max-per-target=3 --jobs=4
 ```
 
-The generated target list is compact, but changing it still requires rescanning raw corpora because the local app index stores only matching sentences.
+The generated target list is compact. Without the candidate cache, changing it
+still requires rescanning raw corpora because the local app index stores only
+matching sentences.
 
 An absence is meaningful for the generated canonical target plus any scanner
 variants recorded in the SQLite DB. Schema-2 occurrence rows include
