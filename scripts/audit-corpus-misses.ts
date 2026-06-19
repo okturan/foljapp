@@ -1047,6 +1047,10 @@ function mdCell(value: string): string {
   return value.replaceAll('|', '\\|').replaceAll('\n', ' ');
 }
 
+function countCells(rows: CountRow[]): string {
+  return rows.map((row) => `${row.key} ${row.count}`).join(', ');
+}
+
 function main(): void {
   const targetsPath = valueAfter('--targets=') ?? DEFAULT_TARGETS;
   const coveragePath = valueAfter('--coverage=') ?? DEFAULT_COVERAGE;
@@ -1180,6 +1184,11 @@ function main(): void {
       primary,
       labels,
       morphologyAction: morphology?.action ?? null,
+      morphologyForm: morphology?.form ?? null,
+      morphologyVoiceEligibility: morphology?.voiceEligibility ?? null,
+      morphologyProofLevel: morphology?.proofLevel ?? null,
+      morphologyScope: morphology?.scope ?? null,
+      morphologyReasons: morphology?.reasons ?? [],
       wordOrderAlternants: wordOrder,
       scannerVariantAlternants: scannerVariants,
     };
@@ -1446,8 +1455,29 @@ function main(): void {
             translationEn: miss.translationEn,
             targetCount: 0,
             samples: [] as ReturnType<typeof worklistSamples>,
+            morphologyFormCounts: new Map<string, number>(),
+            morphologyVoiceEligibilityCounts: new Map<string, number>(),
+            morphologyProofLevelCounts: new Map<string, number>(),
+            morphologyScopeCounts: new Map<string, number>(),
+            morphologyReasonCounts: new Map<string, number>(),
           };
           group.targetCount += 1;
+          if (miss.morphologyForm)
+            add(group.morphologyFormCounts, miss.morphologyForm);
+          if (miss.morphologyVoiceEligibility) {
+            add(
+              group.morphologyVoiceEligibilityCounts,
+              miss.morphologyVoiceEligibility,
+            );
+          }
+          if (miss.morphologyProofLevel) {
+            add(group.morphologyProofLevelCounts, miss.morphologyProofLevel);
+          }
+          if (miss.morphologyScope)
+            add(group.morphologyScopeCounts, miss.morphologyScope);
+          for (const reason of miss.morphologyReasons) {
+            add(group.morphologyReasonCounts, reason);
+          }
           if (group.samples.length < 3) {
             group.samples.push({
               targetKey: miss.targetKey,
@@ -1468,6 +1498,11 @@ function main(): void {
             translationEn: string;
             targetCount: number;
             samples: ReturnType<typeof worklistSamples>;
+            morphologyFormCounts: Map<string, number>;
+            morphologyVoiceEligibilityCounts: Map<string, number>;
+            morphologyProofLevelCounts: Map<string, number>;
+            morphologyScopeCounts: Map<string, number>;
+            morphologyReasonCounts: Map<string, number>;
           }
         >(),
       )
@@ -1477,10 +1512,26 @@ function main(): void {
       const verb = verbsById.get(row.verbId);
       const sources = sourceKeys(verb);
       const voice = byLemmaVoice.get(row.verbId);
+      const {
+        morphologyFormCounts,
+        morphologyVoiceEligibilityCounts,
+        morphologyProofLevelCounts,
+        morphologyScopeCounts,
+        morphologyReasonCounts,
+        ...base
+      } = row;
       return {
-        ...row,
+        ...base,
         sourceLevel: sourceLevel(sources),
         sources,
+        morphologyForms: topEntries(morphologyFormCounts, 4),
+        morphologyVoiceEligibility: topEntries(
+          morphologyVoiceEligibilityCounts,
+          4,
+        ),
+        morphologyProofLevels: topEntries(morphologyProofLevelCounts, 4),
+        morphologyScopes: topEntries(morphologyScopeCounts, 4),
+        morphologyReasons: topEntries(morphologyReasonCounts, 6),
         middlePassiveCoverage: voice
           ? cellHitRate({
               total: voice.middlePassiveTotal,
@@ -2023,11 +2074,11 @@ function main(): void {
     '',
     'Every action-by-lemma group in the middle-passive review bucket. A lemma may appear more than once when different generated cells have different morphology actions.',
     '',
-    '| Morphology Action | Lemma | Verb ID | Targets | Middle-Passive Coverage | Active Coverage | Source Level | Flags/Overrides | Samples |',
-    '| --- | --- | --- | ---: | --- | --- | --- | --- | --- |',
+    '| Morphology Action | Lemma | Verb ID | Targets | Verdict Forms | Proof | Scope | Top Reasons | Middle-Passive Coverage | Active Coverage | Source Level | Flags/Overrides | Samples |',
+    '| --- | --- | --- | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
     ...report.middlePassiveLemmaReviewQueue.map(
       (row) =>
-        `| ${mdCell(row.action)} | ${mdCell(row.lemma)} | ${mdCell(row.verbId)} | ${row.targetCount} | ${row.middlePassiveCoverage} | ${row.activeCoverage} | ${row.sourceLevel} | ${row.hasNoMiddlePassiveFlag ? 'noMiddlePassive' : 'none'} / ${row.middlePassiveOverrideCount} MP overrides | ${mdCell(row.samples.map((sample) => `${sample.targetKey} (${sample.signature})`).join(', '))} |`,
+        `| ${mdCell(row.action)} | ${mdCell(row.lemma)} | ${mdCell(row.verbId)} | ${row.targetCount} | ${mdCell(countCells(row.morphologyForms))} | ${mdCell(countCells(row.morphologyProofLevels))} | ${mdCell(countCells(row.morphologyScopes))} | ${mdCell(countCells(row.morphologyReasons))} | ${row.middlePassiveCoverage} | ${row.activeCoverage} | ${row.sourceLevel} | ${row.hasNoMiddlePassiveFlag ? 'noMiddlePassive' : 'none'} / ${row.middlePassiveOverrideCount} MP overrides | ${mdCell(row.samples.map((sample) => `${sample.targetKey} (${sample.signature})`).join(', '))} |`,
     ),
     '',
     '## Corpus Source Levels',
