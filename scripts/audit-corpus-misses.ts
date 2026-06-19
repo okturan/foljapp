@@ -880,7 +880,11 @@ function labelMiss(
   if (surface.total > 1) labels.push('duplicate_surface_targets');
 
   if (morphology?.form === 'analyzer_accepted') {
-    labels.push('analyzer_accepted_exact_absence');
+    labels.push(
+      target.tokens.length === 1
+        ? 'analyzer_accepted_exact_absence'
+        : 'analyzer_accepted_head_token_absence',
+    );
   }
   if (labels.length > 0) return labels;
   if (target.tokens.length > 1 && morphology?.scope === 'head-token-only') {
@@ -935,6 +939,24 @@ function primaryCategory(labels: string[]): string {
     return 'morphology_unvalidated_exact_absence';
   }
   return 'unexplained_exact_absence';
+}
+
+function analyzerAcceptedClass(miss: {
+  labels: string[];
+  cellKey: string;
+  signature: string;
+}): string {
+  if (miss.cellKey.includes('.middle-passive.')) return 'middle-passive';
+  if (
+    miss.cellKey.startsWith('admirative.') ||
+    miss.cellKey.startsWith('optative.')
+  ) {
+    return 'active rare mood: admirative/optative';
+  }
+  if (miss.labels.includes('analyzer_accepted_head_token_absence')) {
+    return 'other multiword active';
+  }
+  return 'other single-token active';
 }
 
 function sql(value: string): string {
@@ -1175,6 +1197,57 @@ function main(): void {
       })),
     };
   });
+  const analyzerAcceptedMisses = auditedMisses.filter(
+    (miss) =>
+      miss.labels.includes('analyzer_accepted_exact_absence') ||
+      miss.labels.includes('analyzer_accepted_head_token_absence'),
+  );
+  const analyzerAcceptedPrimaryCounts = new Map<string, number>();
+  const analyzerAcceptedCellCounts = new Map<string, number>();
+  const analyzerAcceptedLemmaCounts = new Map<string, number>();
+  const analyzerAcceptedScopeCounts = new Map<string, number>();
+  const analyzerAcceptedClassCounts = new Map<string, number>();
+  for (const miss of analyzerAcceptedMisses) {
+    add(analyzerAcceptedPrimaryCounts, miss.primary);
+    add(analyzerAcceptedCellCounts, miss.cellKey);
+    add(analyzerAcceptedLemmaCounts, miss.verbId);
+    add(analyzerAcceptedClassCounts, analyzerAcceptedClass(miss));
+    add(
+      analyzerAcceptedScopeCounts,
+      miss.labels.includes('analyzer_accepted_exact_absence')
+        ? 'single-token'
+        : 'head-token-only',
+    );
+  }
+  const analyzerAcceptedSamples = (rows: typeof analyzerAcceptedMisses) =>
+    rows.slice(0, 4).map((row) => ({
+      targetKey: row.targetKey,
+      lemma: row.lemma,
+      signature: row.signature,
+      primary: row.primary,
+    }));
+  const analyzerAcceptedByCell = topEntries(analyzerAcceptedCellCounts, 20).map(
+    (row) => ({
+      ...row,
+      samples: analyzerAcceptedSamples(
+        analyzerAcceptedMisses.filter((miss) => miss.cellKey === row.key),
+      ),
+    }),
+  );
+  const analyzerAcceptedByLemma = topEntries(analyzerAcceptedLemmaCounts, 20).map(
+    (row) => {
+      const verb = verbsById.get(row.key);
+      return {
+        ...row,
+        lemma: verb?.lemma ?? row.key,
+        translationEn: verb?.translationEn ?? '',
+        sourceLevel: sourceLevel(sourceKeys(verb)),
+        samples: analyzerAcceptedSamples(
+          analyzerAcceptedMisses.filter((miss) => miss.verbId === row.key),
+        ),
+      };
+    },
+  );
   const report = {
     generatedAt: new Date().toISOString(),
     targetsPath,
@@ -1233,6 +1306,15 @@ function main(): void {
     },
     primaryCategories: topEntries(primaryCounts, 20),
     primaryCategoryDetails,
+    analyzerAcceptedMisses: {
+      total: analyzerAcceptedMisses.length,
+      byScope: topEntries(analyzerAcceptedScopeCounts, 10),
+      byClass: topEntries(analyzerAcceptedClassCounts, 10),
+      byPrimary: topEntries(analyzerAcceptedPrimaryCounts, 10),
+      byCell: analyzerAcceptedByCell,
+      byLemma: analyzerAcceptedByLemma,
+      samples: analyzerAcceptedSamples(analyzerAcceptedMisses),
+    },
     evidenceLabels: topEntries(labelCounts, 40),
     dbEvidence,
     duplicateMissSurfaces: duplicateMissSurfaces.slice(0, 80),
@@ -1304,9 +1386,10 @@ function main(): void {
   );
   takeDossierMisses(
     auditedMisses.filter((miss) =>
-      miss.labels.includes('analyzer_accepted_exact_absence'),
+      miss.labels.includes('analyzer_accepted_exact_absence') ||
+      miss.labels.includes('analyzer_accepted_head_token_absence'),
     ),
-    'evidence: analyzer-accepted exact absence',
+    'evidence: analyzer-accepted missing form',
     24,
     (miss) => miss.verbId,
     2,
@@ -1558,6 +1641,42 @@ function main(): void {
     'Joined morphology fields are copied into the compact dossier by target ID when `.cache/external-morphology-audit.json` exists. They explain why a generated miss deserves review; they do not prove that a form is used in real text, and they do not prove that a form is impossible.',
     '`proofLevel` describes the strength of the morphology evidence. `local-source` means foljapp-internal verb data only. `lexeme` or `analyzer` evidence, when present, means an external morphology source recognized the lemma or token, not that the full generated phrase is corpus-attested.',
     'For multiword targets, `scope=head-token-only` or `tokens-only` means the review covers component tokens rather than the whole phrase. Morphology fields never change hit/miss counts.',
+    '',
+    '## UniParser-Accepted Missing Forms',
+    '',
+    `UniParser accepted ${report.analyzerAcceptedMisses.total} missed target(s) at the analyzer layer. Single-token rows are exact token validation; head-token-only rows validate the inflected verb inside a multiword target, not the whole phrase.`,
+    '',
+    '| Analyzer Scope | Misses |',
+    '| --- | ---: |',
+    ...report.analyzerAcceptedMisses.byScope.map(
+      (row) => `| ${mdCell(row.key)} | ${row.count} |`,
+    ),
+    '',
+    '| Coarse Class | Analyzer-Accepted Misses |',
+    '| --- | ---: |',
+    ...report.analyzerAcceptedMisses.byClass.map(
+      (row) => `| ${mdCell(row.key)} | ${row.count} |`,
+    ),
+    '',
+    '| Primary Bucket | Analyzer-Accepted Misses |',
+    '| --- | ---: |',
+    ...report.analyzerAcceptedMisses.byPrimary.map(
+      (row) => `| ${mdCell(row.key)} | ${row.count} |`,
+    ),
+    '',
+    '| Cell | Analyzer-Accepted Misses | Samples |',
+    '| --- | ---: | --- |',
+    ...report.analyzerAcceptedMisses.byCell.slice(0, 12).map(
+      (row) =>
+        `| ${mdCell(row.key)} | ${row.count} | ${mdCell(row.samples.map((sample) => `${sample.targetKey} (${sample.lemma})`).join(', '))} |`,
+    ),
+    '',
+    '| Lemma | Verb ID | Analyzer-Accepted Misses | Source Level | Samples |',
+    '| --- | --- | ---: | --- | --- |',
+    ...report.analyzerAcceptedMisses.byLemma.slice(0, 12).map(
+      (row) =>
+        `| ${mdCell(row.lemma)} | ${mdCell(row.key)} | ${row.count} | ${row.sourceLevel} | ${mdCell(row.samples.map((sample) => `${sample.targetKey} [${sample.primary}]`).join(', '))} |`,
+    ),
     '',
     '## Corpus Source Levels',
     '',
