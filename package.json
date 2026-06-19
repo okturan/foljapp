@@ -21,6 +21,7 @@
     "build:corpus-targets": "tsx scripts/build-corpus-targets.ts",
     "build:local-corpus-index": "npm run build:corpus-targets && npm run scan:local-corpus",
     "scan:local-corpus": "CARGO_TARGET_DIR=.cache/cargo-target cargo run --release --manifest-path tools/corpus-indexer/Cargo.toml -- match --out=.cache/corpus-local-full.sqlite --sources=all --max-per-target=3 --jobs=12",
+    "report:corpus-coverage": "tsx scripts/report-corpus-coverage.ts",
     "bench:corpus-search": "CARGO_TARGET_DIR=.cache/cargo-target cargo run --release --manifest-path tools/corpus-indexer/Cargo.toml -- bench",
     "build:corpus-search-index": "CARGO_TARGET_DIR=.cache/cargo-target cargo run --release --manifest-path tools/corpus-indexer/Cargo.toml -- build-search-index",
     "search:corpus": "CARGO_TARGET_DIR=.cache/cargo-target cargo run --release --manifest-path tools/corpus-indexer/Cargo.toml -- search-index",

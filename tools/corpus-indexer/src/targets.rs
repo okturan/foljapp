@@ -67,10 +67,9 @@ impl TargetMatcher {
             if target.tokens.is_empty() {
                 continue;
             }
-            by_pattern
-                .entry(target.tokens.join(" "))
-                .or_default()
-                .push(target);
+            for pattern in patterns_for_target(&target) {
+                by_pattern.entry(pattern).or_default().push(target.clone());
+            }
         }
 
         let mut patterns = Vec::with_capacity(by_pattern.len());
@@ -113,6 +112,24 @@ impl TargetMatcher {
 
         matches
     }
+}
+
+fn patterns_for_target(target: &Target) -> Vec<String> {
+    let mut patterns = vec![target.tokens.join(" ")];
+    if target.tokens.first().map(String::as_str) == Some("mos")
+        && target.tokens.get(1).map(String::as_str) == Some("të")
+    {
+        patterns.push(
+            std::iter::once("të")
+                .chain(std::iter::once("mos"))
+                .chain(target.tokens.iter().skip(2).map(String::as_str))
+                .collect::<Vec<_>>()
+                .join(" "),
+        );
+    }
+    patterns.sort();
+    patterns.dedup();
+    patterns
 }
 
 fn is_token_boundary(bytes: &[u8], index: usize) -> bool {
@@ -234,5 +251,39 @@ mod tests {
         assert_eq!(matches[1].target_key, "punoj");
         assert_eq!(matches[1].kind, MatchKind::ExactToken);
         assert_eq!(matches[2].target_key, "punoj");
+    }
+
+    #[test]
+    fn matches_te_mos_order_for_mos_te_targets() {
+        let targets = targets_from_json(
+            r#"
+{
+  "targets": [
+    {
+      "id": "punoj:subjunctive.present.1sg.active.negative.declarative:mos_t_punoj",
+      "targetKey": "mos t\u00eb punoj",
+      "displayForm": "mos t\u00eb punoj",
+      "tokens": ["mos", "t\u00eb", "punoj"],
+      "signature": "subjunctive.present.1sg.active.negative.declarative",
+      "ancTags": ["V", "sbjv"],
+      "ancQuery": "V sbjv",
+      "cellLabel": "subjunctive present 1sg active",
+      "verbId": "punoj",
+      "lemma": "punoj",
+      "translationEn": "to work",
+      "options": {"mood": "subjunctive"}
+    }
+  ]
+}
+"#,
+        )
+        .expect("targets parse");
+        let matcher = TargetMatcher::new(targets).expect("matcher builds");
+        let normalized = tokens_for("Vendosa të mos punoj sot.").join(" ");
+        let matches = matcher.matches_normalized(&normalized);
+
+        assert_eq!(matches.len(), 1);
+        assert_eq!(matches[0].target_key, "mos t\u{00eb} punoj");
+        assert_eq!(matches[0].kind, MatchKind::ExactPhrase);
     }
 }

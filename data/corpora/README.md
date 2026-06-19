@@ -75,6 +75,12 @@ npm run build:corpus-targets
 npm run scan:local-corpus
 ```
 
+After a full scan, write the hit/miss coverage report:
+
+```bash
+npm run report:corpus-coverage
+```
+
 Build a focused smoke-test index:
 
 ```bash
