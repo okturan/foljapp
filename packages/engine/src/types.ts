@@ -136,6 +136,8 @@ export interface VerbEntryFlags {
   irregularAorist?: boolean;
   /** Verb has no middle-passive voice (copula `jam`, intransitive `iki`/`vij`). */
   noMiddlePassive?: boolean;
+  /** Defective finite verb whose usable forms are restricted to 3sg/3pl. */
+  thirdPersonOnly?: boolean;
 }
 
 /**

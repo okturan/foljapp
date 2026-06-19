@@ -783,15 +783,18 @@ function main(): void {
   const coveragePath = valueAfter('--coverage=') ?? DEFAULT_COVERAGE;
   const dbPath = valueAfter('--db=') ?? DEFAULT_DB;
   const verbsPath = valueAfter('--verbs=') ?? DEFAULT_VERBS;
+  const morphologyPath = valueAfter('--morphology=') ?? DEFAULT_MORPHOLOGY;
   const jsonOut = valueAfter('--json=') ?? DEFAULT_JSON_OUT;
   const mdOut = valueAfter('--md=') ?? DEFAULT_MD_OUT;
+  const dossierJsonOut = valueAfter('--dossier-json=') ?? DEFAULT_DOSSIER_JSON_OUT;
+  const dossierMdOut = valueAfter('--dossier-md=') ?? DEFAULT_DOSSIER_MD_OUT;
 
   const targetFile = readJson<TargetFile>(targetsPath);
   const coverage = readJson<CoverageReport>(coveragePath);
   const verbs = readJson<VerbEntry[]>(verbsPath);
   const dbEvidence = existsSync(dbPath) ? readDbEvidence(dbPath) : null;
   const targetsById = new Map(targetFile.targets.map((target) => [target.id, target]));
-  const morphologyEvidence = readMorphologyEvidence(DEFAULT_MORPHOLOGY, targetsById);
+  const morphologyEvidence = readMorphologyEvidence(morphologyPath, targetsById);
   const missingIds = new Set(coverage.misses.map((miss) => miss.id));
   const verbsById = new Map(verbs.map((verb) => [verb.id, verb]));
 
@@ -1154,11 +1157,8 @@ function main(): void {
     variantCounts: report.dbEvidence?.occurrenceVariantCounts ?? [],
     entries: dossierEntries,
   };
-  writeFileSync(
-    DEFAULT_DOSSIER_JSON_OUT,
-    JSON.stringify(dossier, null, 2) + '\n',
-    'utf8',
-  );
+  mkdirSync(dirname(dossierJsonOut), { recursive: true });
+  writeFileSync(dossierJsonOut, JSON.stringify(dossier, null, 2) + '\n', 'utf8');
 
   const md = [
     '# Corpus Missing Audit',
@@ -1428,12 +1428,13 @@ function main(): void {
     '```',
     '',
   ].join('\n');
-  writeFileSync(DEFAULT_DOSSIER_MD_OUT, dossierMd, 'utf8');
+  mkdirSync(dirname(dossierMdOut), { recursive: true });
+  writeFileSync(dossierMdOut, dossierMd, 'utf8');
 
   console.log(`Wrote ${jsonOut}`);
   console.log(`Wrote ${mdOut}`);
-  console.log(`Wrote ${DEFAULT_DOSSIER_JSON_OUT}`);
-  console.log(`Wrote ${DEFAULT_DOSSIER_MD_OUT}`);
+  console.log(`Wrote ${dossierJsonOut}`);
+  console.log(`Wrote ${dossierMdOut}`);
 }
 
 main();

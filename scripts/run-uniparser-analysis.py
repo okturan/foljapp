@@ -10,6 +10,16 @@ from pathlib import Path
 from typing import Any
 
 
+def add_local_uniparser_venv() -> None:
+    repo_root = Path(__file__).resolve().parents[1]
+    lib = repo_root / ".cache" / "uniparser-venv" / "lib"
+    if not lib.exists():
+        return
+    for site_packages in sorted(lib.glob("python*/site-packages")):
+        sys.path.insert(0, str(site_packages))
+        return
+
+
 def tags(value: Any) -> list[str]:
     if not isinstance(value, str):
         return []
@@ -66,6 +76,7 @@ def main() -> int:
         print(str(exc), file=sys.stderr)
         return 1
 
+    add_local_uniparser_venv()
     try:
         from uniparser_albanian import AlbanianAnalyzer
     except ModuleNotFoundError:

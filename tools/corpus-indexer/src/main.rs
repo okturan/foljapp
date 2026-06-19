@@ -104,6 +104,8 @@ struct TraceTargetsArgs {
     jobs: usize,
     #[arg(long, default_value_t = 5)]
     sample_limit: usize,
+    #[arg(long)]
+    retained_only: bool,
 }
 
 #[derive(Args)]
@@ -294,6 +296,7 @@ struct TraceReport {
     targets_path: String,
     source_db: String,
     selected_sources: String,
+    raw_scan_performed: bool,
     resource_partitions: usize,
     max_per_target: usize,
     sample_limit: usize,
@@ -497,6 +500,17 @@ fn trace_targets(args: TraceTargetsArgs) -> Result<()> {
         bail!("--max-per-target must be greater than zero");
     }
 
+    let all_targets = load_targets(&args.targets)
+        .with_context(|| format!("load targets from {}", args.targets.display()))?;
+    let selected_targets = select_trace_targets(&all_targets, &args)?;
+    if selected_targets.is_empty() {
+        bail!("no targets matched --target-ids or --forms");
+    }
+
+    if args.retained_only {
+        return retained_only_trace(args, selected_targets);
+    }
+
     let repo_root = std::env::current_dir().context("read current directory")?;
     let selected_resources = select_resources(&repo_root, &args.sources)?;
     if selected_resources.is_empty() {
@@ -510,12 +524,6 @@ fn trace_targets(args: TraceTargetsArgs) -> Result<()> {
         resources.extend(expand_resource_partitions(&resource)?);
     }
 
-    let all_targets = load_targets(&args.targets)
-        .with_context(|| format!("load targets from {}", args.targets.display()))?;
-    let selected_targets = select_trace_targets(&all_targets, &args)?;
-    if selected_targets.is_empty() {
-        bail!("no targets matched --target-ids or --forms");
-    }
     let selected_ids = selected_targets
         .iter()
         .map(|target| target.id.clone())
@@ -652,6 +660,7 @@ fn trace_targets(args: TraceTargetsArgs) -> Result<()> {
         targets_path: args.targets.display().to_string(),
         source_db: args.source_db.display().to_string(),
         selected_sources: args.sources,
+        raw_scan_performed: true,
         resource_partitions: resources.len(),
         max_per_target: args.max_per_target,
         sample_limit: args.sample_limit,
@@ -669,19 +678,69 @@ fn trace_targets(args: TraceTargetsArgs) -> Result<()> {
         targets: target_outputs,
     };
 
-    if let Some(parent) = args.out_json.parent() {
+    write_trace_report(&report, &args.out_json, &args.out_md)?;
+    Ok(())
+}
+
+fn retained_only_trace(args: TraceTargetsArgs, selected_targets: Vec<Target>) -> Result<()> {
+    if !args.source_db.exists() {
+        bail!(
+            "--retained-only requires an existing --source-db: {}",
+            args.source_db.display()
+        );
+    }
+
+    let started = Instant::now();
+    let retained = retained_trace_evidence(&args.source_db, &selected_targets)?;
+    let mut samples =
+        retained_trace_samples(&args.source_db, &selected_targets, args.sample_limit)?;
+    let targets = selected_targets
+        .iter()
+        .map(|target| TraceTargetOutput {
+            target_id: target.id.clone(),
+            target_key: target.target_key.clone(),
+            lemma: target.lemma.clone(),
+            signature: target.signature.clone(),
+            counts: TraceCounts::default(),
+            retained: retained.get(&target.id).cloned().unwrap_or_default(),
+            resources: Vec::new(),
+            samples: samples.remove(&target.id).unwrap_or_default(),
+        })
+        .collect();
+
+    let report = TraceReport {
+        generated_at: current_timestamp()?,
+        targets_path: args.targets.display().to_string(),
+        source_db: args.source_db.display().to_string(),
+        selected_sources: "retained-only".to_owned(),
+        raw_scan_performed: false,
+        resource_partitions: 0,
+        max_per_target: args.max_per_target,
+        sample_limit: args.sample_limit,
+        candidates_seen: 0,
+        empty_candidates: 0,
+        duration_ms: started.elapsed().as_millis(),
+        boundaries: vec![
+            "Retained-only mode reads examples already stored in the supplied SQLite DB.",
+            "Raw corpus resources were not scanned, so raw matches, variant rejects, cap drops, and quality rejects are unavailable.",
+            "Retained occurrences may come from an earlier scan and are not proof of exhaustive corpus absence.",
+        ],
+        targets,
+    };
+    write_trace_report(&report, &args.out_json, &args.out_md)
+}
+
+fn write_trace_report(report: &TraceReport, out_json: &Path, out_md: &Path) -> Result<()> {
+    if let Some(parent) = out_json.parent() {
         fs::create_dir_all(parent)?;
     }
-    if let Some(parent) = args.out_md.parent() {
+    if let Some(parent) = out_md.parent() {
         fs::create_dir_all(parent)?;
     }
-    fs::write(
-        &args.out_json,
-        serde_json::to_string_pretty(&report)? + "\n",
-    )?;
-    fs::write(&args.out_md, trace_markdown(&report))?;
-    println!("Wrote {}", args.out_json.display());
-    println!("Wrote {}", args.out_md.display());
+    fs::write(out_json, serde_json::to_string_pretty(report)? + "\n")?;
+    fs::write(out_md, trace_markdown(report))?;
+    println!("Wrote {}", out_json.display());
+    println!("Wrote {}", out_md.display());
     Ok(())
 }
 
@@ -981,6 +1040,59 @@ fn retained_trace_evidence(
     Ok(retained)
 }
 
+fn retained_trace_samples(
+    source_db: &Path,
+    targets: &[Target],
+    sample_limit: usize,
+) -> Result<HashMap<String, Vec<TraceSample>>> {
+    if sample_limit == 0 {
+        return Ok(HashMap::new());
+    }
+    let con = readonly_connection(source_db)?;
+    let has_variant_kind = occurrences_has_variant_kind(&con)?;
+    let variant_expr = if has_variant_kind {
+        "o.variant_kind"
+    } else {
+        "'canonical'"
+    };
+    let sql = format!(
+        r#"
+        SELECT s.resource_id, s.doc_id, s.title, s.url, {variant_expr},
+               o.matched_pattern, s.flags_json, s.sentence
+        FROM occurrences o
+        JOIN sentences s ON s.id = o.sentence_id
+        WHERE o.target_id = ?
+        ORDER BY o.score DESC, o.id
+        LIMIT ?
+        "#
+    );
+    let mut out = HashMap::new();
+    for target in targets {
+        let mut stmt = con.prepare(&sql)?;
+        let rows = stmt.query_map(params![target.id.as_str(), sample_limit as i64], |row| {
+            let flags_json: String = row.get(6)?;
+            let flags = serde_json::from_str::<Vec<String>>(&flags_json).unwrap_or_default();
+            Ok(TraceSample {
+                target_id: target.id.clone(),
+                stage: "retained".to_owned(),
+                resource_id: row.get(0)?,
+                doc_id: row.get::<_, Option<String>>(1)?.unwrap_or_default(),
+                title: row.get(2)?,
+                url: row.get(3)?,
+                variant_kind: row.get(4)?,
+                matched_pattern: row.get(5)?,
+                flags,
+                sentence: row.get(7)?,
+            })
+        })?;
+        let samples = rows.collect::<rusqlite::Result<Vec<_>>>()?;
+        if !samples.is_empty() {
+            out.insert(target.id.clone(), samples);
+        }
+    }
+    Ok(out)
+}
+
 fn occurrences_has_variant_kind(con: &Connection) -> Result<bool> {
     let mut stmt = con.prepare("PRAGMA table_info(occurrences)")?;
     let columns = stmt.query_map([], |row| row.get::<_, String>(1))?;
@@ -1001,6 +1113,14 @@ fn trace_markdown(report: &TraceReport) -> String {
         "## Summary".to_owned(),
         String::new(),
         format!("- Selected sources: {}", report.selected_sources),
+        format!(
+            "- Raw scan performed: {}",
+            if report.raw_scan_performed {
+                "yes"
+            } else {
+                "no"
+            }
+        ),
         format!(
             "- Resource partitions scanned: {}",
             report.resource_partitions
@@ -1024,16 +1144,27 @@ fn trace_markdown(report: &TraceReport) -> String {
         "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |".to_owned(),
     ]);
     for target in &report.targets {
+        let raw_pattern_matches = trace_count_cell(report, target.counts.raw_pattern_matches);
+        let variant_supported_matches =
+            trace_count_cell(report, target.counts.variant_supported_matches);
+        let variant_rejected_matches =
+            trace_count_cell(report, target.counts.variant_rejected_matches);
+        let local_cap_dropped_matches =
+            trace_count_cell(report, target.counts.local_cap_dropped_matches);
+        let quality_rejected_matches =
+            trace_count_cell(report, target.counts.quality_rejected_matches);
+        let emitted_matches =
+            trace_count_cell(report, target.counts.emitted_matches_before_writer_cap);
         lines.push(format!(
             "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |",
             md_escape(&target.target_key),
             md_escape(&target.signature),
-            target.counts.raw_pattern_matches,
-            target.counts.variant_supported_matches,
-            target.counts.variant_rejected_matches,
-            target.counts.local_cap_dropped_matches,
-            target.counts.quality_rejected_matches,
-            target.counts.emitted_matches_before_writer_cap,
+            raw_pattern_matches,
+            variant_supported_matches,
+            variant_rejected_matches,
+            local_cap_dropped_matches,
+            quality_rejected_matches,
+            emitted_matches,
             target.retained.retained_occurrences,
             md_escape(&target.retained.retained_variants.join(", ")),
         ));
@@ -1060,6 +1191,14 @@ fn trace_markdown(report: &TraceReport) -> String {
         lines.push(String::new());
     }
     lines.join("\n")
+}
+
+fn trace_count_cell(report: &TraceReport, value: usize) -> String {
+    if report.raw_scan_performed {
+        value.to_string()
+    } else {
+        "n/a".to_owned()
+    }
 }
 
 fn md_escape(value: &str) -> String {

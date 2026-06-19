@@ -15,6 +15,7 @@ export const verbEntryFlagsSchema = z
     hasMutation: z.boolean().optional(),
     irregularAorist: z.boolean().optional(),
     noMiddlePassive: z.boolean().optional(),
+    thirdPersonOnly: z.boolean().optional(),
   })
   .strict();
 

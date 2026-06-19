@@ -107,12 +107,12 @@ function roundTripGate(entries: { entry: VerbEntry }[]): void {
   for (const { entry } of entries) {
     try {
       const t = table(entry.id);
-      // sanity: ensure at least one finite tense produced something for active 1sg
-      const presentActive1sg =
-        (t.indicative.present as Record<string, unknown>)['1sg.active'];
-      if (presentActive1sg === undefined) {
+      const sanityCell = entry.flags?.thirdPersonOnly ? '3sg.active' : '1sg.active';
+      const presentActive =
+        (t.indicative.present as Record<string, unknown>)[sanityCell];
+      if (presentActive === undefined) {
         console.error(
-          `✗ engine round-trip: ${entry.id} produced no indicative present 1sg active form`,
+          `✗ engine round-trip: ${entry.id} produced no indicative present ${sanityCell} form`,
         );
         process.exit(1);
       }

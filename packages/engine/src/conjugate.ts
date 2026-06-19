@@ -788,6 +788,13 @@ export function conjugate(
   const person = (options.person ?? 2) as Person;
   const number = options.number ?? 'singular';
 
+  if (options.mood !== 'non-finite' && entry.flags?.thirdPersonOnly && person !== 3) {
+    throw new UnsupportedCellError(
+      `${cellLabel(person, number)}/${options.mood}`,
+      `${entry.id} only supports third-person finite cells (flag thirdPersonOnly)`,
+    );
+  }
+
   // Verbs flagged noMiddlePassive (copula `jam`, intransitive `iki`/`vij`)
   // have no MP voice in standard Albanian. Refuse before paradigm dispatch
   // so the engine never fabricates forms like `jamem`/`ikem`/`vihem`.

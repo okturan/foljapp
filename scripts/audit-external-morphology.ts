@@ -6,7 +6,7 @@
  * as review evidence only.
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -20,6 +20,7 @@ const DEFAULT_MD_OUT = join(REPO_ROOT, '.cache', 'external-morphology-audit.md')
 const DEFAULT_UNIPARSER_LEXEME_PATHS = [
   join(REPO_ROOT, '.cache', 'uniparser-grammar-albanian', 'sqi_lexemes_V.txt'),
   join(REPO_ROOT, '.cache', 'sqi_lexemes_V.txt'),
+  ...localUniparserPackageLexemePaths(),
 ];
 
 interface TargetRecord {
@@ -164,6 +165,25 @@ function resolveUniparserLexemes(
   };
 }
 
+function localUniparserPackageLexemePaths(): string[] {
+  const lib = join(REPO_ROOT, '.cache', 'uniparser-venv', 'lib');
+  if (!existsSync(lib)) return [];
+  return readdirSync(lib, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && entry.name.startsWith('python'))
+    .flatMap((entry) => {
+      const base = join(
+        lib,
+        entry.name,
+        'site-packages',
+        'uniparser_albanian',
+      );
+      return [
+        join(base, 'data_strict', 'lexemes.txt'),
+        join(base, 'data_nodiacritics', 'lexemes.txt'),
+      ];
+    });
+}
+
 function resolveUniparserAnalysis(
   explicitPath: string | undefined,
 ): { path: string | null; searchedPaths: string[]; source: string } {
@@ -230,23 +250,25 @@ function middlePassiveOverrideKeys(verb: VerbEntry | undefined): string[] {
 }
 
 function parseUniparserLexemes(path: string): LexemeIndex {
-  const text = readFileSync(path, 'utf8').replaceAll('\r', '\n');
+  const text = readFileSync(path, 'utf8').replaceAll('\r\n', '\n').replaceAll('\r', '\n');
   const chunks = text
-    .split(/(?=-lexeme\s+lex:\s*)/g)
+    .split(/(?=^-lexeme\b)/gm)
     .map((chunk) => chunk.trim())
     .filter((chunk) => chunk.startsWith('-lexeme'));
   const entries: LexemeEntry[] = [];
 
   for (const chunk of chunks) {
-    const lex = chunk.match(/-lexeme\s+lex:\s*([^\s]+)/)?.[1];
-    const gramm = chunk.match(/\sgramm:\s*([^\s]+)/)?.[1];
+    const lex = chunk.match(/(?:^|\n)\s*lex:\s*([^\s]+)/)?.[1];
+    const gramm = chunk.match(/(?:^|\n)\s*gramm:\s*([^\n]+)/)?.[1];
     if (!lex || !gramm) continue;
+    const tags = gramm.split(',').map((tag) => tag.trim()).filter(Boolean);
+    if (!tags.includes('V')) continue;
     entries.push({
       lex,
-      tags: gramm.split(',').filter(Boolean),
-      paradigm: chunk.match(/\sparadigm:\s*([^\s]+)/)?.[1] ?? null,
-      lexref: chunk.match(/\slexref:\s*([^\s]+)/)?.[1] ?? null,
-      transEn: chunk.match(/\strans_en:\s*([\s\S]*)$/)?.[1]?.trim() ?? '',
+      tags,
+      paradigm: chunk.match(/(?:^|\n)\s*paradigm:\s*([^\s]+)/)?.[1] ?? null,
+      lexref: chunk.match(/(?:^|\n)\s*lexref:\s*([^\s]+)/)?.[1] ?? null,
+      transEn: chunk.match(/(?:^|\n)\s*trans_en:\s*([\s\S]*)$/)?.[1]?.trim() ?? '',
     });
   }
 
