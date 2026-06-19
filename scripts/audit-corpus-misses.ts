@@ -1083,13 +1083,14 @@ function main(): void {
   const auditedMisses = coverage.misses.map((miss) => {
     const target = targetsById.get(miss.id);
     if (!target) throw new Error(`Coverage miss not found in targets: ${miss.id}`);
+    const morphology = morphologyEvidence.byTargetId.get(target.id);
     const labels = labelMiss(
       target,
       byCell.get(cellKey(target))!,
       byLemma.get(target.verbId)!,
       bySurface.get(target.targetKey)!,
       scannerVariantsRecorded,
-      morphologyEvidence.byTargetId.get(target.id),
+      morphology,
     );
     for (const label of labels) add(labelCounts, label);
     const primary = primaryCategory(labels);
@@ -1109,6 +1110,7 @@ function main(): void {
       bucket: miss.bucket,
       primary,
       labels,
+      morphologyAction: morphology?.action ?? null,
       wordOrderAlternants: wordOrder,
       scannerVariantAlternants: scannerVariants,
     };
@@ -1248,6 +1250,89 @@ function main(): void {
       };
     },
   );
+  const worklistSamples = (rows: typeof auditedMisses) =>
+    rows.slice(0, 5).map((row) => ({
+      targetKey: row.targetKey,
+      lemma: row.lemma,
+      signature: row.signature,
+      primary: row.primary,
+    }));
+  const worklistRow = (
+    key: string,
+    title: string,
+    basis: string,
+    rows: typeof auditedMisses,
+  ) => ({
+    key,
+    title,
+    basis,
+    targetCount: rows.length,
+    lemmaCount: new Set(rows.map((row) => row.verbId)).size,
+    samples: worklistSamples(rows),
+  });
+  const reviewWorklist = [
+    worklistRow(
+      'keep_rare_valid_unattested',
+      'Keep rare-valid forms unless policy changes',
+      'UniParser accepts these missing forms; current evidence says they are valid-looking but unattested in retained examples, not wrong.',
+      analyzerAcceptedMisses.filter(
+        (miss) =>
+          analyzerAcceptedClass(miss) === 'active rare mood: admirative/optative',
+      ),
+    ),
+    worklistRow(
+      'review_middle_passive_voice_eligibility',
+      'Review middle-passive voice eligibility by lemma',
+      'These misses all come from generated middle-passive cells; inspect lemma voice semantics, local flags, and external morphology before suppressing output.',
+      auditedMisses.filter((miss) => miss.primary === 'needs_middle_passive_attestation'),
+    ),
+    worklistRow(
+      'review_scanner_variant_absences',
+      'Review checked scanner variants only when examples are needed',
+      'The Rust scan already checked configured word-order, apostrophe-negative, or diacritic-fold variants; remaining absences may need broader phrase search rather than generation changes.',
+      auditedMisses.filter(
+        (miss) => miss.primary === 'scanner_variant_checked_but_absent',
+      ),
+    ),
+    worklistRow(
+      'review_near_empty_cells',
+      'Treat near-empty grammatical cells as grammar-wide rarity first',
+      'These cells have very low corpus yield across many lemmas, so they are better reviewed as cell-level rarity than as isolated verb bugs.',
+      auditedMisses.filter((miss) => miss.primary === 'near_empty_cell'),
+    ),
+    worklistRow(
+      'review_lemma_outliers',
+      'Inspect lemma-level source/status outliers',
+      'These lemmas have unusually high miss pressure relative to their generated target count.',
+      auditedMisses.filter((miss) => miss.primary === 'lemma_outlier'),
+    ),
+    worklistRow(
+      'review_component_valid_phrases',
+      'Check full phrases whose head/component is morphologically supported',
+      'Morphology evidence supports the token or lemma component, but retained corpus evidence does not attest the full generated phrase.',
+      auditedMisses.filter((miss) => miss.primary === 'component_valid_phrase_absence'),
+    ),
+  ].filter((row) => row.targetCount > 0);
+  const middlePassiveReviewActionCounts = new Map<string, number>();
+  const middlePassiveReviewMisses = auditedMisses.filter(
+    (miss) => miss.primary === 'needs_middle_passive_attestation',
+  );
+  for (const miss of middlePassiveReviewMisses) {
+    add(middlePassiveReviewActionCounts, miss.morphologyAction ?? 'unknown');
+  }
+  const middlePassiveReviewActions = topEntries(
+    middlePassiveReviewActionCounts,
+    20,
+  ).map((row) => {
+    const rows = middlePassiveReviewMisses.filter(
+      (miss) => (miss.morphologyAction ?? 'unknown') === row.key,
+    );
+    return {
+      ...row,
+      lemmaCount: new Set(rows.map((miss) => miss.verbId)).size,
+      samples: worklistSamples(rows),
+    };
+  });
   const report = {
     generatedAt: new Date().toISOString(),
     targetsPath,
@@ -1315,6 +1400,8 @@ function main(): void {
       byLemma: analyzerAcceptedByLemma,
       samples: analyzerAcceptedSamples(analyzerAcceptedMisses),
     },
+    reviewWorklist,
+    middlePassiveReviewActions,
     evidenceLabels: topEntries(labelCounts, 40),
     dbEvidence,
     duplicateMissSurfaces: duplicateMissSurfaces.slice(0, 80),
@@ -1676,6 +1763,28 @@ function main(): void {
     ...report.analyzerAcceptedMisses.byLemma.slice(0, 12).map(
       (row) =>
         `| ${mdCell(row.lemma)} | ${mdCell(row.key)} | ${row.count} | ${row.sourceLevel} | ${mdCell(row.samples.map((sample) => `${sample.targetKey} [${sample.primary}]`).join(', '))} |`,
+    ),
+    '',
+    '## Next Review Worklist',
+    '',
+    'These buckets are conservative review guidance from existing evidence. They may overlap; they do not change generated forms or prove impossibility.',
+    '',
+    '| Action | Targets | Lemmas | Evidence Basis | Samples |',
+    '| --- | ---: | ---: | --- | --- |',
+    ...report.reviewWorklist.map(
+      (row) =>
+        `| ${mdCell(row.title)} | ${row.targetCount} | ${row.lemmaCount} | ${mdCell(row.basis)} | ${mdCell(row.samples.map((sample) => `${sample.targetKey} (${sample.lemma}; ${sample.signature}; ${sample.primary})`).join(', '))} |`,
+    ),
+    '',
+    '### Middle-Passive Review Actions',
+    '',
+    'These rows split the middle-passive review bucket by the morphology action joined from `.cache/external-morphology-audit.json`.',
+    '',
+    '| Morphology Action | Targets | Lemmas | Samples |',
+    '| --- | ---: | ---: | --- |',
+    ...report.middlePassiveReviewActions.map(
+      (row) =>
+        `| ${mdCell(row.key)} | ${row.count} | ${row.lemmaCount} | ${mdCell(row.samples.map((sample) => `${sample.targetKey} (${sample.lemma}; ${sample.signature})`).join(', '))} |`,
     ),
     '',
     '## Corpus Source Levels',
