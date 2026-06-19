@@ -13,7 +13,7 @@
     { "source": "husic", "reference": "3C (suppletive aorist ndenj)" },
     { "source": "kaikki", "reference": "https://en.wiktionary.org/wiki/rri#Albanian" }
   ],
-  "flags": { "irregularAorist": true },
+  "flags": { "irregularAorist": true, "noMiddlePassive": true },
   "dialect": "tosk",
   "notes": "Aorist stem ndenj takes Class 2 endings (consonant stem). Optative is built from aorist stem with -ça-/-ç family endings.",
   "cellOverrides": {

@@ -807,7 +807,7 @@ export function conjugate(
     );
   }
 
-  // Verbs flagged noMiddlePassive (copula `jam`, intransitive `iki`/`vij`)
+  // Verbs flagged noMiddlePassive (copula `jam`, intransitives such as `iki`)
   // have no MP voice in standard Albanian. Refuse before paradigm dispatch
   // so the engine never fabricates forms like `jamem`/`ikem`/`vihem`.
   if (voice === 'middle-passive' && entry.flags?.noMiddlePassive) {

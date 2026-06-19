@@ -9,6 +9,7 @@
     "aorist": "qëndrua",
     "participle": "qëndruar"
   },
+  "flags": { "noMiddlePassive": true },
   "sources": [
     {
       "source": "kaikki",

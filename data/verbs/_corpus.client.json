@@ -2181,6 +2181,9 @@
         "reference": "scaffolded by ingest-kaikki-batch"
       }
     ],
+    "flags": {
+      "noMiddlePassive": true
+    },
     "dialect": "tosk"
   },
   {
@@ -4472,6 +4475,9 @@
         "reference": "Husić 2002 — parsed cache (.cache/husic/qendroj.jsonl)"
       }
     ],
+    "flags": {
+      "noMiddlePassive": true
+    },
     "dialect": "tosk"
   },
   {
@@ -4550,7 +4556,8 @@
       }
     ],
     "flags": {
-      "irregularAorist": true
+      "irregularAorist": true,
+      "noMiddlePassive": true
     },
     "dialect": "tosk",
     "notes": "Aorist stem ndenj takes Class 2 endings (consonant stem). Optative is built from aorist stem with -ça-/-ç family endings.",
@@ -5130,6 +5137,9 @@
         "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
       }
     ],
+    "flags": {
+      "noMiddlePassive": true
+    },
     "dialect": "tosk"
   },
   {
