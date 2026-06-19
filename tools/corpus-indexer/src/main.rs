@@ -13,7 +13,7 @@ use db::ExampleDb;
 use quality::{keep_sentence, quality_flags};
 use rusqlite::{params, Connection, OpenFlags};
 use serde::Serialize;
-use sources::{expand_resource_partitions, load_downloaded_resources, open_resource, ResourceSpec};
+use sources::{expand_resource_partitions, load_downloaded_resources, ResourceSpec};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -125,6 +125,10 @@ struct TraceTargetsArgs {
     sample_limit: usize,
     #[arg(long)]
     retained_only: bool,
+    #[arg(long)]
+    candidate_cache_dir: Option<PathBuf>,
+    #[arg(long)]
+    require_candidate_cache: bool,
 }
 
 #[derive(Args)]
@@ -316,6 +320,8 @@ struct TraceReport {
     targets_path: String,
     source_db: String,
     selected_sources: String,
+    candidate_cache_dir: Option<String>,
+    require_candidate_cache: bool,
     raw_scan_performed: bool,
     resource_partitions: usize,
     max_per_target: usize,
@@ -577,6 +583,8 @@ fn trace_targets(args: TraceTargetsArgs) -> Result<()> {
         let worker_selected_ids = Arc::clone(&selected_ids);
         let max_per_target = args.max_per_target;
         let sample_limit = args.sample_limit;
+        let candidate_cache_dir = args.candidate_cache_dir.clone();
+        let require_candidate_cache = args.require_candidate_cache;
         handles.push(thread::spawn(move || loop {
             let Some(resource) = worker_work.lock().expect("work queue").pop_front() else {
                 break;
@@ -587,6 +595,8 @@ fn trace_targets(args: TraceTargetsArgs) -> Result<()> {
                 Arc::clone(&worker_selected_ids),
                 max_per_target,
                 sample_limit,
+                candidate_cache_dir.clone(),
+                require_candidate_cache,
                 worker_tx.clone(),
             );
         }));
@@ -680,6 +690,11 @@ fn trace_targets(args: TraceTargetsArgs) -> Result<()> {
         targets_path: args.targets.display().to_string(),
         source_db: args.source_db.display().to_string(),
         selected_sources: args.sources,
+        candidate_cache_dir: args
+            .candidate_cache_dir
+            .as_ref()
+            .map(|path| path.display().to_string()),
+        require_candidate_cache: args.require_candidate_cache,
         raw_scan_performed: true,
         resource_partitions: resources.len(),
         max_per_target: args.max_per_target,
@@ -694,6 +709,7 @@ fn trace_targets(args: TraceTargetsArgs) -> Result<()> {
             "Quality-rejected matches failed the current sentence quality filters before writer retention.",
             "Emitted matches are worker output before the global SQLite writer cap.",
             "Retained occurrences are read from the supplied SQLite DB and may come from an earlier scan.",
+            "When --candidate-cache-dir is supplied, the trace reads cached normalized candidates where fresh shards exist and preserves raw-resource fallback unless --require-candidate-cache is set.",
         ],
         targets: target_outputs,
     };
@@ -733,6 +749,11 @@ fn retained_only_trace(args: TraceTargetsArgs, selected_targets: Vec<Target>) ->
         targets_path: args.targets.display().to_string(),
         source_db: args.source_db.display().to_string(),
         selected_sources: "retained-only".to_owned(),
+        candidate_cache_dir: args
+            .candidate_cache_dir
+            .as_ref()
+            .map(|path| path.display().to_string()),
+        require_candidate_cache: args.require_candidate_cache,
         raw_scan_performed: false,
         resource_partitions: 0,
         max_per_target: args.max_per_target,
@@ -826,6 +847,8 @@ fn trace_resource(
     selected_ids: Arc<HashSet<String>>,
     max_per_target: usize,
     sample_limit: usize,
+    candidate_cache_dir: Option<PathBuf>,
+    require_candidate_cache: bool,
     tx: mpsc::Sender<TraceEvent>,
 ) {
     let resource_id = resource.id.clone();
@@ -835,6 +858,8 @@ fn trace_resource(
         selected_ids,
         max_per_target,
         sample_limit,
+        candidate_cache_dir,
+        require_candidate_cache,
         &tx,
     ) {
         let _ = tx.send(TraceEvent::Error(format!("{resource_id}: {err:#}")));
@@ -847,6 +872,8 @@ fn trace_resource_inner(
     selected_ids: Arc<HashSet<String>>,
     max_per_target: usize,
     sample_limit: usize,
+    candidate_cache_dir: Option<PathBuf>,
+    require_candidate_cache: bool,
     tx: &mpsc::Sender<TraceEvent>,
 ) -> Result<()> {
     let started = Instant::now();
@@ -856,17 +883,22 @@ fn trace_resource_inner(
     let mut counts_by_target = HashMap::<String, TraceCounts>::new();
     let mut samples = Vec::<TraceSample>::new();
     let mut sample_counts = HashMap::<String, usize>::new();
-    let stream =
-        open_resource(&resource).with_context(|| format!("open source {}", resource.id))?;
+    let stream = open_candidate_stream(
+        &resource,
+        candidate_cache_dir.as_deref(),
+        require_candidate_cache,
+    )
+    .with_context(|| format!("open candidates for {}", resource.id))?;
 
     for item in stream {
-        let candidate = item.with_context(|| format!("read source {}", resource.id))?;
+        let cached = item.with_context(|| format!("read source {}", resource.id))?;
+        let candidate = cached.candidate;
+        let normalized = cached.normalized;
         candidates_seen += 1;
         if candidates_seen.is_multiple_of(1_000_000) {
             println!("  {}: {candidates_seen} trace candidates", resource.id);
         }
 
-        let normalized = normalized_text(&candidate.sentence);
         if normalized.is_empty() {
             empty_candidates += 1;
             continue;
