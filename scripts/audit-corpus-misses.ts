@@ -36,6 +36,11 @@ const DEFAULT_DOSSIER_MD_OUT = join(
   '.cache',
   'corpus-missing-dossier.md',
 );
+const DEFAULT_MORPHOLOGY = join(
+  REPO_ROOT,
+  '.cache',
+  'external-morphology-audit.json',
+);
 
 interface TargetRecord {
   id: string;
@@ -61,6 +66,66 @@ interface CoverageReport {
     candidatesSeen: number;
   };
   misses: Array<{ id: string; targetKey: string; bucket: string }>;
+}
+
+interface ExternalMorphologyAudit {
+  run?: {
+    generatedAt?: string;
+  };
+  externalMorphology?: {
+    uniparserLexemesStatus?: string;
+    analyzerStatus?: string;
+    webCorporaStatus?: string;
+  };
+  summary?: {
+    auditedMissTargets?: number;
+    middlePassiveMissTargets?: number;
+    lexemeMatchedLemmas?: number;
+  };
+  targets?: Array<{
+    targetId: string;
+    targetKey?: string;
+    signature?: string;
+    headToken?: string;
+    scope?: string;
+    verdict?: {
+      form?: string;
+      voiceEligibility?: string;
+      proofLevel?: string;
+      reasons?: string[];
+      action?: string;
+    };
+  }>;
+}
+
+interface MorphologyTargetVerdict {
+  headToken: string | null;
+  scope: string | null;
+  form: string | null;
+  voiceEligibility: string | null;
+  proofLevel: string | null;
+  reasons: string[];
+  action: string | null;
+}
+
+interface MorphologyEvidence {
+  status: string;
+  path: string;
+  generatedAt: string | null;
+  matchedMissRows: number;
+  skippedRows: number;
+  duplicateTargetIds: number;
+  summary: {
+    auditedMissTargets: number | null;
+    middlePassiveMissTargets: number | null;
+    lexemeMatchedLemmas: number | null;
+  };
+  external: {
+    uniparserLexemesStatus: string | null;
+    analyzerStatus: string | null;
+    webCorporaStatus: string | null;
+  };
+  byTargetId: Map<string, MorphologyTargetVerdict>;
 }
 
 interface VerbEntry {
@@ -151,11 +216,118 @@ function readJson<T>(path: string): T {
   return JSON.parse(readFileSync(path, 'utf8')) as T;
 }
 
+function emptyMorphologyEvidence(
+  status: string,
+  path: string,
+  overrides: Partial<MorphologyEvidence> = {},
+): MorphologyEvidence {
+  return {
+    status,
+    path,
+    generatedAt: null,
+    matchedMissRows: 0,
+    skippedRows: 0,
+    duplicateTargetIds: 0,
+    summary: {
+      auditedMissTargets: null,
+      middlePassiveMissTargets: null,
+      lexemeMatchedLemmas: null,
+    },
+    external: {
+      uniparserLexemesStatus: null,
+      analyzerStatus: null,
+      webCorporaStatus: null,
+    },
+    byTargetId: new Map(),
+    ...overrides,
+  };
+}
+
+function readMorphologyEvidence(
+  path: string,
+  targetsById: Map<string, TargetRecord>,
+): MorphologyEvidence {
+  if (!existsSync(path)) {
+    return emptyMorphologyEvidence('missing', path);
+  }
+
+  let audit: ExternalMorphologyAudit;
+  try {
+    audit = readJson<ExternalMorphologyAudit>(path);
+  } catch (error) {
+    console.warn(
+      `Ignoring optional morphology audit at ${path}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    return emptyMorphologyEvidence('invalid', path);
+  }
+  if (!Array.isArray(audit.targets)) {
+    console.warn(`Ignoring optional morphology audit at ${path}: missing targets[]`);
+    return emptyMorphologyEvidence('invalid', path);
+  }
+
+  const byTargetId = new Map<string, MorphologyTargetVerdict>();
+  let skippedRows = 0;
+  let duplicateTargetIds = 0;
+  for (const target of audit.targets ?? []) {
+    if (!target.targetId) {
+      skippedRows += 1;
+      continue;
+    }
+    const current = targetsById.get(target.targetId);
+    if (
+      !current ||
+      (target.targetKey !== undefined && target.targetKey !== current.targetKey) ||
+      (target.signature !== undefined && target.signature !== current.signature)
+    ) {
+      skippedRows += 1;
+      continue;
+    }
+    if (byTargetId.has(target.targetId)) {
+      duplicateTargetIds += 1;
+      continue;
+    }
+    byTargetId.set(target.targetId, {
+      headToken: target.headToken ?? null,
+      scope: target.scope ?? null,
+      form: target.verdict?.form ?? null,
+      voiceEligibility: target.verdict?.voiceEligibility ?? null,
+      proofLevel: target.verdict?.proofLevel ?? null,
+      reasons: Array.isArray(target.verdict?.reasons) ? target.verdict.reasons : [],
+      action: target.verdict?.action ?? null,
+    });
+  }
+
+  return {
+    status: 'loaded',
+    path,
+    generatedAt: audit.run?.generatedAt ?? null,
+    matchedMissRows: byTargetId.size,
+    skippedRows,
+    duplicateTargetIds,
+    summary: {
+      auditedMissTargets: audit.summary?.auditedMissTargets ?? null,
+      middlePassiveMissTargets: audit.summary?.middlePassiveMissTargets ?? null,
+      lexemeMatchedLemmas: audit.summary?.lexemeMatchedLemmas ?? null,
+    },
+    external: {
+      uniparserLexemesStatus:
+        audit.externalMorphology?.uniparserLexemesStatus ?? null,
+      analyzerStatus: audit.externalMorphology?.analyzerStatus ?? null,
+      webCorporaStatus: audit.externalMorphology?.webCorporaStatus ?? null,
+    },
+    byTargetId,
+  };
+}
+
 function sqliteJson<T>(dbPath: string, sql: string): T[] {
-  const output = execFileSync('sqlite3', ['-json', dbPath, sql], {
-    encoding: 'utf8',
-    maxBuffer: 1024 * 1024 * 64,
-  }).trim();
+  const output = execFileSync(
+    'sqlite3',
+    ['-readonly', '-cmd', '.timeout 5000', '-json', dbPath, sql],
+    {
+      encoding: 'utf8',
+      maxBuffer: 1024 * 1024 * 64,
+    },
+  ).trim();
   return output ? (JSON.parse(output) as T[]) : [];
 }
 
@@ -585,6 +757,7 @@ function main(): void {
   const verbs = readJson<VerbEntry[]>(verbsPath);
   const dbEvidence = existsSync(dbPath) ? readDbEvidence(dbPath) : null;
   const targetsById = new Map(targetFile.targets.map((target) => [target.id, target]));
+  const morphologyEvidence = readMorphologyEvidence(DEFAULT_MORPHOLOGY, targetsById);
   const missingIds = new Set(coverage.misses.map((miss) => miss.id));
   const verbsById = new Map(verbs.map((verb) => [verb.id, verb]));
 
@@ -777,6 +950,8 @@ function main(): void {
       scannerVariantsRecorded,
       missesWithWordOrderAlternants,
       missesWithScannerVariantAlternants,
+      morphologyStatus: morphologyEvidence.status,
+      morphologyMatchedMissTargets: morphologyEvidence.matchedMissRows,
     },
     primaryCategories: topEntries(primaryCounts, 20),
     evidenceLabels: topEntries(labelCounts, 40),
@@ -787,6 +962,16 @@ function main(): void {
     sourceSummary: topEntries(sourceCounts, 40),
     middlePassivePressure: middlePassivePressure.slice(0, 80),
     weakMiddlePassivePressure: weakMiddlePassivePressure.slice(0, 80),
+    morphologyEvidence: {
+      status: morphologyEvidence.status,
+      path: morphologyEvidence.path,
+      generatedAt: morphologyEvidence.generatedAt,
+      matchedMissRows: morphologyEvidence.matchedMissRows,
+      skippedRows: morphologyEvidence.skippedRows,
+      duplicateTargetIds: morphologyEvidence.duplicateTargetIds,
+      summary: morphologyEvidence.summary,
+      external: morphologyEvidence.external,
+    },
     wordOrderAlternants: topEntries(wordOrderAlternantCounts, 100),
     scannerVariantAlternants: topEntries(scannerVariantCounts, 100),
     unexplainedSample: unexplained.slice(0, 100),
@@ -881,6 +1066,7 @@ function main(): void {
     const lemma = byLemma.get(miss.verbId) ?? { total: 0, hit: 0, miss: 0 };
     const verb = verbsById.get(miss.verbId);
     const sources = sourceKeys(verb);
+    const morphology = morphologyEvidence.byTargetId.get(id);
     return {
       priority: reasons,
       targetKey: miss.targetKey,
@@ -897,6 +1083,17 @@ function main(): void {
       sourceLevel: sourceLevel(sources),
       sources,
       middlePassiveOverrideKeys: middlePassiveOverrideKeys(verb),
+      morphology: morphology
+        ? {
+            scope: morphology.scope,
+            headToken: morphology.headToken,
+            form: morphology.form,
+            voiceEligibility: morphology.voiceEligibility,
+            proofLevel: morphology.proofLevel,
+            reasons: morphology.reasons,
+            action: morphology.action,
+          }
+        : null,
       wordOrderAlternants: miss.wordOrderAlternants,
       scannerVariantAlternants: miss.scannerVariantAlternants,
       lookupSql: lookupSql(miss),
@@ -946,6 +1143,7 @@ function main(): void {
     `- Weakly sourced lemmas with middle-passive miss pressure: ${report.summary.weakMiddlePassivePressureCount}`,
     `- Verbs flagged noMiddlePassive: ${report.summary.noMiddlePassiveFlaggedVerbs}`,
     `- Verbs with explicit middle-passive overrides: ${report.summary.verbsWithMiddlePassiveOverrides}`,
+    `- External morphology audit: ${report.summary.morphologyStatus}; joined target verdicts: ${report.summary.morphologyMatchedMissTargets}`,
     `- Unexplained exact absences after heuristics: ${report.summary.unexplainedMisses}`,
     '',
     '## Methodology & Caveats',
@@ -954,6 +1152,7 @@ function main(): void {
     'A target miss is a generated target ID with no retained occurrence. A unique surface miss deduplicates those misses by normalized `targetKey`, so repeated forms across cells or lemmas do not inflate the surface count.',
     'Evidence labels overlap; the primary category is a single prioritized bucket per missed target.',
     'Exact retained absence is not universal raw-corpus absence. Ungenerated alternants, OCR/tokenization variants, filtered examples, and examples dropped by the per-target cap can all remain outside the retained SQLite evidence.',
+    'External morphology verdicts, when present, are review hints only. They do not change hit/miss counts and do not prove corpus attestation or impossibility.',
     '',
     '## DB Cap/Filter Evidence',
     '',
@@ -1014,6 +1213,22 @@ function main(): void {
     report.dbEvidence
       ? `Schema-2 Rust scans also record \`s ...\` negative variants and diacritic-fold variants. Retained sentences include ${report.dbEvidence.retainedSentencesWithSApostrophe} apostrophe-negation examples; variant-only hits are lower-confidence evidence than canonical hits.`
       : 'Schema-2 Rust scans also record `s ...` negative variants and diacritic-fold variants, but SQLite evidence was unavailable for counts.',
+    '',
+    '## External Morphology Evidence',
+    '',
+    `Status: ${report.morphologyEvidence.status}`,
+    `Path: ${report.morphologyEvidence.path}`,
+    `Generated: ${report.morphologyEvidence.generatedAt ?? 'unknown'}`,
+    `Matched miss rows: ${report.morphologyEvidence.matchedMissRows}`,
+    `Skipped stale/invalid rows: ${report.morphologyEvidence.skippedRows}`,
+    `Duplicate target IDs skipped: ${report.morphologyEvidence.duplicateTargetIds}`,
+    `Analyzer status: ${report.morphologyEvidence.external.analyzerStatus ?? 'unknown'}`,
+    `UniParser lexeme status: ${report.morphologyEvidence.external.uniparserLexemesStatus ?? 'unknown'}`,
+    `Lexeme-matched lemmas in morphology artifact: ${report.morphologyEvidence.summary.lexemeMatchedLemmas ?? 'unknown'}`,
+    '',
+    'Joined morphology fields are copied into the compact dossier by target ID when `.cache/external-morphology-audit.json` exists. They explain why a generated miss deserves review; they do not prove that a form is used in real text, and they do not prove that a form is impossible.',
+    '`proofLevel` describes the strength of the morphology evidence. `local-source` means foljapp-internal verb data only. `lexeme` or `analyzer` evidence, when present, means an external morphology source recognized the lemma or token, not that the full generated phrase is corpus-attested.',
+    'For multiword targets, `scope=head-token-only` or `tokens-only` means the review covers component tokens rather than the whole phrase. Morphology fields never change hit/miss counts.',
     '',
     '## Corpus Source Levels',
     '',
@@ -1138,11 +1353,13 @@ function main(): void {
     '',
     '## Priority Samples',
     '',
-    '| Priority | Target | Lemma | Signature | Cell Hit Rate | Lemma Hit Rate | Primary |',
-    '| --- | --- | --- | --- | ---: | ---: | --- |',
+    'Morphology columns are review hints. They refine the likely explanation for a miss but never change hit/miss counts.',
+    '',
+    '| Priority | Target | Lemma | Signature | Cell Hit Rate | Lemma Hit Rate | Primary | Morphology Form | Voice Eligibility | Proof | Scope | Morphology Reasons |',
+    '| --- | --- | --- | --- | ---: | ---: | --- | --- | --- | --- | --- | --- |',
     ...dossier.entries.map(
       (entry) =>
-        `| ${mdCell(entry.priority.join(', '))} | ${mdCell(entry.targetKey)} | ${mdCell(entry.lemma)} | ${mdCell(entry.signature)} | ${entry.cellHitRate} | ${entry.lemmaHitRate} | ${mdCell(entry.primary)} |`,
+        `| ${mdCell(entry.priority.join(', '))} | ${mdCell(entry.targetKey)} | ${mdCell(entry.lemma)} | ${mdCell(entry.signature)} | ${entry.cellHitRate} | ${entry.lemmaHitRate} | ${mdCell(entry.primary)} | ${mdCell(entry.morphology?.form ?? 'not joined')} | ${mdCell(entry.morphology?.voiceEligibility ?? '')} | ${mdCell(entry.morphology?.proofLevel ?? '')} | ${mdCell(entry.morphology?.scope ?? '')} | ${mdCell(entry.morphology?.reasons.join(', ') ?? '')} |`,
     ),
     '',
     '## SQLite Lookup Anchors',
