@@ -698,13 +698,13 @@ function labelMiss(
   if (o.voice === 'middle-passive') labels.push('middle_passive_needs_attestation');
   if (cell.total >= 100 && cell.hit <= 3) labels.push('near_empty_grammatical_cell');
   else if (cell.total >= 100 && hitRate < 0.1) labels.push('low_coverage_grammatical_cell');
-  if (o.mood === 'admirative' && o.tense === 'present') {
+  if (o.voice === 'active' && o.mood === 'admirative' && o.tense === 'present') {
     labels.push('rare_admirative_present');
   }
   if (o.mood === 'admirative' && o.tense !== 'present') {
     labels.push('rare_admirative_nonpresent');
   }
-  if (o.mood === 'optative' && o.tense === 'present') {
+  if (o.voice === 'active' && o.mood === 'optative' && o.tense === 'present') {
     labels.push('rare_optative_present');
   }
   if (o.mood === 'optative' && o.tense === 'perfect') {

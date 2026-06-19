@@ -134,13 +134,13 @@ function missBucket(target: TargetRecord): string {
     return 'negative_subjunctive_order';
   }
   if (o.voice === 'middle-passive') return 'middle_passive';
-  if (o.mood === 'admirative' && o.tense === 'present') {
+  if (o.voice === 'active' && o.mood === 'admirative' && o.tense === 'present') {
     return 'rare_admirative_present';
   }
   if (o.mood === 'admirative' && o.tense !== 'present') {
     return 'rare_admirative_nonpresent';
   }
-  if (o.mood === 'optative' && o.tense === 'present') {
+  if (o.voice === 'active' && o.mood === 'optative' && o.tense === 'present') {
     return 'rare_optative_present';
   }
   if (o.mood === 'optative' && o.tense === 'perfect') {

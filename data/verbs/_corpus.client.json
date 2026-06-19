@@ -3688,8 +3688,8 @@
     "auxiliary": "kam",
     "principalParts": {
       "present": "mbro",
-      "aorist": "mbrua",
-      "participle": "mbruar"
+      "aorist": "mbrojt",
+      "participle": "mbrojtur"
     },
     "sources": [
       {
@@ -3697,11 +3697,29 @@
         "reference": "https://en.wiktionary.org/wiki/mbroj#Albanian"
       },
       {
+        "source": "uniparser",
+        "reference": "mbroj brej/brej-1"
+      },
+      {
         "source": "manual",
         "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
       }
     ],
-    "dialect": "tosk"
+    "flags": {
+      "irregularAorist": true
+    },
+    "dialect": "tosk",
+    "notes": "Irregular aorist and participle use mbrojt-: mbrojta/mbrojte/mbrojti/mbrojtëm/mbrojtët/mbrojtën, participle mbrojtur.",
+    "cellOverrides": {
+      "indicative.aorist": {
+        "1sg": "mbrojta",
+        "2sg": "mbrojte",
+        "3sg": "mbrojti",
+        "1pl": "mbrojtëm",
+        "2pl": "mbrojtët",
+        "3pl": "mbrojtën"
+      }
+    }
   },
   {
     "id": "mbyll",
