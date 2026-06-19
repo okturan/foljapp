@@ -932,12 +932,23 @@ function main(): void {
   const proofCounts = new Map<string, number>();
   const sourceLevelCounts = new Map<string, number>();
   const scopeCounts = new Map<string, number>();
+  const analyzerStatusCounts = new Map<string, number>();
+  const analyzerNonAcceptedLemmaCounts = new Map<string, number>();
+  const analyzerNonAcceptedSignatureCounts = new Map<string, number>();
   for (const audit of targetAudits) {
     add(verdictCounts, audit.verdict.voiceEligibility);
     add(formCounts, audit.verdict.form);
     add(proofCounts, audit.verdict.proofLevel);
     add(sourceLevelCounts, audit.localVerb.sourceLevel);
     add(scopeCounts, audit.scope);
+    add(analyzerStatusCounts, audit.external.uniparserAnalyzer.status);
+    if (
+      audit.external.uniparserAnalyzer.status !== 'not_provided' &&
+      !audit.external.uniparserAnalyzer.accepted
+    ) {
+      add(analyzerNonAcceptedLemmaCounts, audit.lemma);
+      add(analyzerNonAcceptedSignatureCounts, audit.signature);
+    }
   }
 
   const report = {
@@ -1007,6 +1018,9 @@ function main(): void {
     proofLevelCounts: topCounts(proofCounts),
     sourceLevelCounts: topCounts(sourceLevelCounts),
     scopeCounts: topCounts(scopeCounts),
+    analyzerStatusCounts: topCounts(analyzerStatusCounts),
+    analyzerNonAcceptedLemmaCounts: topCounts(analyzerNonAcceptedLemmaCounts),
+    analyzerNonAcceptedSignatureCounts: topCounts(analyzerNonAcceptedSignatureCounts),
     verbs: lemmaReviews,
     targets: targetAudits,
   };
@@ -1064,6 +1078,32 @@ function main(): void {
     '| --- | ---: |',
     ...report.scopeCounts.map((row) => `| ${row.key} | ${row.count} |`),
     '',
+    ...(report.externalMorphology.analyzerRowsLoaded > 0
+      ? [
+          '## UniParser Analyzer Status Counts',
+          '',
+          '| Status | Missed Targets |',
+          '| --- | ---: |',
+          ...report.analyzerStatusCounts.map((row) => `| ${row.key} | ${row.count} |`),
+          '',
+          '## UniParser Non-Accepted Lemma Clusters',
+          '',
+          '| Lemma | Targets |',
+          '| --- | ---: |',
+          ...report.analyzerNonAcceptedLemmaCounts
+            .slice(0, 20)
+            .map((row) => `| ${md(row.key)} | ${row.count} |`),
+          '',
+          '## UniParser Non-Accepted Signature Clusters',
+          '',
+          '| Signature | Targets |',
+          '| --- | ---: |',
+          ...report.analyzerNonAcceptedSignatureCounts
+            .slice(0, 20)
+            .map((row) => `| ${md(row.key)} | ${row.count} |`),
+          '',
+        ]
+      : []),
     '## Top Lemma Reviews',
     '',
     '| Lemma | Verb ID | MP Misses | MP Hit Rate | Active Hit Rate | Source Level | Lexeme Tags | Voice Verdict | Action |',
