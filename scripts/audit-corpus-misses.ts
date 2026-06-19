@@ -180,11 +180,6 @@ interface SqlTextRow {
   value: string;
 }
 
-interface VariantCountRow {
-  variant_kind: string;
-  count: number;
-}
-
 interface CoverageRow {
   key: string;
   total: number;
@@ -235,6 +230,13 @@ interface DbEvidence {
   targetIdsAtMaxStoredOccurrences: number;
   mosTeTargetsMatchedInTeMosOrder: number;
   retainedSentencesWithSApostrophe: number;
+}
+
+interface OccurrenceDbRow {
+  target_id: string;
+  target_key: string;
+  variant_kind: string | null;
+  sentence_id: number;
 }
 
 function valueAfter(prefix: string): string | undefined {
@@ -511,44 +513,86 @@ function voiceCoverageRows(
     );
 }
 
-function readDbEvidence(dbPath: string): DbEvidence {
+function readDbEvidence(dbPath: string, currentTargetIds: Set<string>): DbEvidence {
   const hasOccurrenceVariantEvidence =
     hasColumn(dbPath, 'occurrences', 'variant_kind') &&
     hasColumn(dbPath, 'occurrences', 'matched_pattern');
-  const variantTargetCounts = hasOccurrenceVariantEvidence
-    ? sqliteJson<{
-        canonical_hit_targets: number;
-        variant_hit_targets: number;
-        variant_only_hit_targets: number;
-      }>(
-        dbPath,
-        `
-        WITH target_variant AS (
-          SELECT
-            target_id,
-            max(CASE WHEN variant_kind = 'canonical' THEN 1 ELSE 0 END) AS canonical_hit,
-            max(CASE WHEN variant_kind <> 'canonical' THEN 1 ELSE 0 END) AS variant_hit
-          FROM occurrences
-          GROUP BY target_id
-        )
-        SELECT
-          coalesce(sum(canonical_hit), 0) AS canonical_hit_targets,
-          coalesce(sum(variant_hit), 0) AS variant_hit_targets,
-          coalesce(sum(CASE WHEN canonical_hit = 0 AND variant_hit = 1 THEN 1 ELSE 0 END), 0) AS variant_only_hit_targets
-        FROM target_variant
-        `,
-      )[0]
-    : null;
-  const maxStoredOccurrencesPerTarget = sqliteCount(
+  const variantColumn = hasOccurrenceVariantEvidence
+    ? 'variant_kind'
+    : "'canonical' AS variant_kind";
+  const retainedOccurrences = sqliteJson<OccurrenceDbRow>(
     dbPath,
     `
-    SELECT coalesce(max(occurrences_per_target), 0) AS count
-    FROM (
-      SELECT count(*) AS occurrences_per_target
-      FROM occurrences
-      GROUP BY target_id
-    )
+    SELECT target_id, target_key, ${variantColumn}, sentence_id
+    FROM occurrences
     `,
+  ).filter((row) => currentTargetIds.has(row.target_id));
+
+  const sentenceIds = new Set(retainedOccurrences.map((row) => row.sentence_id));
+  const targetKeys = new Set(retainedOccurrences.map((row) => row.target_key));
+  const occurrencesByTarget = new Map<
+    string,
+    { count: number; canonical: boolean; variants: Set<string> }
+  >();
+  const occurrenceVariantCounts = new Map<string, number>();
+
+  for (const row of retainedOccurrences) {
+    const variantKind = row.variant_kind ?? 'canonical';
+    add(occurrenceVariantCounts, variantKind);
+    const target = occurrencesByTarget.get(row.target_id) ?? {
+      count: 0,
+      canonical: false,
+      variants: new Set<string>(),
+    };
+    target.count += 1;
+    if (variantKind === 'canonical') {
+      target.canonical = true;
+    } else {
+      target.variants.add(variantKind);
+    }
+    occurrencesByTarget.set(row.target_id, target);
+  }
+
+  let canonicalHitTargets = 0;
+  let variantHitTargets = 0;
+  let variantOnlyHitTargets = 0;
+  let maxStoredOccurrencesPerTarget = 0;
+  const variantOnlyTargetCounts = new Map<string, number>();
+
+  for (const target of occurrencesByTarget.values()) {
+    if (target.canonical) canonicalHitTargets += 1;
+    if (target.variants.size > 0) variantHitTargets += 1;
+    if (!target.canonical && target.variants.size > 0) {
+      variantOnlyHitTargets += 1;
+      for (const variantKind of target.variants) {
+        add(variantOnlyTargetCounts, variantKind);
+      }
+    }
+    maxStoredOccurrencesPerTarget = Math.max(
+      maxStoredOccurrencesPerTarget,
+      target.count,
+    );
+  }
+
+  const teMosSentenceIds = new Set(
+    sqliteJson<{ id: number }>(
+      dbPath,
+      "SELECT id FROM sentences WHERE normalized LIKE '%të mos %'",
+    ).map((row) => row.id),
+  );
+  const mosTeTargetsMatchedInTeMosOrder = new Set(
+    retainedOccurrences
+      .filter(
+        (row) =>
+          row.target_key.startsWith('mos të ') && teMosSentenceIds.has(row.sentence_id),
+      )
+      .map((row) => row.target_id),
+  ).size;
+  const sApostropheSentenceIds = new Set(
+    sqliteJson<{ id: number }>(
+      dbPath,
+      "SELECT id FROM sentences WHERE sentence LIKE '%s''%' OR sentence LIKE '%s’%'",
+    ).map((row) => row.id),
   );
 
   return {
@@ -567,41 +611,13 @@ function readDbEvidence(dbPath: string): DbEvidence {
     ),
     hasOccurrenceVariantEvidence,
     occurrenceVariantCounts: hasOccurrenceVariantEvidence
-      ? sqliteJson<VariantCountRow>(
-          dbPath,
-          `
-          SELECT variant_kind, count(*) AS count
-          FROM occurrences
-          GROUP BY variant_kind
-          ORDER BY count(*) DESC, variant_kind ASC
-          `,
-        ).map((row) => ({ key: row.variant_kind, count: Number(row.count) }))
+      ? topEntries(occurrenceVariantCounts, occurrenceVariantCounts.size)
       : [],
-    canonicalHitTargets: Number(variantTargetCounts?.canonical_hit_targets ?? 0),
-    variantHitTargets: Number(variantTargetCounts?.variant_hit_targets ?? 0),
-    variantOnlyHitTargets: Number(
-      variantTargetCounts?.variant_only_hit_targets ?? 0,
-    ),
+    canonicalHitTargets,
+    variantHitTargets,
+    variantOnlyHitTargets,
     variantOnlyTargetCounts: hasOccurrenceVariantEvidence
-      ? sqliteJson<VariantCountRow>(
-          dbPath,
-          `
-          WITH target_variant AS (
-            SELECT
-              target_id,
-              max(CASE WHEN variant_kind = 'canonical' THEN 1 ELSE 0 END) AS canonical_hit
-            FROM occurrences
-            GROUP BY target_id
-          )
-          SELECT o.variant_kind, count(DISTINCT o.target_id) AS count
-          FROM occurrences o
-          JOIN target_variant tv ON tv.target_id = o.target_id
-          WHERE tv.canonical_hit = 0
-            AND o.variant_kind <> 'canonical'
-          GROUP BY o.variant_kind
-          ORDER BY count(DISTINCT o.target_id) DESC, o.variant_kind ASC
-          `,
-        ).map((row) => ({ key: row.variant_kind, count: Number(row.count) }))
+      ? topEntries(variantOnlyTargetCounts, variantOnlyTargetCounts.size)
       : [],
     scannedResources: sqliteCount(
       dbPath,
@@ -627,50 +643,21 @@ function readDbEvidence(dbPath: string): DbEvidence {
       dbPath,
       'SELECT coalesce(sum(sentences_inserted), 0) AS count FROM resource_stats',
     ),
-    retainedSentences: sqliteCount(dbPath, 'SELECT count(*) AS count FROM sentences'),
-    retainedOccurrences: sqliteCount(dbPath, 'SELECT count(*) AS count FROM occurrences'),
-    distinctHitTargets: sqliteCount(
-      dbPath,
-      'SELECT count(DISTINCT target_id) AS count FROM occurrences',
-    ),
-    distinctHitSurfaces: sqliteCount(
-      dbPath,
-      'SELECT count(DISTINCT target_key) AS count FROM occurrences',
-    ),
+    retainedSentences: sentenceIds.size,
+    retainedOccurrences: retainedOccurrences.length,
+    distinctHitTargets: occurrencesByTarget.size,
+    distinctHitSurfaces: targetKeys.size,
     maxStoredOccurrencesPerTarget,
     targetIdsAtMaxStoredOccurrences:
       maxStoredOccurrencesPerTarget === 0
         ? 0
-        : sqliteCount(
-            dbPath,
-            `
-            SELECT count(*) AS count
-            FROM (
-              SELECT target_id, count(*) AS occurrences_per_target
-              FROM occurrences
-              GROUP BY target_id
-            )
-            WHERE occurrences_per_target = ${maxStoredOccurrencesPerTarget}
-            `,
-          ),
-    mosTeTargetsMatchedInTeMosOrder: sqliteCount(
-      dbPath,
-      `
-      SELECT count(DISTINCT o.target_id) AS count
-      FROM occurrences o
-      JOIN sentences s ON s.id = o.sentence_id
-      WHERE o.target_key LIKE 'mos të %'
-        AND s.normalized LIKE '%të mos %'
-      `,
-    ),
-    retainedSentencesWithSApostrophe: sqliteCount(
-      dbPath,
-      `
-      SELECT count(*) AS count
-      FROM sentences
-      WHERE sentence LIKE '%s''%' OR sentence LIKE '%s’%'
-      `,
-    ),
+        : [...occurrencesByTarget.values()].filter(
+            (target) => target.count === maxStoredOccurrencesPerTarget,
+          ).length,
+    mosTeTargetsMatchedInTeMosOrder,
+    retainedSentencesWithSApostrophe: [...sentenceIds].filter((sentenceId) =>
+      sApostropheSentenceIds.has(sentenceId),
+    ).length,
   };
 }
 
@@ -832,8 +819,10 @@ function main(): void {
   const targetFile = readJson<TargetFile>(targetsPath);
   const coverage = readJson<CoverageReport>(coveragePath);
   const verbs = readJson<VerbEntry[]>(verbsPath);
-  const dbEvidence = existsSync(dbPath) ? readDbEvidence(dbPath) : null;
   const targetsById = new Map(targetFile.targets.map((target) => [target.id, target]));
+  const dbEvidence = existsSync(dbPath)
+    ? readDbEvidence(dbPath, new Set(targetsById.keys()))
+    : null;
   const morphologyEvidence = readMorphologyEvidence(
     morphologyPath,
     targetFile,

@@ -57,8 +57,9 @@ interface ResourceStatsRow {
   duration_ms: number;
 }
 
-interface CountRow {
-  count: number;
+interface RetainedOccurrenceRow {
+  target_id: string;
+  sentence_id: number;
 }
 
 interface TextRow {
@@ -177,8 +178,14 @@ function main(): void {
     ORDER BY candidates_seen DESC, resource_id ASC
     `,
   );
-  const sentenceCount = Number(
-    sqliteJson<CountRow>(dbPath, 'SELECT count(*) AS count FROM sentences')[0]?.count ?? 0,
+  const currentTargetIds = new Set(targetFile.targets.map((target) => target.id));
+  const sentenceCount = new Set(
+    sqliteJson<RetainedOccurrenceRow>(
+      dbPath,
+      'SELECT target_id, sentence_id FROM occurrences',
+    )
+      .filter((row) => currentTargetIds.has(row.target_id))
+      .map((row) => row.sentence_id),
   );
   const schemaVersion = sqliteText(
     dbPath,
@@ -290,7 +297,7 @@ function main(): void {
         (sum, row) => sum + Number(row.sentences_inserted),
         0,
       ),
-      storedExampleSentences: sentenceCount,
+      storedExampleSentences: sentenceCount.size,
       scanDurationMs: resourceStats.reduce(
         (sum, row) => sum + Number(row.duration_ms),
         0,

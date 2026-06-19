@@ -9,6 +9,7 @@
     "aorist": "nxis",
     "participle": "nxisur"
   },
+  "flags": { "middlePassiveThirdPersonOnly": true },
   "sources": [
     {
       "source": "kaikki",
