@@ -44,6 +44,8 @@ interface TargetFile {
 interface OccurrenceRow {
   target_id: string;
   occurrences: number;
+  canonical_occurrences: number;
+  variant_occurrences: number;
   resources: number;
   best_score: number;
 }
@@ -60,10 +62,15 @@ interface ResourceStatsRow {
 interface RetainedOccurrenceRow {
   target_id: string;
   sentence_id: number;
+  variant_kind: string | null;
 }
 
 interface TextRow {
   value: string;
+}
+
+interface ColumnRow {
+  name: string;
 }
 
 function valueAfter(prefix: string): string | undefined {
@@ -80,6 +87,12 @@ function sqliteJson<T>(dbPath: string, sql: string): T[] {
 
 function sqliteText(dbPath: string, sql: string): string | null {
   return sqliteJson<TextRow>(dbPath, sql)[0]?.value ?? null;
+}
+
+function hasColumn(dbPath: string, table: string, column: string): boolean {
+  return sqliteJson<ColumnRow>(dbPath, `PRAGMA table_info(${table})`).some(
+    (row) => row.name === column,
+  );
 }
 
 function evidenceScope(selectedSources: string | null): string {
@@ -156,12 +169,30 @@ function main(): void {
   if (!existsSync(dbPath)) throw new Error(`Missing local corpus DB: ${dbPath}`);
 
   const targetFile = JSON.parse(readFileSync(targetsPath, 'utf8')) as TargetFile;
+  const currentTargetIds = new Set(targetFile.targets.map((target) => target.id));
+  const hasOccurrenceVariantEvidence = hasColumn(dbPath, 'occurrences', 'variant_kind');
+  const retainedOccurrenceRows = sqliteJson<RetainedOccurrenceRow>(
+    dbPath,
+    hasOccurrenceVariantEvidence
+      ? 'SELECT target_id, sentence_id, variant_kind FROM occurrences'
+      : "SELECT target_id, sentence_id, 'canonical' AS variant_kind FROM occurrences",
+  ).filter((row) => currentTargetIds.has(row.target_id));
+  const variantSelect = hasOccurrenceVariantEvidence
+    ? `
+      sum(CASE WHEN o.variant_kind = 'canonical' THEN 1 ELSE 0 END) AS canonical_occurrences,
+      sum(CASE WHEN o.variant_kind <> 'canonical' THEN 1 ELSE 0 END) AS variant_occurrences,
+    `
+    : `
+      count(*) AS canonical_occurrences,
+      0 AS variant_occurrences,
+    `;
   const occurrenceRows = sqliteJson<OccurrenceRow>(
     dbPath,
     `
     SELECT
       o.target_id,
       count(*) AS occurrences,
+      ${variantSelect}
       count(DISTINCT s.resource_id) AS resources,
       max(o.score) AS best_score
     FROM occurrences o
@@ -178,14 +209,8 @@ function main(): void {
     ORDER BY candidates_seen DESC, resource_id ASC
     `,
   );
-  const currentTargetIds = new Set(targetFile.targets.map((target) => target.id));
   const sentenceCount = new Set(
-    sqliteJson<RetainedOccurrenceRow>(
-      dbPath,
-      'SELECT target_id, sentence_id FROM occurrences',
-    )
-      .filter((row) => currentTargetIds.has(row.target_id))
-      .map((row) => row.sentence_id),
+    retainedOccurrenceRows.map((row) => row.sentence_id),
   );
   const schemaVersion = sqliteText(
     dbPath,
@@ -205,6 +230,8 @@ function main(): void {
       row.target_id,
       {
         occurrences: Number(row.occurrences),
+        canonicalOccurrences: Number(row.canonical_occurrences),
+        variantOccurrences: Number(row.variant_occurrences),
         resources: Number(row.resources),
         bestScore: Number(row.best_score),
       },
@@ -227,7 +254,38 @@ function main(): void {
   }> = [];
 
   let hitTargets = 0;
+  let canonicalHitTargets = 0;
+  let variantHitTargets = 0;
+  let variantOnlyHitTargets = 0;
   let totalOccurrences = 0;
+  const occurrenceVariantCounts = new Map<string, number>();
+  const targetVariants = new Map<
+    string,
+    { canonical: boolean; variants: Set<string> }
+  >();
+
+  for (const row of retainedOccurrenceRows) {
+    const variantKind = row.variant_kind ?? 'canonical';
+    inc(occurrenceVariantCounts, variantKind);
+    const target = targetVariants.get(row.target_id) ?? {
+      canonical: false,
+      variants: new Set<string>(),
+    };
+    if (variantKind === 'canonical') {
+      target.canonical = true;
+    } else {
+      target.variants.add(variantKind);
+    }
+    targetVariants.set(row.target_id, target);
+  }
+
+  const variantOnlyTargetCounts = new Map<string, number>();
+  for (const target of targetVariants.values()) {
+    if (target.canonical) continue;
+    for (const variantKind of target.variants) {
+      inc(variantOnlyTargetCounts, variantKind);
+    }
+  }
 
   for (const target of targetFile.targets) {
     const hit = hitsByTarget.get(target.id);
@@ -235,6 +293,14 @@ function main(): void {
     if (hasHit) {
       hitTargets += 1;
       totalOccurrences += hit?.occurrences ?? 0;
+      if ((hit?.canonicalOccurrences ?? 0) > 0) canonicalHitTargets += 1;
+      if ((hit?.variantOccurrences ?? 0) > 0) variantHitTargets += 1;
+      if (
+        (hit?.canonicalOccurrences ?? 0) === 0 &&
+        (hit?.variantOccurrences ?? 0) > 0
+      ) {
+        variantOnlyHitTargets += 1;
+      }
     }
 
     const cell = groupKey(target);
@@ -279,10 +345,17 @@ function main(): void {
       hitTargets,
       missedTargets: targetFile.targets.length - hitTargets,
       hitRate: pct(hitTargets, targetFile.targets.length),
+      canonicalHitTargets,
+      canonicalHitRate: pct(canonicalHitTargets, targetFile.targets.length),
+      variantHitTargets: hasOccurrenceVariantEvidence ? variantHitTargets : null,
+      variantOnlyHitTargets: hasOccurrenceVariantEvidence
+        ? variantOnlyHitTargets
+        : null,
       evidenceScope: evidenceScope(selectedSources),
       selectedSources,
       indexMode,
       schemaVersion,
+      hasOccurrenceVariantEvidence,
       totalOccurrences,
       scannedResources: resourceStats.length,
       candidatesSeen: resourceStats.reduce(
@@ -310,6 +383,14 @@ function main(): void {
     missBuckets: topEntries(missBuckets, 20),
     missedByLemma: topEntries(missedByLemma, 40),
     alternantCandidates: topEntries(alternants, 80),
+    variantEvidence: {
+      occurrenceVariantCounts: hasOccurrenceVariantEvidence
+        ? topEntries(occurrenceVariantCounts, occurrenceVariantCounts.size)
+        : [],
+      variantOnlyTargetCounts: hasOccurrenceVariantEvidence
+        ? topEntries(variantOnlyTargetCounts, variantOnlyTargetCounts.size)
+        : [],
+    },
     resourceStats,
     misses,
   };
@@ -326,6 +407,13 @@ function main(): void {
     '',
     `- Targets: ${report.summary.totalTargets}`,
     `- Hit targets: ${report.summary.hitTargets} (${report.summary.hitRate})`,
+    `- Canonical-hit targets: ${report.summary.canonicalHitTargets} (${report.summary.canonicalHitRate})`,
+    ...(report.summary.hasOccurrenceVariantEvidence
+      ? [
+          `- Variant-hit targets: ${report.summary.variantHitTargets}`,
+          `- Variant-only hit targets: ${report.summary.variantOnlyHitTargets}`,
+        ]
+      : ['- Variant-hit targets: unavailable; DB lacks occurrence variant columns']),
     `- Missed targets: ${report.summary.missedTargets}`,
     `- Evidence scope: ${report.summary.evidenceScope}`,
     `- Selected sources: ${report.summary.selectedSources ?? 'unknown'}`,
@@ -337,6 +425,29 @@ function main(): void {
     `- Stored example sentences after cap: ${report.summary.storedExampleSentences}`,
     `- Aggregate scan time: ${(report.summary.scanDurationMs / 1000).toFixed(1)}s`,
     '',
+    ...(report.summary.hasOccurrenceVariantEvidence
+      ? [
+          '## Variant Evidence',
+          '',
+          'Variant evidence is retained as supporting evidence, not exact canonical attestation. Variant-only target IDs have no retained canonical occurrence.',
+          '',
+          '| Variant Kind | Retained Occurrences | Variant-Only Target IDs |',
+          '| --- | ---: | ---: |',
+          ...report.variantEvidence.occurrenceVariantCounts.map((row) => {
+            const variantOnly =
+              report.variantEvidence.variantOnlyTargetCounts.find(
+                (other) => other.key === row.key,
+              )?.count ?? 0;
+            return `| ${row.key} | ${row.count} | ${variantOnly} |`;
+          }),
+          '',
+        ]
+      : [
+          '## Variant Evidence',
+          '',
+          'Unavailable: the local SQLite DB does not include occurrence variant columns.',
+          '',
+        ]),
     '## Miss Buckets',
     '',
     '| Bucket | Misses |',

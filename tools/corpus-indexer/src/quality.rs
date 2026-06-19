@@ -74,7 +74,7 @@ pub fn quality_flags(sentence: &str, normalized: &str, quality: Option<&str>) ->
     {
         flags.push("control_char".to_string());
     }
-    let token_count = tokens_for(normalized).len();
+    let token_count = normalized.split_whitespace().count();
     if sentence.matches(',').count() >= 3 && token_count <= 18 {
         flags.push("inflection_list".to_string());
     }
