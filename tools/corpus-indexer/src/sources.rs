@@ -164,6 +164,9 @@ pub fn expand_resource_partitions(resource: &ResourceSpec) -> SourceResult<Vec<R
         SourceKind::WikimediaXmlBz2Dir => files_with_suffix(&resource.local_path, ".xml.bz2")?,
         SourceKind::OpusMosesZipDir => {
             files_with_suffix(&resource.local_path.join("zips"), ".zip")?
+                .into_iter()
+                .filter(|path| !is_duplicate_all_to_sq_en_sq_partition(resource, path))
+                .collect()
         }
         _ => Vec::new(),
     };
@@ -184,6 +187,24 @@ pub fn expand_resource_partitions(resource: &ResourceSpec) -> SourceResult<Vec<R
             Ok(partition)
         })
         .collect()
+}
+
+fn is_duplicate_all_to_sq_en_sq_partition(resource: &ResourceSpec, path: &Path) -> bool {
+    resource.id == "opus-all-to-sq-moses-latest"
+        && path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .is_some_and(is_exact_en_sq_opus_zip)
+}
+
+fn is_exact_en_sq_opus_zip(name: &str) -> bool {
+    let Some(stem) = name.strip_suffix(".zip") else {
+        return false;
+    };
+    let Some((prefix, number)) = stem.rsplit_once('-') else {
+        return false;
+    };
+    !number.is_empty() && number.chars().all(|ch| ch.is_ascii_digit()) && prefix.ends_with("-en-sq")
 }
 
 fn macocu_genre_jsonl_gz_with_id(
@@ -1348,4 +1369,18 @@ fn normalize_text(text: &str) -> String {
 
 fn invalid_data(message: impl Into<String>) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message.into())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_exact_en_sq_opus_zip;
+
+    #[test]
+    fn exact_en_sq_opus_zip_match_excludes_regional_english() {
+        assert!(is_exact_en_sq_opus_zip("CCMatrix-v1-en-sq-38058.zip"));
+        assert!(!is_exact_en_sq_opus_zip("CCMatrix-v1-en_US-sq-123.zip"));
+        assert!(!is_exact_en_sq_opus_zip("CCMatrix-v1-en_GB-sq-123.zip"));
+        assert!(!is_exact_en_sq_opus_zip("CCMatrix-v1-fr-sq-123.zip"));
+        assert!(!is_exact_en_sq_opus_zip("CCMatrix-v1-en-sq.zip"));
+    }
 }

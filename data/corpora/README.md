@@ -53,8 +53,12 @@ natural file partitions, streams selected raw corpus partitions with a worker
 pool, matches all generated foljapp forms with Aho-Corasick in Rust, and stores
 only matching example sentences plus occurrence rows. This avoids writing tens
 or hundreds of gigabytes of non-matching sentences. The scanner writes
-per-source accounting to `resource_stats`, including candidates seen, stored hit
-sentences, quality rejects, unmatched rejects, and duration.
+per-source accounting to `resource_stats`, including candidates seen,
+scanner-emitted hit sentences after global target saturation, retained
+occurrences, quality rejects, unmatched rejects, and duration. OPUS all-to-sq
+skips exact `*-en-sq-<number>.zip` partitions because the dedicated OPUS
+`sq-en` resource already covers that duplicate subset; regional English and
+non-English Albanian-paired OPUS partitions remain included.
 
 Build the target list from the engine:
 

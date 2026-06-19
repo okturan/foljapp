@@ -1270,7 +1270,7 @@ function main(): void {
           `| Raw candidates seen | ${report.dbEvidence.candidatesSeen} | Candidates streamed by scanner workers for the selected source scope. |`,
           `| Rejected before target match | ${report.dbEvidence.unmatchedRejectedCandidates} | Candidates with no generated target match. |`,
           `| Rejected by quality filters | ${report.dbEvidence.qualityRejectedCandidates} | Target-matching candidates dropped before retention. |`,
-          `| Matched quality candidates before DB writer cap | ${report.dbEvidence.matchedSentenceCandidatesBeforeWriterCap} | Worker-emitted hit sentences before the central writer applies the global per-target cap. |`,
+          `| Scanner-emitted hit sentences after saturation suppression | ${report.dbEvidence.matchedSentenceCandidatesBeforeWriterCap} | Worker-emitted hit sentences after globally capped target IDs are suppressed and before final SQLite occurrence insertion checks. |`,
           `| Retained sentences in SQLite | ${report.dbEvidence.retainedSentences} | Stored example sentences after DB retention and cap behavior. |`,
           `| Retained occurrences in SQLite | ${report.dbEvidence.retainedOccurrences} | Stored target-occurrence rows. |`,
           `| Distinct retained target IDs | ${report.dbEvidence.distinctHitTargets} | Target IDs with at least one stored occurrence. |`,

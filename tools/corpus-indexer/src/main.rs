@@ -16,7 +16,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command as ProcessCommand;
-use std::sync::{mpsc, Arc, Mutex};
+use std::sync::{mpsc, Arc, Mutex, RwLock};
 use std::thread;
 use std::time::Instant;
 use tantivy::collector::{Count, TopDocs};
@@ -1600,6 +1600,31 @@ fn match_targets(args: MatchArgs) -> Result<()> {
         targets.len()
     );
 
+    let db = ExampleDb::open(&args.out, args.append)
+        .with_context(|| format!("open {}", args.out.display()))?;
+    db.insert_resources(&resources)?;
+    db.insert_targets(&targets)?;
+    db.write_index_metadata("parallel_matched_examples", &args.sources)?;
+
+    let mut counts = db.occurrence_counts()?;
+    let saturated_targets = Arc::new(RwLock::new(
+        counts
+            .iter()
+            .filter_map(|(id, count)| {
+                if *count >= args.max_per_target {
+                    Some(id.clone())
+                } else {
+                    None
+                }
+            })
+            .collect::<HashSet<_>>(),
+    ));
+    let mut writes_since_commit = 0usize;
+    let mut total_sentences = 0usize;
+    let mut total_occurrences = 0usize;
+    let mut occurrences_by_resource = HashMap::<String, usize>::new();
+    let mut errors = Vec::new();
+
     let jobs = match args.jobs {
         0 => thread::available_parallelism()
             .map(|count| count.get())
@@ -1615,6 +1640,7 @@ fn match_targets(args: MatchArgs) -> Result<()> {
         let worker_tx = tx.clone();
         let worker_matcher = Arc::clone(&target_matcher);
         let worker_work = Arc::clone(&work);
+        let worker_saturated_targets = Arc::clone(&saturated_targets);
         let max_per_target = args.max_per_target;
         handles.push(thread::spawn(move || loop {
             let Some(resource) = worker_work.lock().expect("work queue").pop_front() else {
@@ -1623,24 +1649,13 @@ fn match_targets(args: MatchArgs) -> Result<()> {
             scan_resource_for_matches(
                 resource,
                 Arc::clone(&worker_matcher),
+                Arc::clone(&worker_saturated_targets),
                 max_per_target,
                 worker_tx.clone(),
             );
         }));
     }
     drop(tx);
-
-    let db = ExampleDb::open(&args.out, args.append)
-        .with_context(|| format!("open {}", args.out.display()))?;
-    db.insert_resources(&resources)?;
-    db.insert_targets(&targets)?;
-    db.write_index_metadata("parallel_matched_examples", &args.sources)?;
-
-    let mut counts = db.occurrence_counts()?;
-    let mut writes_since_commit = 0usize;
-    let mut total_sentences = 0usize;
-    let mut total_occurrences = 0usize;
-    let mut errors = Vec::new();
 
     db.begin()?;
     for event in rx {
@@ -1679,6 +1694,15 @@ fn match_targets(args: MatchArgs) -> Result<()> {
                         score,
                     )? {
                         *counts.entry(matched.id.clone()).or_insert(0) += 1;
+                        if counts.get(&matched.id).copied().unwrap_or(0) >= args.max_per_target {
+                            saturated_targets
+                                .write()
+                                .expect("saturated target set")
+                                .insert(matched.id.clone());
+                        }
+                        *occurrences_by_resource
+                            .entry(hit.candidate.resource_id.clone())
+                            .or_insert(0) += 1;
                         total_occurrences += 1;
                         writes_since_commit += 1;
                     }
@@ -1690,7 +1714,9 @@ fn match_targets(args: MatchArgs) -> Result<()> {
                     stats.candidates_seen,
                     stats.sentences_inserted,
                     0,
-                    0,
+                    occurrences_by_resource
+                        .remove(&stats.resource_id)
+                        .unwrap_or(0),
                     stats.empty_candidates,
                     stats.quality_rejected,
                     stats.unmatched_rejected,
@@ -1737,12 +1763,18 @@ fn match_targets(args: MatchArgs) -> Result<()> {
 fn scan_resource_for_matches(
     resource: ResourceSpec,
     target_matcher: Arc<TargetMatcher>,
+    saturated_targets: Arc<RwLock<HashSet<String>>>,
     max_per_target: usize,
     tx: mpsc::Sender<MatchEvent>,
 ) {
     let resource_id = resource.id.clone();
-    if let Err(err) = scan_resource_for_matches_inner(resource, target_matcher, max_per_target, &tx)
-    {
+    if let Err(err) = scan_resource_for_matches_inner(
+        resource,
+        target_matcher,
+        saturated_targets,
+        max_per_target,
+        &tx,
+    ) {
         let _ = tx.send(MatchEvent::Error(format!("{resource_id}: {err:#}")));
     }
 }
@@ -1750,6 +1782,7 @@ fn scan_resource_for_matches(
 fn scan_resource_for_matches_inner(
     resource: ResourceSpec,
     target_matcher: Arc<TargetMatcher>,
+    saturated_targets: Arc<RwLock<HashSet<String>>>,
     max_per_target: usize,
     tx: &mpsc::Sender<MatchEvent>,
 ) -> Result<()> {
@@ -1778,9 +1811,16 @@ fn scan_resource_for_matches_inner(
             empty_candidates += 1;
             continue;
         }
-        let matches = target_matcher
-            .matches_normalized(&normalized)
+        let raw_matches = target_matcher.matches_normalized(&normalized);
+        if raw_matches.is_empty() {
+            unmatched_rejected += 1;
+            continue;
+        }
+
+        let saturated = saturated_targets.read().expect("saturated target set");
+        let matches = raw_matches
             .into_iter()
+            .filter(|matched| !saturated.contains(matched.id))
             .filter(|matched| {
                 variant_supported_by_raw_sentence(matched.variant_kind, &candidate.sentence)
             })
@@ -1794,6 +1834,7 @@ fn scan_resource_for_matches_inner(
                 matched_pattern: matched.matched_pattern.to_owned(),
             })
             .collect::<Vec<_>>();
+        drop(saturated);
 
         if matches.is_empty() {
             unmatched_rejected += 1;
