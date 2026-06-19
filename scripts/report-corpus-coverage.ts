@@ -54,9 +54,20 @@ interface ResourceStatsRow {
   resource_id: string;
   candidates_seen: number;
   sentences_inserted: number;
+  occurrences_inserted: number;
   quality_rejected: number;
   unmatched_rejected: number;
   duration_ms: number;
+}
+
+interface ResourceFamilyRow {
+  key: string;
+  partitions: number;
+  candidatesSeen: number;
+  sentencesInserted: number;
+  occurrencesInserted: number;
+  qualityRejected: number;
+  durationMs: number;
 }
 
 interface RetainedOccurrenceRow {
@@ -123,8 +134,14 @@ function missBucket(target: TargetRecord): string {
     return 'negative_subjunctive_order';
   }
   if (o.voice === 'middle-passive') return 'middle_passive';
+  if (o.mood === 'admirative' && o.tense === 'present') {
+    return 'rare_admirative_present';
+  }
   if (o.mood === 'admirative' && o.tense !== 'present') {
     return 'rare_admirative_nonpresent';
+  }
+  if (o.mood === 'optative' && o.tense === 'present') {
+    return 'rare_optative_present';
   }
   if (o.mood === 'optative' && o.tense === 'perfect') {
     return 'rare_optative_perfect';
@@ -153,6 +170,25 @@ function topEntries(map: Map<string, number>, limit: number) {
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, limit)
     .map(([key, count]) => ({ key, count }));
+}
+
+function resourceFamily(resourceId: string): string {
+  if (resourceId.startsWith('hplt-v3-')) return 'hplt-v3';
+  if (resourceId.startsWith('mc4-')) return 'mc4';
+  if (resourceId.startsWith('opus-en-sq')) return 'opus-en-sq';
+  if (resourceId.startsWith('opus-all-to-sq')) return 'opus-all-to-sq';
+  if (resourceId.startsWith('fineweb2-')) return 'fineweb2';
+  if (resourceId.startsWith('macocu-')) return 'macocu';
+  if (resourceId.startsWith('cc100-')) return 'cc100';
+  if (resourceId.startsWith('hf-')) return 'huggingface';
+  if (resourceId.startsWith('wikimedia-')) return 'wikimedia';
+  const hashIndex = resourceId.indexOf('#');
+  return hashIndex === -1 ? resourceId : resourceId.slice(0, hashIndex);
+}
+
+function resourceYield(row: ResourceFamilyRow): string {
+  if (row.candidatesSeen === 0) return '0.00';
+  return ((row.occurrencesInserted / row.candidatesSeen) * 1_000_000).toFixed(2);
 }
 
 function pct(part: number, total: number): string {
@@ -203,8 +239,8 @@ function main(): void {
   const resourceStats = sqliteJson<ResourceStatsRow>(
     dbPath,
     `
-    SELECT resource_id, candidates_seen, sentences_inserted, quality_rejected,
-           unmatched_rejected, duration_ms
+    SELECT resource_id, candidates_seen, sentences_inserted, occurrences_inserted,
+           quality_rejected, unmatched_rejected, duration_ms
     FROM resource_stats
     ORDER BY candidates_seen DESC, resource_id ASC
     `,
@@ -285,6 +321,27 @@ function main(): void {
     for (const variantKind of target.variants) {
       inc(variantOnlyTargetCounts, variantKind);
     }
+  }
+
+  const resourceFamilies = new Map<string, ResourceFamilyRow>();
+  for (const row of resourceStats) {
+    const key = resourceFamily(row.resource_id);
+    const family = resourceFamilies.get(key) ?? {
+      key,
+      partitions: 0,
+      candidatesSeen: 0,
+      sentencesInserted: 0,
+      occurrencesInserted: 0,
+      qualityRejected: 0,
+      durationMs: 0,
+    };
+    family.partitions += 1;
+    family.candidatesSeen += Number(row.candidates_seen);
+    family.sentencesInserted += Number(row.sentences_inserted);
+    family.occurrencesInserted += Number(row.occurrences_inserted);
+    family.qualityRejected += Number(row.quality_rejected);
+    family.durationMs += Number(row.duration_ms);
+    resourceFamilies.set(key, family);
   }
 
   for (const target of targetFile.targets) {
@@ -391,6 +448,9 @@ function main(): void {
         ? topEntries(variantOnlyTargetCounts, variantOnlyTargetCounts.size)
         : [],
     },
+    resourceFamilies: [...resourceFamilies.values()].sort(
+      (a, b) => b.candidatesSeen - a.candidatesSeen || a.key.localeCompare(b.key),
+    ),
     resourceStats,
     misses,
   };
@@ -448,6 +508,19 @@ function main(): void {
           'Unavailable: the local SQLite DB does not include occurrence variant columns.',
           '',
         ]),
+    '## Source Yield',
+    '',
+    'Source yield is grouped from `resource_stats`; it measures retained examples per scanned candidate, not linguistic quality.',
+    '',
+    '| Source Family | Partitions | Candidates | Stored Sentences | Occurrences | Occurrences / 1M Candidates | Scan Time |',
+    '| --- | ---: | ---: | ---: | ---: | ---: | ---: |',
+    ...report.resourceFamilies
+      .slice(0, 24)
+      .map(
+        (row) =>
+          `| ${row.key} | ${row.partitions} | ${row.candidatesSeen} | ${row.sentencesInserted} | ${row.occurrencesInserted} | ${resourceYield(row)} | ${(row.durationMs / 1000).toFixed(1)}s |`,
+      ),
+    '',
     '## Miss Buckets',
     '',
     '| Bucket | Misses |',
