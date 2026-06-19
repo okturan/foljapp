@@ -95,13 +95,15 @@ it is not a proof that a form is absent from every scanned raw sentence.
 Build an optional local morphology review artifact:
 
 ```bash
-node --experimental-strip-types scripts/audit-external-morphology.ts
+npm run audit:external-morphology
 ```
 
-If you have a local UniParser Albanian checkout, pass its verb lexeme file:
+The audit auto-detects a UniParser Albanian verb lexeme file at either
+`.cache/uniparser-grammar-albanian/sqi_lexemes_V.txt` or
+`.cache/sqi_lexemes_V.txt`. If the file lives elsewhere, pass it explicitly:
 
 ```bash
-node --experimental-strip-types scripts/audit-external-morphology.ts --uniparser-lexemes=/path/to/uniparser-grammar-albanian/sqi_lexemes_V.txt
+npm run audit:external-morphology -- --uniparser-lexemes=/path/to/uniparser-grammar-albanian/sqi_lexemes_V.txt
 ```
 
 This writes `.cache/external-morphology-audit.json` and

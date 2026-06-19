@@ -17,6 +17,10 @@ const DEFAULT_COVERAGE = join(REPO_ROOT, '.cache', 'corpus-coverage-report.json'
 const DEFAULT_VERBS = join(REPO_ROOT, 'data', 'verbs', '_corpus.client.json');
 const DEFAULT_JSON_OUT = join(REPO_ROOT, '.cache', 'external-morphology-audit.json');
 const DEFAULT_MD_OUT = join(REPO_ROOT, '.cache', 'external-morphology-audit.md');
+const DEFAULT_UNIPARSER_LEXEME_PATHS = [
+  join(REPO_ROOT, '.cache', 'uniparser-grammar-albanian', 'sqi_lexemes_V.txt'),
+  join(REPO_ROOT, '.cache', 'sqi_lexemes_V.txt'),
+];
 
 interface TargetRecord {
   id: string;
@@ -82,6 +86,24 @@ function valueAfter(prefix: string): string | undefined {
 function readJson<T>(path: string): T {
   if (!existsSync(path)) throw new Error(`Missing file: ${path}`);
   return JSON.parse(readFileSync(path, 'utf8')) as T;
+}
+
+function resolveUniparserLexemes(
+  explicitPath: string | undefined,
+): { path: string | null; searchedPaths: string[]; source: string } {
+  if (explicitPath) {
+    return {
+      path: existsSync(explicitPath) ? explicitPath : null,
+      searchedPaths: [explicitPath],
+      source: 'explicit',
+    };
+  }
+  const found = DEFAULT_UNIPARSER_LEXEME_PATHS.find((path) => existsSync(path));
+  return {
+    path: found ?? null,
+    searchedPaths: DEFAULT_UNIPARSER_LEXEME_PATHS,
+    source: found ? 'auto' : 'default-search',
+  };
 }
 
 function pct(part: number, total: number): string {
@@ -359,8 +381,11 @@ function main(): void {
   const targetsPath = valueAfter('--targets=') ?? DEFAULT_TARGETS;
   const coveragePath = valueAfter('--coverage=') ?? DEFAULT_COVERAGE;
   const verbsPath = valueAfter('--verbs=') ?? DEFAULT_VERBS;
-  const lexemesPath =
+  const lexemesInput =
     valueAfter('--uniparser-lexemes=') ?? process.env.FOLJAPP_UNIPARSER_LEXEMES;
+  const lexemesInputProvided = Boolean(lexemesInput);
+  const lexemesLocation = resolveUniparserLexemes(lexemesInput);
+  const lexemesPath = lexemesLocation.path;
   const jsonOut = valueAfter('--json=') ?? DEFAULT_JSON_OUT;
   const mdOut = valueAfter('--md=') ?? DEFAULT_MD_OUT;
 
@@ -370,8 +395,7 @@ function main(): void {
   const targetsById = new Map(targetFile.targets.map((target) => [target.id, target]));
   const missingIds = new Set(coverage.misses.map((miss) => miss.id));
   const verbsById = new Map(verbs.map((verb) => [verb.id, verb]));
-  const lexemes =
-    lexemesPath && existsSync(lexemesPath) ? parseUniparserLexemes(lexemesPath) : null;
+  const lexemes = lexemesPath ? parseUniparserLexemes(lexemesPath) : null;
 
   const byLemmaVoice = new Map<string, VoiceRow>();
   for (const target of targetFile.targets) {
@@ -544,11 +568,13 @@ function main(): void {
       coveragePath,
       verbsPath,
       uniparserLexemesPath: lexemesPath ?? null,
+      uniparserLexemesSearchedPaths: lexemesLocation.searchedPaths,
+      uniparserLexemesSource: lexemesLocation.source,
     },
     externalMorphology: {
       uniparserLexemesStatus: lexemes
         ? 'loaded'
-        : lexemesPath
+        : lexemesInputProvided
           ? 'path_missing'
           : 'missing',
       uniparserLexemeEntries: lexemes?.entries.length ?? 0,
@@ -600,6 +626,8 @@ function main(): void {
     `- UniParser lexeme status: ${report.externalMorphology.uniparserLexemesStatus}`,
     `- UniParser lexeme entries loaded: ${report.externalMorphology.uniparserLexemeEntries}`,
     `- Lexeme-matched foljapp lemmas: ${report.summary.lexemeMatchedLemmas}`,
+    `- UniParser lexeme source: ${report.inputs.uniparserLexemesSource}`,
+    `- UniParser lexeme searched paths: ${report.inputs.uniparserLexemesSearchedPaths.join(', ')}`,
     '',
     '## Caveats',
     '',

@@ -22,6 +22,7 @@
     "build:local-corpus-index": "npm run build:corpus-targets && npm run scan:local-corpus",
     "scan:local-corpus": "CARGO_TARGET_DIR=.cache/cargo-target cargo run --release --manifest-path tools/corpus-indexer/Cargo.toml -- match --out=.cache/corpus-local-full.sqlite --sources=all --max-per-target=3 --jobs=12",
     "report:corpus-coverage": "tsx scripts/report-corpus-coverage.ts",
+    "audit:external-morphology": "node --experimental-strip-types scripts/audit-external-morphology.ts",
     "audit:corpus-misses": "node --experimental-strip-types scripts/audit-corpus-misses.ts",
     "bench:corpus-search": "CARGO_TARGET_DIR=.cache/cargo-target cargo run --release --manifest-path tools/corpus-indexer/Cargo.toml -- bench",
     "build:corpus-search-index": "CARGO_TARGET_DIR=.cache/cargo-target cargo run --release --manifest-path tools/corpus-indexer/Cargo.toml -- build-search-index",
