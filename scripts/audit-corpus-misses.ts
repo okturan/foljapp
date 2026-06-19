@@ -68,6 +68,8 @@ interface VerbEntry {
   lemma: string;
   translationEn: string;
   flags?: Record<string, unknown>;
+  sources?: Array<{ source: string; reference?: string }>;
+  cellOverrides?: Record<string, Record<string, string>>;
 }
 
 interface CountRow {
@@ -94,6 +96,23 @@ interface CoverageRow {
   hit: number;
   miss: number;
   hitRate: string;
+}
+
+interface VoiceCoverageRow {
+  verbId: string;
+  lemma: string;
+  translationEn: string;
+  activeTotal: number;
+  activeHit: number;
+  activeMiss: number;
+  middlePassiveTotal: number;
+  middlePassiveHit: number;
+  middlePassiveMiss: number;
+  middlePassiveHitRate: string;
+  sourceLevel: string;
+  sources: string[];
+  flags: Record<string, unknown>;
+  middlePassiveOverrideKeys: string[];
 }
 
 interface DbEvidence {
@@ -190,6 +209,60 @@ function coverageRows(
   return [...map.entries()]
     .map(([key, row]) => ({ key, ...row, hitRate: pct(row.hit, row.total) }))
     .sort((a, b) => b.miss - a.miss || a.key.localeCompare(b.key));
+}
+
+function sourceKeys(verb: VerbEntry | undefined): string[] {
+  return [...new Set((verb?.sources ?? []).map((source) => source.source))].sort();
+}
+
+function sourceLevel(sources: string[]): string {
+  if (sources.includes('husic')) return 'husic-backed';
+  if (sources.includes('uniparser')) return 'uniparser-backed';
+  if (sources.length > 0) return 'lexicon-only';
+  return 'unknown-source';
+}
+
+function middlePassiveOverrideKeys(verb: VerbEntry | undefined): string[] {
+  return Object.keys(verb?.cellOverrides ?? {})
+    .filter((key) => key.includes('middle-passive'))
+    .sort();
+}
+
+function voiceCoverageRows(
+  map: Map<
+    string,
+    {
+      activeTotal: number;
+      activeHit: number;
+      activeMiss: number;
+      middlePassiveTotal: number;
+      middlePassiveHit: number;
+      middlePassiveMiss: number;
+    }
+  >,
+  verbsById: Map<string, VerbEntry>,
+): VoiceCoverageRow[] {
+  return [...map.entries()]
+    .map(([verbId, row]) => {
+      const verb = verbsById.get(verbId);
+      const sources = sourceKeys(verb);
+      return {
+        verbId,
+        lemma: verb?.lemma ?? verbId,
+        translationEn: verb?.translationEn ?? '',
+        ...row,
+        middlePassiveHitRate: pct(row.middlePassiveHit, row.middlePassiveTotal),
+        sourceLevel: sourceLevel(sources),
+        sources,
+        flags: verb?.flags ?? {},
+        middlePassiveOverrideKeys: middlePassiveOverrideKeys(verb),
+      };
+    })
+    .sort(
+      (a, b) =>
+        b.middlePassiveMiss - a.middlePassiveMiss ||
+        a.lemma.localeCompare(b.lemma),
+    );
 }
 
 function readDbEvidence(dbPath: string): DbEvidence {
@@ -518,6 +591,17 @@ function main(): void {
   const byCell = new Map<string, { total: number; hit: number; miss: number }>();
   const byLemma = new Map<string, { total: number; hit: number; miss: number }>();
   const bySurface = new Map<string, { total: number; hit: number; miss: number }>();
+  const byLemmaVoice = new Map<
+    string,
+    {
+      activeTotal: number;
+      activeHit: number;
+      activeMiss: number;
+      middlePassiveTotal: number;
+      middlePassiveHit: number;
+      middlePassiveMiss: number;
+    }
+  >();
 
   for (const target of targetFile.targets) {
     const missed = missingIds.has(target.id);
@@ -531,6 +615,27 @@ function main(): void {
       if (missed) row.miss += 1;
       else row.hit += 1;
       map.set(key, row);
+    }
+    if (target.options.voice === 'active' || target.options.voice === 'middle-passive') {
+      const row =
+        byLemmaVoice.get(target.verbId) ?? {
+          activeTotal: 0,
+          activeHit: 0,
+          activeMiss: 0,
+          middlePassiveTotal: 0,
+          middlePassiveHit: 0,
+          middlePassiveMiss: 0,
+        };
+      if (target.options.voice === 'active') {
+        row.activeTotal += 1;
+        if (missed) row.activeMiss += 1;
+        else row.activeHit += 1;
+      } else {
+        row.middlePassiveTotal += 1;
+        if (missed) row.middlePassiveMiss += 1;
+        else row.middlePassiveHit += 1;
+      }
+      byLemmaVoice.set(target.verbId, row);
     }
   }
 
@@ -594,13 +699,41 @@ function main(): void {
     .filter((row) => row.total >= 100 && row.miss / row.total >= 0.75)
     .map((row) => {
       const verb = verbsById.get(row.key);
+      const sources = sourceKeys(verb);
       return {
         ...row,
         lemma: verb?.lemma ?? row.key,
         translationEn: verb?.translationEn ?? '',
         flags: verb?.flags ?? {},
+        sources,
+        sourceLevel: sourceLevel(sources),
+        middlePassiveOverrideKeys: middlePassiveOverrideKeys(verb),
       };
     });
+  const voiceCoverage = voiceCoverageRows(byLemmaVoice, verbsById);
+  const middlePassivePressure = voiceCoverage
+    .filter(
+      (row) =>
+        row.middlePassiveTotal > 0 &&
+        row.middlePassiveMiss > 0 &&
+        !row.flags.noMiddlePassive,
+    )
+    .map((row) => ({
+      ...row,
+      activeHitRate: pct(row.activeHit, row.activeTotal),
+      needsExternalVoiceCheck:
+        row.sourceLevel === 'lexicon-only' &&
+        row.middlePassiveOverrideKeys.length === 0,
+    }));
+  const weakMiddlePassivePressure = middlePassivePressure.filter(
+    (row) => row.needsExternalVoiceCheck,
+  );
+  const sourceCounts = new Map<string, number>();
+  for (const verb of verbs) {
+    const sources = sourceKeys(verb);
+    add(sourceCounts, sourceLevel(sources));
+    for (const source of sources) add(sourceCounts, `source:${source}`);
+  }
 
   const unexplained = auditedMisses.filter(
     (miss) => miss.primary === 'unexplained_exact_absence',
@@ -633,6 +766,13 @@ function main(): void {
       qualityRejectedCandidates: dbEvidence?.qualityRejectedCandidates ?? null,
       nearEmptyCellCount: nearEmptyCells.length,
       lemmaOutlierCount: lemmaOutliers.length,
+      weakMiddlePassivePressureCount: weakMiddlePassivePressure.length,
+      noMiddlePassiveFlaggedVerbs: verbs.filter(
+        (verb) => verb.flags?.noMiddlePassive,
+      ).length,
+      verbsWithMiddlePassiveOverrides: verbs.filter(
+        (verb) => middlePassiveOverrideKeys(verb).length > 0,
+      ).length,
       unexplainedMisses: unexplained.length,
       scannerVariantsRecorded,
       missesWithWordOrderAlternants,
@@ -644,6 +784,9 @@ function main(): void {
     duplicateMissSurfaces: duplicateMissSurfaces.slice(0, 80),
     nearEmptyCells: nearEmptyCells.slice(0, 80),
     lemmaOutliers: lemmaOutliers.slice(0, 80),
+    sourceSummary: topEntries(sourceCounts, 40),
+    middlePassivePressure: middlePassivePressure.slice(0, 80),
+    weakMiddlePassivePressure: weakMiddlePassivePressure.slice(0, 80),
     wordOrderAlternants: topEntries(wordOrderAlternantCounts, 100),
     scannerVariantAlternants: topEntries(scannerVariantCounts, 100),
     unexplainedSample: unexplained.slice(0, 100),
@@ -736,6 +879,8 @@ function main(): void {
     if (!miss) throw new Error(`Dossier miss not found: ${id}`);
     const cell = byCell.get(miss.cellKey) ?? { total: 0, hit: 0, miss: 0 };
     const lemma = byLemma.get(miss.verbId) ?? { total: 0, hit: 0, miss: 0 };
+    const verb = verbsById.get(miss.verbId);
+    const sources = sourceKeys(verb);
     return {
       priority: reasons,
       targetKey: miss.targetKey,
@@ -749,6 +894,9 @@ function main(): void {
       cellHitRate: cellHitRate(cell),
       lemmaHitRate: cellHitRate(lemma),
       sameLemmaHitTargets: lemma.hit,
+      sourceLevel: sourceLevel(sources),
+      sources,
+      middlePassiveOverrideKeys: middlePassiveOverrideKeys(verb),
       wordOrderAlternants: miss.wordOrderAlternants,
       scannerVariantAlternants: miss.scannerVariantAlternants,
       lookupSql: lookupSql(miss),
@@ -795,6 +943,9 @@ function main(): void {
     `- Misses with scanner variant alternants: ${report.summary.missesWithScannerVariantAlternants}`,
     `- Near-empty grammatical cells: ${report.summary.nearEmptyCellCount}`,
     `- Lemma outliers at >=75% miss rate: ${report.summary.lemmaOutlierCount}`,
+    `- Weakly sourced lemmas with middle-passive miss pressure: ${report.summary.weakMiddlePassivePressureCount}`,
+    `- Verbs flagged noMiddlePassive: ${report.summary.noMiddlePassiveFlaggedVerbs}`,
+    `- Verbs with explicit middle-passive overrides: ${report.summary.verbsWithMiddlePassiveOverrides}`,
     `- Unexplained exact absences after heuristics: ${report.summary.unexplainedMisses}`,
     '',
     '## Methodology & Caveats',
@@ -864,6 +1015,35 @@ function main(): void {
       ? `Schema-2 Rust scans also record \`s ...\` negative variants and diacritic-fold variants. Retained sentences include ${report.dbEvidence.retainedSentencesWithSApostrophe} apostrophe-negation examples; variant-only hits are lower-confidence evidence than canonical hits.`
       : 'Schema-2 Rust scans also record `s ...` negative variants and diacritic-fold variants, but SQLite evidence was unavailable for counts.',
     '',
+    '## Corpus Source Levels',
+    '',
+    'These are local source tags on generated verb entries. They are not independent proof of voice eligibility, but they show which lemmas need outside morphology checks first.',
+    '',
+    '| Source Level | Verbs |',
+    '| --- | ---: |',
+    ...report.sourceSummary
+      .filter((row) => !row.key.startsWith('source:'))
+      .map((row) => `| ${row.key} | ${row.count} |`),
+    '',
+    '| Source Tag | Verbs |',
+    '| --- | ---: |',
+    ...report.sourceSummary
+      .filter((row) => row.key.startsWith('source:'))
+      .map((row) => `| ${row.key.replace('source:', '')} | ${row.count} |`),
+    '',
+    '## Middle-Passive Pressure',
+    '',
+    'These rows are generated-form pressure, not a verdict that a middle-passive is impossible. `needs external check` means the lemma has no Husić/UniParser source tag and no explicit middle-passive override in local data.',
+    '',
+    '| Lemma | Verb ID | MP Total | MP Hit | MP Miss | MP Hit Rate | Active Hit Rate | Source Level | Needs External Check | MP Overrides |',
+    '| --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- | --- |',
+    ...report.middlePassivePressure
+      .slice(0, 40)
+      .map(
+        (row) =>
+          `| ${row.lemma} | ${row.verbId} | ${row.middlePassiveTotal} | ${row.middlePassiveHit} | ${row.middlePassiveMiss} | ${row.middlePassiveHitRate} | ${row.activeHitRate} | ${row.sourceLevel} | ${row.needsExternalVoiceCheck ? 'yes' : 'no'} | ${row.middlePassiveOverrideKeys.join(', ') || ''} |`,
+      ),
+    '',
     '## Primary Categories',
     '',
     '| Category | Misses |',
@@ -899,13 +1079,13 @@ function main(): void {
     '',
     '## Lemma Outliers',
     '',
-    '| Lemma | Verb ID | Total | Hit | Miss | Hit Rate |',
-    '| --- | --- | ---: | ---: | ---: | ---: |',
+    '| Lemma | Verb ID | Total | Hit | Miss | Hit Rate | Source Level |',
+    '| --- | --- | ---: | ---: | ---: | ---: | --- |',
     ...report.lemmaOutliers
       .slice(0, 40)
       .map(
         (row) =>
-          `| ${row.lemma} | ${row.key} | ${row.total} | ${row.hit} | ${row.miss} | ${row.hitRate} |`,
+          `| ${row.lemma} | ${row.key} | ${row.total} | ${row.hit} | ${row.miss} | ${row.hitRate} | ${row.sourceLevel} |`,
       ),
     '',
     '## Scanner Variant Alternants On Misses',
