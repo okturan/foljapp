@@ -92,6 +92,22 @@ The same audit command also writes a compact missing-form dossier to
 The audit explains retained-evidence misses in `.cache/corpus-local-full.sqlite`;
 it is not a proof that a form is absent from every scanned raw sentence.
 
+Build an optional local morphology review artifact:
+
+```bash
+node --experimental-strip-types scripts/audit-external-morphology.ts
+```
+
+If you have a local UniParser Albanian checkout, pass its verb lexeme file:
+
+```bash
+node --experimental-strip-types scripts/audit-external-morphology.ts --uniparser-lexemes=/path/to/uniparser-grammar-albanian/sqi_lexemes_V.txt
+```
+
+This writes `.cache/external-morphology-audit.json` and
+`.cache/external-morphology-audit.md`. It is review evidence only: it does not
+run in the app, prove real usage, or auto-edit `data/verbs/*.json`.
+
 Build a focused smoke-test index:
 
 ```bash
