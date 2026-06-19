@@ -983,7 +983,10 @@ function main(): void {
     },
     inputs: {
       targetsPath,
+      targetGeneratedAt: targetFile.generatedAt ?? null,
       coveragePath,
+      coverageTargetGeneratedAt: coverage.targetGeneratedAt ?? null,
+      corpusVersion: targetFile.corpusVersion ?? null,
       verbsPath,
       uniparserLexemesPath: lexemesPath ?? null,
       uniparserLexemesSearchedPaths: lexemesLocation.searchedPaths,

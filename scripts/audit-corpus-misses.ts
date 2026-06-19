@@ -55,10 +55,14 @@ interface TargetRecord {
 }
 
 interface TargetFile {
+  generatedAt?: string;
+  corpusVersion?: string;
   targets: TargetRecord[];
 }
 
 interface CoverageReport {
+  targetGeneratedAt?: string;
+  corpusVersion?: string;
   summary: {
     totalTargets: number;
     hitTargets: number;
@@ -75,6 +79,11 @@ interface CoverageReport {
 interface ExternalMorphologyAudit {
   run?: {
     generatedAt?: string;
+  };
+  inputs?: {
+    targetGeneratedAt?: string | null;
+    coverageTargetGeneratedAt?: string | null;
+    corpusVersion?: string | null;
   };
   externalMorphology?: {
     uniparserLexemesStatus?: string;
@@ -273,6 +282,8 @@ function emptyMorphologyEvidence(
 
 function readMorphologyEvidence(
   path: string,
+  targetFile: TargetFile,
+  coverage: CoverageReport,
   targetsById: Map<string, TargetRecord>,
 ): MorphologyEvidence {
   if (!existsSync(path)) {
@@ -291,6 +302,30 @@ function readMorphologyEvidence(
   if (!Array.isArray(audit.targets)) {
     console.warn(`Ignoring optional morphology audit at ${path}: missing targets[]`);
     return emptyMorphologyEvidence('invalid', path);
+  }
+  if (
+    audit.inputs?.targetGeneratedAt &&
+    audit.inputs.targetGeneratedAt !== targetFile.generatedAt
+  ) {
+    return emptyMorphologyEvidence('stale_target_generation', path, {
+      generatedAt: audit.run?.generatedAt ?? null,
+      skippedRows: audit.targets.length,
+    });
+  }
+  if (
+    audit.inputs?.coverageTargetGeneratedAt &&
+    audit.inputs.coverageTargetGeneratedAt !== coverage.targetGeneratedAt
+  ) {
+    return emptyMorphologyEvidence('stale_coverage_generation', path, {
+      generatedAt: audit.run?.generatedAt ?? null,
+      skippedRows: audit.targets.length,
+    });
+  }
+  if (audit.inputs?.corpusVersion && audit.inputs.corpusVersion !== targetFile.corpusVersion) {
+    return emptyMorphologyEvidence('stale_corpus_version', path, {
+      generatedAt: audit.run?.generatedAt ?? null,
+      skippedRows: audit.targets.length,
+    });
   }
 
   const byTargetId = new Map<string, MorphologyTargetVerdict>();
@@ -798,7 +833,12 @@ function main(): void {
   const verbs = readJson<VerbEntry[]>(verbsPath);
   const dbEvidence = existsSync(dbPath) ? readDbEvidence(dbPath) : null;
   const targetsById = new Map(targetFile.targets.map((target) => [target.id, target]));
-  const morphologyEvidence = readMorphologyEvidence(morphologyPath, targetsById);
+  const morphologyEvidence = readMorphologyEvidence(
+    morphologyPath,
+    targetFile,
+    coverage,
+    targetsById,
+  );
   const missingIds = new Set(coverage.misses.map((miss) => miss.id));
   const verbsById = new Map(verbs.map((verb) => [verb.id, verb]));
 

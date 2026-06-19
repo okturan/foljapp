@@ -286,6 +286,10 @@ function main(): void {
         (sum, row) => sum + Number(row.sentences_inserted),
         0,
       ),
+      matchedSentenceCandidatesBeforeWriterCap: resourceStats.reduce(
+        (sum, row) => sum + Number(row.sentences_inserted),
+        0,
+      ),
       storedExampleSentences: sentenceCount,
       scanDurationMs: resourceStats.reduce(
         (sum, row) => sum + Number(row.duration_ms),
@@ -322,7 +326,7 @@ function main(): void {
     `- Stored occurrences: ${report.summary.totalOccurrences}`,
     `- Scanned resource partitions: ${report.summary.scannedResources}`,
     `- Candidates seen: ${report.summary.candidatesSeen}`,
-    `- Matched sentence candidates: ${report.summary.matchedSentenceCandidates}`,
+    `- Matched sentence candidates before writer cap: ${report.summary.matchedSentenceCandidatesBeforeWriterCap}`,
     `- Stored example sentences after cap: ${report.summary.storedExampleSentences}`,
     `- Aggregate scan time: ${(report.summary.scanDurationMs / 1000).toFixed(1)}s`,
     '',
