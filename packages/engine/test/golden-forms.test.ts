@@ -8,7 +8,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 
 import { configure, conjugate } from '../src/conjugate.js';
 
-import { fixtures, punoj, hap, pi, pjek, djeg, jam, jap, shoh, laj } from './fixtures.js';
+import { fixtures, punoj, hap, pi, pjek, djeg, jam, jap, shoh, them, laj } from './fixtures.js';
 
 beforeAll(() => {
   configure(fixtures, '0.1.0');
@@ -339,6 +339,52 @@ describe('auxiliaries directly', () => {
     expect(r.form).toBe('kam punuar');
     void persons;
     void expected;
+  });
+});
+
+describe('them — middle-passive suppletive stem', () => {
+  it('present middle-passive uses thu- stem across all 6 cells', () => {
+    const cells = [
+      { person: 1 as const, number: 'singular' as const, expected: 'thuhem' },
+      { person: 2 as const, number: 'singular' as const, expected: 'thuhesh' },
+      { person: 3 as const, number: 'singular' as const, expected: 'thuhet' },
+      { person: 1 as const, number: 'plural' as const, expected: 'thuhemi' },
+      { person: 2 as const, number: 'plural' as const, expected: 'thuheni' },
+      { person: 3 as const, number: 'plural' as const, expected: 'thuhen' },
+    ];
+
+    for (const c of cells) {
+      const r = conjugate(them.id, {
+        mood: 'indicative',
+        tense: 'present',
+        voice: 'middle-passive',
+        person: c.person,
+        number: c.number,
+      });
+      expect(r.form).toBe(c.expected);
+    }
+  });
+
+  it('imperfect middle-passive uses thu- stem across all 6 cells', () => {
+    const cells = [
+      { person: 1 as const, number: 'singular' as const, expected: 'thuhesha' },
+      { person: 2 as const, number: 'singular' as const, expected: 'thuheshe' },
+      { person: 3 as const, number: 'singular' as const, expected: 'thuhej' },
+      { person: 1 as const, number: 'plural' as const, expected: 'thuheshim' },
+      { person: 2 as const, number: 'plural' as const, expected: 'thuheshit' },
+      { person: 3 as const, number: 'plural' as const, expected: 'thuheshin' },
+    ];
+
+    for (const c of cells) {
+      const r = conjugate(them.id, {
+        mood: 'indicative',
+        tense: 'imperfect',
+        voice: 'middle-passive',
+        person: c.person,
+        number: c.number,
+      });
+      expect(r.form).toBe(c.expected);
+    }
   });
 });
 

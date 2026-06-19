@@ -75,6 +75,37 @@ export const shoh: VerbEntry = {
   dialect: 'tosk',
 };
 
+export const them: VerbEntry = {
+  id: 'them',
+  lemma: 'them',
+  translationEn: 'to say',
+  class: 2,
+  auxiliary: 'kam',
+  principalParts: { present: 'them', aorist: 'thash', participle: 'thënë' },
+  sources: [{ source: 'husic', reference: 'Irregular — them' }],
+  flags: { isSuppletive: true, irregularAorist: true },
+  dialect: 'tosk',
+  notes: 'Suppletive MP indicative present/imperfect use the thu- stem.',
+  cellOverrides: {
+    'indicative.present.middle-passive': {
+      '1sg': 'thuhem',
+      '2sg': 'thuhesh',
+      '3sg': 'thuhet',
+      '1pl': 'thuhemi',
+      '2pl': 'thuheni',
+      '3pl': 'thuhen',
+    },
+    'indicative.imperfect.middle-passive': {
+      '1sg': 'thuhesha',
+      '2sg': 'thuheshe',
+      '3sg': 'thuhej',
+      '1pl': 'thuheshim',
+      '2pl': 'thuheshit',
+      '3pl': 'thuheshin',
+    },
+  },
+};
+
 export const pjek: VerbEntry = {
   id: 'pjek',
   lemma: 'pjek',
@@ -132,6 +163,7 @@ export const fixtures: VerbEntry[] = [
   jam,
   jap,
   shoh,
+  them,
   pjek,
   djeg,
   laj,
