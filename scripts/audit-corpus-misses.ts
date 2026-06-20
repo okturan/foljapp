@@ -177,6 +177,24 @@ interface CountRow {
   count: number;
 }
 
+interface VariantProbe {
+  kind: 'te_mos_order' | 's_negative' | 'diacritic_fold';
+  alternant: string;
+  scannerChecked: boolean;
+}
+
+interface VariantProbeSummary {
+  kind: string;
+  misses: number;
+  scannerChecked: boolean;
+  samples: Array<{
+    targetKey: string;
+    lemma: string;
+    alternant: string;
+    primary: string;
+  }>;
+}
+
 interface SqlCountRow {
   count: number;
 }
@@ -843,22 +861,34 @@ function noDiacritics(text: string): string {
   return text.replaceAll('ë', 'e').replaceAll('ç', 'c');
 }
 
-function wordOrderAlternants(target: TargetRecord): string[] {
-  const out = new Set<string>();
+function variantProbes(
+  target: TargetRecord,
+  scannerVariantsRecorded: boolean,
+): VariantProbe[] {
+  const probes: VariantProbe[] = [];
   if (target.tokens[0] === 'mos' && target.tokens[1] === 'të') {
-    out.add(['të', 'mos', ...target.tokens.slice(2)].join(' '));
+    probes.push({
+      kind: 'te_mos_order',
+      alternant: ['të', 'mos', ...target.tokens.slice(2)].join(' '),
+      scannerChecked: scannerVariantsRecorded,
+    });
   }
-  return [...out].sort();
-}
-
-function scannerVariantAlternants(target: TargetRecord): string[] {
-  const out = new Set<string>();
   if (target.tokens[0] === 'nuk' && target.tokens.length > 1) {
-    out.add(['s', ...target.tokens.slice(1)].join(' '));
+    probes.push({
+      kind: 's_negative',
+      alternant: ['s', ...target.tokens.slice(1)].join(' '),
+      scannerChecked: scannerVariantsRecorded,
+    });
   }
   const folded = noDiacritics(target.targetKey);
-  if (folded !== target.targetKey) out.add(folded);
-  return [...out].sort();
+  if (folded !== target.targetKey) {
+    probes.push({
+      kind: 'diacritic_fold',
+      alternant: folded,
+      scannerChecked: scannerVariantsRecorded,
+    });
+  }
+  return probes;
 }
 
 function labelMiss(
@@ -1164,6 +1194,7 @@ function main(): void {
     dbEvidence.hasOccurrenceVariantEvidence;
   const wordOrderAlternantCounts = new Map<string, number>();
   const scannerVariantCounts = new Map<string, number>();
+  const variantProbeSummary = new Map<string, VariantProbeSummary>();
   const auditedMisses = coverage.misses.map((miss) => {
     const target = targetsById.get(miss.id);
     if (!target)
@@ -1180,11 +1211,37 @@ function main(): void {
     for (const label of labels) add(labelCounts, label);
     const primary = primaryCategory(labels);
     add(primaryCounts, primary);
-    const wordOrder = wordOrderAlternants(target);
-    const scannerVariants = scannerVariantAlternants(target);
+    const probes = variantProbes(target, scannerVariantsRecorded);
+    const wordOrder = probes
+      .filter((probe) => probe.kind === 'te_mos_order')
+      .map((probe) => probe.alternant)
+      .sort();
+    const scannerVariants = probes
+      .filter((probe) => probe.kind !== 'te_mos_order')
+      .map((probe) => probe.alternant)
+      .sort();
     for (const alternant of wordOrder) add(wordOrderAlternantCounts, alternant);
     for (const alternant of scannerVariants)
       add(scannerVariantCounts, alternant);
+    for (const probe of probes) {
+      const summary = variantProbeSummary.get(probe.kind) ?? {
+        kind: probe.kind,
+        misses: 0,
+        scannerChecked: probe.scannerChecked,
+        samples: [],
+      };
+      summary.misses += 1;
+      summary.scannerChecked ||= probe.scannerChecked;
+      if (summary.samples.length < 8) {
+        summary.samples.push({
+          targetKey: target.targetKey,
+          lemma: target.lemma,
+          alternant: probe.alternant,
+          primary,
+        });
+      }
+      variantProbeSummary.set(probe.kind, summary);
+    }
     return {
       id: target.id,
       targetKey: target.targetKey,
@@ -1204,6 +1261,7 @@ function main(): void {
       morphologyReasons: morphology?.reasons ?? [],
       wordOrderAlternants: wordOrder,
       scannerVariantAlternants: scannerVariants,
+      variantProbes: probes,
     };
   });
 
@@ -1675,6 +1733,9 @@ function main(): void {
     },
     wordOrderAlternants: topEntries(wordOrderAlternantCounts, 100),
     scannerVariantAlternants: topEntries(scannerVariantCounts, 100),
+    variantProbeSummary: [...variantProbeSummary.values()].sort(
+      (a, b) => b.misses - a.misses || a.kind.localeCompare(b.kind),
+    ),
     unexplainedSample: unexplained.slice(0, 100),
     misses: auditedMisses,
   };
@@ -1827,6 +1888,7 @@ function main(): void {
         : null,
       wordOrderAlternants: miss.wordOrderAlternants,
       scannerVariantAlternants: miss.scannerVariantAlternants,
+      variantProbes: miss.variantProbes,
       lookupSql: lookupSql(miss),
     };
   });
@@ -2175,6 +2237,19 @@ function main(): void {
         (row) =>
           `| ${row.lemma} | ${row.key} | ${row.total} | ${row.hit} | ${row.miss} | ${row.hitRate} | ${row.sourceLevel} |`,
       ),
+    '',
+    '## Variant Probe Summary',
+    '',
+    report.summary.scannerVariantsRecorded
+      ? 'These probe kinds were part of the schema-2 scanner surface space. Rows here are still misses, so the exact target and these configured alternants had no retained occurrence for that target ID.'
+      : 'These probe kinds need a schema-2 scan before they can be treated as checked.',
+    '',
+    '| Probe Kind | Misses | Checked By Scanner | Sample Target -> Alternant |',
+    '| --- | ---: | --- | --- |',
+    ...report.variantProbeSummary.map(
+      (row) =>
+        `| ${row.kind} | ${row.misses} | ${row.scannerChecked ? 'yes' : 'no'} | ${mdCell(row.samples.map((sample) => `${sample.targetKey} -> ${sample.alternant} (${sample.lemma}; ${sample.primary})`).join(', '))} |`,
+    ),
     '',
     '## Scanner Variant Alternants On Misses',
     '',
