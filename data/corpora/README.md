@@ -164,6 +164,16 @@ After a full scan, write the hit/miss coverage report:
 npm run report:corpus-coverage
 ```
 
+After target-hit sidecars exist, write the exact raw-hit coverage report:
+
+```bash
+npm run report:corpus-raw-coverage
+```
+
+This reads `.target-hits.zst` sidecars only; it does not rescan raw corpora.
+It fails if any scanner-configured downloaded partition is missing a fresh
+target-hit sidecar.
+
 Explain the misses without rerunning the raw-corpus scan:
 
 ```bash

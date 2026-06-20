@@ -9,7 +9,8 @@ use aho_corasick::AhoCorasick;
 use anyhow::{bail, Context, Result};
 use candidate_cache::{
     build_resource_cache, cached_resource_may_contain_any_target_id,
-    cached_resource_may_contain_any_token, open_candidate_stream, CacheBuildStats,
+    cached_resource_may_contain_any_token, open_candidate_stream, target_hits_path,
+    CacheBuildStats,
 };
 use clap::{Args, Parser, Subcommand};
 use db::ExampleDb;
@@ -19,6 +20,7 @@ use serde::Serialize;
 use sources::{expand_resource_partitions, load_downloaded_resources, ResourceSpec};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs;
+use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::process::Command as ProcessCommand;
 use std::sync::{mpsc, Arc, Mutex, RwLock};
@@ -66,6 +68,7 @@ struct Cli {
 enum Command {
     Match(MatchArgs),
     TraceTargets(TraceTargetsArgs),
+    ReportRawCoverage(ReportRawCoverageArgs),
     Bench(BenchArgs),
     BuildCandidateCache(BuildCandidateCacheArgs),
     BuildSearchIndex(BuildSearchIndexArgs),
@@ -141,6 +144,22 @@ struct TraceTargetsArgs {
 }
 
 #[derive(Args)]
+struct ReportRawCoverageArgs {
+    #[arg(long, default_value = ".cache/corpus-targets.json")]
+    targets: PathBuf,
+    #[arg(long, default_value = ".cache/corpus-candidate-shards/split-20260620")]
+    candidate_cache_dir: PathBuf,
+    #[arg(long, default_value = ".cache/corpus-local-full.sqlite")]
+    source_db: PathBuf,
+    #[arg(long, default_value = ".cache/corpus-raw-coverage-report.json")]
+    out_json: PathBuf,
+    #[arg(long, default_value = ".cache/corpus-raw-coverage-report.md")]
+    out_md: PathBuf,
+    #[arg(long, default_value_t = 20)]
+    limit: usize,
+}
+
+#[derive(Args)]
 struct BenchArgs {
     #[arg(long, default_value = ".cache/corpus-local-full.sqlite")]
     source_db: PathBuf,
@@ -213,6 +232,7 @@ fn main() -> Result<()> {
     match cli.command {
         Command::Match(args) => match_targets(args),
         Command::TraceTargets(args) => trace_targets(args),
+        Command::ReportRawCoverage(args) => report_raw_coverage(args),
         Command::Bench(args) => bench(args),
         Command::BuildCandidateCache(args) => build_candidate_cache(args),
         Command::BuildSearchIndex(args) => build_search_index(args),
@@ -341,6 +361,64 @@ struct TraceReport {
     duration_ms: u128,
     boundaries: Vec<&'static str>,
     targets: Vec<TraceTargetOutput>,
+}
+
+#[derive(Debug, Serialize)]
+struct RawCoverageReport {
+    generated_at: String,
+    targets_path: String,
+    target_generated_at: Option<String>,
+    corpus_version: Option<String>,
+    candidate_cache_dir: String,
+    source_db: Option<String>,
+    retained_db_has_unknown_targets: bool,
+    summary: RawCoverageSummary,
+    sidecars: RawCoverageSidecars,
+    unknown_raw_hit_ids: Vec<String>,
+    unknown_retained_hit_ids: Vec<String>,
+    top_raw_miss_verbs: Vec<RawCoverageGroup>,
+    top_raw_miss_signatures: Vec<RawCoverageGroup>,
+}
+
+#[derive(Debug, Serialize)]
+struct RawCoverageSummary {
+    total_targets: usize,
+    raw_hit_targets: usize,
+    raw_miss_targets: usize,
+    raw_hit_rate: f64,
+    retained_hit_targets: Option<usize>,
+    retained_miss_targets: Option<usize>,
+    raw_hit_not_retained_targets: Option<usize>,
+    verbs: usize,
+    verbs_with_zero_raw_hits: usize,
+    verbs_with_all_raw_hits: usize,
+    unknown_raw_hit_ids: usize,
+    unknown_retained_hit_ids: Option<usize>,
+}
+
+#[derive(Debug, Serialize)]
+struct RawCoverageSidecars {
+    files: usize,
+    bytes: u64,
+    target_ids: usize,
+}
+
+#[derive(Debug, Serialize)]
+struct RawCoverageGroup {
+    key: String,
+    total: usize,
+    raw_hit: usize,
+    raw_miss: usize,
+    raw_hit_rate: f64,
+    retained_hit: Option<usize>,
+    retained_hit_rate: Option<f64>,
+}
+
+#[derive(Default)]
+struct RawCoverageGroupAcc {
+    total: usize,
+    raw_hit: usize,
+    retained_hit: usize,
 }
 
 #[derive(Debug)]
@@ -793,6 +871,447 @@ fn retained_only_trace(args: TraceTargetsArgs, selected_targets: Vec<Target>) ->
         targets,
     };
     write_trace_report(&report, &args.out_json, &args.out_md)
+}
+
+fn report_raw_coverage(args: ReportRawCoverageArgs) -> Result<()> {
+    if args.limit == 0 {
+        bail!("--limit must be greater than zero");
+    }
+    if !args.targets.exists() {
+        bail!("missing targets file: {}", args.targets.display());
+    }
+    if !args.candidate_cache_dir.exists() {
+        bail!(
+            "missing candidate cache dir: {}",
+            args.candidate_cache_dir.display()
+        );
+    }
+
+    let targets = load_targets(&args.targets)
+        .with_context(|| format!("load targets from {}", args.targets.display()))?;
+    if targets.is_empty() {
+        bail!("no targets in {}", args.targets.display());
+    }
+    let target_meta = read_target_file_metadata(&args.targets)?;
+    let target_ids = targets
+        .iter()
+        .map(|target| target.id.clone())
+        .collect::<HashSet<_>>();
+    let repo_root = std::env::current_dir().context("read current directory")?;
+    let resources = all_downloaded_partitions(&repo_root)?;
+    let (raw_hit_ids, sidecars) =
+        read_raw_hit_sidecars(&resources, &args.candidate_cache_dir, &args.targets)?;
+    let retained_hit_ids = if args.source_db.exists() {
+        Some(read_retained_hit_ids(&args.source_db)?)
+    } else {
+        None
+    };
+
+    let raw_hit_targets = targets
+        .iter()
+        .filter(|target| raw_hit_ids.contains(&target.id))
+        .count();
+    let retained_hit_targets = retained_hit_ids.as_ref().map(|retained| {
+        targets
+            .iter()
+            .filter(|target| retained.contains(&target.id))
+            .count()
+    });
+    let raw_hit_not_retained_targets = retained_hit_ids.as_ref().map(|retained| {
+        targets
+            .iter()
+            .filter(|target| raw_hit_ids.contains(&target.id) && !retained.contains(&target.id))
+            .count()
+    });
+    let verb_groups = raw_coverage_groups(
+        &targets,
+        &raw_hit_ids,
+        retained_hit_ids.as_ref(),
+        |target| target.verb_id.clone(),
+        usize::MAX,
+    );
+    let verbs_with_zero_raw_hits = verb_groups
+        .iter()
+        .filter(|group| group.raw_hit == 0)
+        .count();
+    let verbs_with_all_raw_hits = verb_groups
+        .iter()
+        .filter(|group| group.raw_hit == group.total)
+        .count();
+    let unknown_raw_hit_id_count = raw_hit_ids
+        .iter()
+        .filter(|id| !target_ids.contains(*id))
+        .count();
+    let unknown_raw_hit_ids = unknown_ids(&raw_hit_ids, &target_ids, args.limit);
+    let unknown_retained_hit_ids = retained_hit_ids
+        .as_ref()
+        .map(|retained| unknown_ids(retained, &target_ids, args.limit))
+        .unwrap_or_default();
+    let unknown_retained_hit_id_count = retained_hit_ids.as_ref().map(|retained| {
+        retained
+            .iter()
+            .filter(|id| !target_ids.contains(*id))
+            .count()
+    });
+    let summary = RawCoverageSummary {
+        total_targets: targets.len(),
+        raw_hit_targets,
+        raw_miss_targets: targets.len() - raw_hit_targets,
+        raw_hit_rate: ratio(raw_hit_targets, targets.len()),
+        retained_hit_targets,
+        retained_miss_targets: retained_hit_targets.map(|count| targets.len() - count),
+        raw_hit_not_retained_targets,
+        verbs: verb_groups.len(),
+        verbs_with_zero_raw_hits,
+        verbs_with_all_raw_hits,
+        unknown_raw_hit_ids: unknown_raw_hit_id_count,
+        unknown_retained_hit_ids: unknown_retained_hit_id_count,
+    };
+    let top_raw_miss_verbs = verb_groups.into_iter().take(args.limit).collect();
+    let top_raw_miss_signatures = raw_coverage_groups(
+        &targets,
+        &raw_hit_ids,
+        retained_hit_ids.as_ref(),
+        |target| target.signature.clone(),
+        args.limit,
+    );
+    let report = RawCoverageReport {
+        generated_at: current_timestamp()?,
+        targets_path: args.targets.display().to_string(),
+        target_generated_at: target_meta.0,
+        corpus_version: target_meta.1,
+        candidate_cache_dir: args.candidate_cache_dir.display().to_string(),
+        source_db: args
+            .source_db
+            .exists()
+            .then(|| args.source_db.display().to_string()),
+        retained_db_has_unknown_targets: unknown_retained_hit_id_count.unwrap_or(0) > 0,
+        summary,
+        sidecars,
+        unknown_raw_hit_ids,
+        unknown_retained_hit_ids,
+        top_raw_miss_verbs,
+        top_raw_miss_signatures,
+    };
+    write_raw_coverage_report(&report, &args.out_json, &args.out_md)?;
+    println!(
+        "Wrote {} and {}: {} raw hit target(s), {} raw miss target(s)",
+        args.out_json.display(),
+        args.out_md.display(),
+        report.summary.raw_hit_targets,
+        report.summary.raw_miss_targets
+    );
+    Ok(())
+}
+
+fn read_target_file_metadata(path: &Path) -> Result<(Option<String>, Option<String>)> {
+    let raw = fs::read_to_string(path).with_context(|| format!("read {}", path.display()))?;
+    let json: serde_json::Value = serde_json::from_str(&raw)?;
+    Ok((
+        json.get("generatedAt")
+            .and_then(serde_json::Value::as_str)
+            .map(ToOwned::to_owned),
+        json.get("corpusVersion")
+            .and_then(serde_json::Value::as_str)
+            .map(ToOwned::to_owned),
+    ))
+}
+
+fn read_raw_hit_sidecars(
+    resources: &[ResourceSpec],
+    cache_dir: &Path,
+    targets_path: &Path,
+) -> Result<(HashSet<String>, RawCoverageSidecars)> {
+    let target_modified = fs::metadata(targets_path)
+        .with_context(|| format!("stat {}", targets_path.display()))?
+        .modified()?;
+    let mut ids = HashSet::new();
+    let mut files = 0usize;
+    let mut bytes = 0u64;
+    let mut stale_files = 0usize;
+    let mut missing = Vec::new();
+    for resource in resources {
+        let path = target_hits_path(resource, cache_dir);
+        if !path.exists() {
+            missing.push(resource.id.clone());
+            continue;
+        }
+        files += 1;
+        let metadata = fs::metadata(&path)?;
+        bytes += metadata.len();
+        if metadata.modified()? < target_modified {
+            stale_files += 1;
+        }
+        let file = fs::File::open(&path).with_context(|| format!("open {}", path.display()))?;
+        let lines = BufReader::new(zstd::stream::read::Decoder::new(file)?).lines();
+        for line in lines {
+            let id = line?;
+            if !id.is_empty() {
+                ids.insert(id);
+            }
+        }
+    }
+    if !missing.is_empty() {
+        let shown = missing.iter().take(10).cloned().collect::<Vec<_>>();
+        bail!(
+            "missing {} target-hit sidecar(s) in {} for configured downloaded partitions; first: {}",
+            missing.len(),
+            cache_dir.display(),
+            shown.join(", ")
+        );
+    }
+    if stale_files > 0 {
+        bail!("{stale_files} target-hit sidecar(s) are older than the target file");
+    }
+    let target_ids = ids.len();
+    Ok((
+        ids,
+        RawCoverageSidecars {
+            files,
+            bytes,
+            target_ids,
+        },
+    ))
+}
+
+fn all_downloaded_partitions(repo_root: &Path) -> Result<Vec<ResourceSpec>> {
+    let mut resources = Vec::new();
+    for resource in load_downloaded_resources(repo_root)? {
+        resources.extend(expand_resource_partitions(&resource)?);
+    }
+    if resources.is_empty() {
+        bail!("no downloaded corpus resources configured");
+    }
+    Ok(resources)
+}
+
+fn read_retained_hit_ids(path: &Path) -> Result<HashSet<String>> {
+    let con = readonly_connection(path)?;
+    let mut stmt = con.prepare("SELECT DISTINCT target_id FROM occurrences")?;
+    let rows = stmt.query_map([], |row| row.get::<_, String>(0))?;
+    let mut ids = HashSet::new();
+    for row in rows {
+        ids.insert(row?);
+    }
+    Ok(ids)
+}
+
+fn raw_coverage_groups<F>(
+    targets: &[Target],
+    raw_hit_ids: &HashSet<String>,
+    retained_hit_ids: Option<&HashSet<String>>,
+    key_for: F,
+    limit: usize,
+) -> Vec<RawCoverageGroup>
+where
+    F: Fn(&Target) -> String,
+{
+    let mut acc = HashMap::<String, RawCoverageGroupAcc>::new();
+    for target in targets {
+        let entry = acc.entry(key_for(target)).or_default();
+        entry.total += 1;
+        if raw_hit_ids.contains(&target.id) {
+            entry.raw_hit += 1;
+        }
+        if retained_hit_ids.is_some_and(|ids| ids.contains(&target.id)) {
+            entry.retained_hit += 1;
+        }
+    }
+    let mut groups = acc
+        .into_iter()
+        .map(|(key, entry)| {
+            let raw_miss = entry.total - entry.raw_hit;
+            RawCoverageGroup {
+                key,
+                total: entry.total,
+                raw_hit: entry.raw_hit,
+                raw_miss,
+                raw_hit_rate: ratio(entry.raw_hit, entry.total),
+                retained_hit: retained_hit_ids.map(|_| entry.retained_hit),
+                retained_hit_rate: retained_hit_ids.map(|_| ratio(entry.retained_hit, entry.total)),
+            }
+        })
+        .collect::<Vec<_>>();
+    groups.sort_by(|a, b| {
+        b.raw_miss
+            .cmp(&a.raw_miss)
+            .then_with(|| a.raw_hit.cmp(&b.raw_hit))
+            .then_with(|| a.key.cmp(&b.key))
+    });
+    groups.truncate(limit);
+    groups
+}
+
+fn unknown_ids(ids: &HashSet<String>, target_ids: &HashSet<String>, limit: usize) -> Vec<String> {
+    let mut unknown = ids
+        .iter()
+        .filter(|id| !target_ids.contains(*id))
+        .cloned()
+        .collect::<Vec<_>>();
+    unknown.sort();
+    unknown.truncate(limit);
+    unknown
+}
+
+fn write_raw_coverage_report(
+    report: &RawCoverageReport,
+    out_json: &Path,
+    out_md: &Path,
+) -> Result<()> {
+    if let Some(parent) = out_json.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    if let Some(parent) = out_md.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    fs::write(out_json, serde_json::to_string_pretty(report)? + "\n")?;
+    fs::write(out_md, raw_coverage_markdown(report))?;
+    Ok(())
+}
+
+fn raw_coverage_markdown(report: &RawCoverageReport) -> String {
+    let retained_hit = report
+        .summary
+        .retained_hit_targets
+        .map_or_else(|| "n/a".to_owned(), |count| count.to_string());
+    let retained_miss = report
+        .summary
+        .retained_miss_targets
+        .map_or_else(|| "n/a".to_owned(), |count| count.to_string());
+    let raw_hit_not_retained = report
+        .summary
+        .raw_hit_not_retained_targets
+        .map_or_else(|| "n/a".to_owned(), |count| count.to_string());
+    let unknown_retained = report
+        .summary
+        .unknown_retained_hit_ids
+        .map_or_else(|| "n/a".to_owned(), |count| count.to_string());
+    let mut lines = vec![
+        "# Corpus Raw-Hit Coverage".to_owned(),
+        String::new(),
+        format!("Generated: {}", report.generated_at),
+        format!("Targets: {}", report.targets_path),
+        format!(
+            "Target generated at: {}",
+            report.target_generated_at.as_deref().unwrap_or("unknown")
+        ),
+        format!("Candidate cache: {}", report.candidate_cache_dir),
+        format!(
+            "Retained DB: {}",
+            report.source_db.as_deref().unwrap_or("not found")
+        ),
+        format!(
+            "Retained DB stale target IDs: {}",
+            if report.retained_db_has_unknown_targets {
+                "yes"
+            } else {
+                "no"
+            }
+        ),
+        String::new(),
+        "## Summary".to_owned(),
+        String::new(),
+        format!("- Total targets: {}", report.summary.total_targets),
+        format!(
+            "- Raw-hit targets: {} ({})",
+            report.summary.raw_hit_targets,
+            pct(report.summary.raw_hit_rate)
+        ),
+        format!("- Raw-miss targets: {}", report.summary.raw_miss_targets),
+        format!("- Retained-hit targets: {retained_hit}"),
+        format!("- Retained-miss targets: {retained_miss}"),
+        format!("- Raw-hit but not retained targets: {raw_hit_not_retained}"),
+        format!("- Verb IDs: {}", report.summary.verbs),
+        format!(
+            "- Verbs with zero raw hits: {}",
+            report.summary.verbs_with_zero_raw_hits
+        ),
+        format!(
+            "- Verbs with all targets raw-hit: {}",
+            report.summary.verbs_with_all_raw_hits
+        ),
+        format!(
+            "- Unknown sidecar target IDs: {}",
+            report.summary.unknown_raw_hit_ids
+        ),
+        format!("- Unknown retained DB target IDs: {unknown_retained}"),
+        String::new(),
+        "## Sidecars".to_owned(),
+        String::new(),
+        format!("- Files: {}", report.sidecars.files),
+        format!("- Bytes: {}", report.sidecars.bytes),
+        format!(
+            "- Unique target IDs in sidecars: {}",
+            report.sidecars.target_ids
+        ),
+        String::new(),
+        "## Worst Verb Gaps".to_owned(),
+        String::new(),
+        coverage_group_table_header(),
+    ];
+    for group in &report.top_raw_miss_verbs {
+        lines.push(coverage_group_table_row(group));
+    }
+    lines.extend([
+        String::new(),
+        "## Worst Signature Gaps".to_owned(),
+        String::new(),
+        coverage_group_table_header(),
+    ]);
+    for group in &report.top_raw_miss_signatures {
+        lines.push(coverage_group_table_row(group));
+    }
+    if !report.unknown_raw_hit_ids.is_empty() || !report.unknown_retained_hit_ids.is_empty() {
+        lines.extend([
+            String::new(),
+            "## Unknown Target IDs".to_owned(),
+            String::new(),
+        ]);
+        for id in &report.unknown_raw_hit_ids {
+            lines.push(format!("- Raw sidecar: `{}`", md_escape(id)));
+        }
+        for id in &report.unknown_retained_hit_ids {
+            lines.push(format!("- Retained DB: `{}`", md_escape(id)));
+        }
+    }
+    lines.push(String::new());
+    lines.join("\n")
+}
+
+fn coverage_group_table_header() -> String {
+    "| Key | Total | Raw Hit | Raw Miss | Raw Hit Rate | Retained Hit | Retained Hit Rate |\n| --- | ---: | ---: | ---: | ---: | ---: | ---: |"
+        .to_owned()
+}
+
+fn coverage_group_table_row(group: &RawCoverageGroup) -> String {
+    let retained_hit = group
+        .retained_hit
+        .map_or_else(|| "n/a".to_owned(), |count| count.to_string());
+    let retained_hit_rate = group
+        .retained_hit_rate
+        .map_or_else(|| "n/a".to_owned(), pct);
+    format!(
+        "| {} | {} | {} | {} | {} | {} | {} |",
+        md_escape(&group.key),
+        group.total,
+        group.raw_hit,
+        group.raw_miss,
+        pct(group.raw_hit_rate),
+        retained_hit,
+        retained_hit_rate
+    )
+}
+
+fn ratio(part: usize, total: usize) -> f64 {
+    if total == 0 {
+        0.0
+    } else {
+        part as f64 / total as f64
+    }
+}
+
+fn pct(value: f64) -> String {
+    format!("{:.1}%", value * 100.0)
 }
 
 fn write_trace_report(report: &TraceReport, out_json: &Path, out_md: &Path) -> Result<()> {

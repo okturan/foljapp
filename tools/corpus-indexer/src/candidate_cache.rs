@@ -551,7 +551,7 @@ fn token_path(resource: &ResourceSpec, cache_dir: &Path) -> PathBuf {
     cache_dir.join(format!("{}.tokens.zst", safe_resource_id(&resource.id)))
 }
 
-fn target_hits_path(resource: &ResourceSpec, cache_dir: &Path) -> PathBuf {
+pub fn target_hits_path(resource: &ResourceSpec, cache_dir: &Path) -> PathBuf {
     cache_dir.join(format!(
         "{}.target-hits.zst",
         safe_resource_id(&resource.id)

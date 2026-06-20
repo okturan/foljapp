@@ -36,6 +36,7 @@ npm run build:corpus-targets
 npm run scan:local-corpus
 npm run build:corpus-candidate-cache
 npm run scan:local-corpus:cached
+npm run report:corpus-raw-coverage
 npm run trace:corpus-targets
 npm run build:corpus-search-index
 npm run search:corpus -- --query="të punoj"
@@ -60,6 +61,8 @@ CARGO_TARGET_DIR=.cache/cargo-target cargo run --release \
   skip whole partitions without reading candidate rows.
 - `trace-targets`: explain selected target IDs or forms by raw matches,
   rejected variants, quality rejection, and retained occurrences.
+- `report-raw-coverage`: summarize exact raw target hits from
+  `.target-hits.zst` sidecars and compare them with retained examples.
 - `bench`: compare Aho-Corasick scanning, Tantivy, and SQLite FTS5 over retained
   examples.
 - `build-search-index`: build the Tantivy index from retained SQLite examples.
