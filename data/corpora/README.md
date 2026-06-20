@@ -193,7 +193,9 @@ npm run report:corpus-missing-forensics
 
 This writes `.cache/corpus-missing-forensics.json` and `.md`, grouped by trace
 status, likely reason, mood, tense, voice, polarity, modality, phrase shape, and
-lemma. It does not rescan corpora.
+lemma. It also includes a raw-zero UniParser-accepted dossier that separates
+morphologically accepted but unattested forms from likely generation bugs. It
+does not rescan corpora.
 
 For the strongest local review, join the full UniParser analyzer pass before
 writing the missing-form audit:

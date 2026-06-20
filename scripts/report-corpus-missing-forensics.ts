@@ -21,11 +21,7 @@ const DEFAULT_JSON_OUT = join(
   '.cache',
   'corpus-missing-forensics.json',
 );
-const DEFAULT_MD_OUT = join(
-  REPO_ROOT,
-  '.cache',
-  'corpus-missing-forensics.md',
-);
+const DEFAULT_MD_OUT = join(REPO_ROOT, '.cache', 'corpus-missing-forensics.md');
 
 interface MissingAudit {
   generatedAt?: string;
@@ -44,8 +40,11 @@ interface MissingTarget {
   primary: string;
   labels?: string[];
   morphologyAction?: string;
+  morphologyForm?: string;
+  morphologyScope?: string;
   morphologyProofLevel?: string;
   morphologyVoiceEligibility?: string;
+  morphologyReasons?: string[];
   traceStatus?: string;
   trace?: {
     counts?: Record<string, number>;
@@ -58,8 +57,21 @@ interface Bucket {
   count: number;
 }
 
+interface MissSample {
+  targetKey: string;
+  lemma: string;
+  signature: string;
+  primary: string;
+  morphologyScope: string;
+  morphologyProofLevel: string;
+  morphologyAction: string;
+  morphologyReasons: string[];
+}
+
 function valueAfter(prefix: string): string | undefined {
-  return process.argv.find((arg) => arg.startsWith(prefix))?.slice(prefix.length);
+  return process.argv
+    .find((arg) => arg.startsWith(prefix))
+    ?.slice(prefix.length);
 }
 
 function readJson<T>(path: string): T {
@@ -77,7 +89,10 @@ function topEntries(map: Map<string, number>, limit: number): Bucket[] {
     .map(([key, count]) => ({ key, count }));
 }
 
-function numberValue(record: Record<string, unknown>, key: string): number | null {
+function numberValue(
+  record: Record<string, unknown>,
+  key: string,
+): number | null {
   const value = record[key];
   return typeof value === 'number' ? value : null;
 }
@@ -107,14 +122,19 @@ function likelyReason(miss: MissingTarget): string {
   const tense = signaturePart(miss.signature, 1);
   const voice = signaturePart(miss.signature, 3);
 
-  if (miss.traceStatus === 'raw_seen_filtered') return 'found-only-in-rejected-text';
+  if (miss.traceStatus === 'raw_seen_filtered')
+    return 'found-only-in-rejected-text';
   if (voice === 'middle-passive') return 'middle-passive-attestation-needed';
-  if (labels.has('near_empty_grammatical_cell')) return 'near-empty-generated-cell';
-  if (labels.has('future_perfect_analytic')) return 'long-analytic-future-perfect';
+  if (labels.has('near_empty_grammatical_cell'))
+    return 'near-empty-generated-cell';
+  if (labels.has('future_perfect_analytic'))
+    return 'long-analytic-future-perfect';
   if (labels.has('long_exact_phrase')) return 'long-exact-phrase';
-  if (mood === 'admirative' && tense !== 'present') return 'rare-admirative-nonpresent';
+  if (mood === 'admirative' && tense !== 'present')
+    return 'rare-admirative-nonpresent';
   if (mood === 'optative') return `rare-optative-${tense}`;
-  if (miss.morphologyProofLevel === 'analyzer') return 'analyzer-accepted-but-unattested';
+  if (miss.morphologyProofLevel === 'analyzer')
+    return 'analyzer-accepted-but-unattested';
   return miss.primary || 'unclassified';
 }
 
@@ -193,6 +213,64 @@ function sumTrace(misses: MissingTarget[]) {
   );
 }
 
+function missSample(miss: MissingTarget): MissSample {
+  return {
+    targetKey: miss.targetKey,
+    lemma: miss.lemma,
+    signature: miss.signature,
+    primary: miss.primary,
+    morphologyScope: miss.morphologyScope ?? 'unknown',
+    morphologyProofLevel: miss.morphologyProofLevel ?? 'unknown',
+    morphologyAction: miss.morphologyAction ?? 'unknown',
+    morphologyReasons: miss.morphologyReasons ?? [],
+  };
+}
+
+function sampleByPrimary(
+  misses: MissingTarget[],
+  limit = 12,
+  samplesPerBucket = 4,
+) {
+  const byPrimary = new Map<string, MissingTarget[]>();
+  for (const miss of misses) {
+    const list = byPrimary.get(miss.primary) ?? [];
+    list.push(miss);
+    byPrimary.set(miss.primary, list);
+  }
+  return [...byPrimary.entries()]
+    .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]))
+    .slice(0, limit)
+    .map(([key, rows]) => ({
+      key,
+      count: rows.length,
+      samples: rows.slice(0, samplesPerBucket).map(missSample),
+    }));
+}
+
+function analyzerAcceptedDossier(misses: MissingTarget[]) {
+  const rows = misses.filter(
+    (miss) =>
+      miss.traceStatus === 'raw_zero' &&
+      miss.morphologyForm === 'analyzer_accepted',
+  );
+  const byScope = new Map<string, number>();
+  const bySignature = new Map<string, number>();
+  const byShape = new Map<string, number>();
+  for (const miss of rows) {
+    inc(byScope, miss.morphologyScope ?? 'unknown');
+    inc(bySignature, miss.signature);
+    inc(byShape, phraseShape(miss));
+  }
+  return {
+    count: rows.length,
+    byPrimary: summarizeGroup(rows).byPrimary,
+    byMorphologyScope: topEntries(byScope, 10),
+    byPhraseShape: topEntries(byShape, 10),
+    bySignature: topEntries(bySignature, 20),
+    samplesByPrimary: sampleByPrimary(rows),
+  };
+}
+
 function buildMarkdown(report: ReturnType<typeof buildReport>): string {
   const lines: string[] = [];
   lines.push('# Corpus Missing Forensics', '');
@@ -201,13 +279,17 @@ function buildMarkdown(report: ReturnType<typeof buildReport>): string {
   lines.push(`- Total targets: ${report.summary.totalTargets}`);
   lines.push(`- Hit targets: ${report.summary.hitTargets}`);
   lines.push(`- Missed targets: ${report.summary.missedTargets}`);
-  lines.push(`- Unique missed surfaces: ${report.summary.uniqueMissedSurfaces}`);
+  lines.push(
+    `- Unique missed surfaces: ${report.summary.uniqueMissedSurfaces}`,
+  );
   lines.push(
     `- Duplicate missed target rows collapsed by surface: ${report.summary.duplicateMissRowsCollapsed}`,
   );
   lines.push(`- Traced miss targets: ${report.summary.tracedMissTargets}`);
   lines.push(`- Raw-zero misses: ${report.summary.rawZeroMisses}`);
-  lines.push(`- Raw-seen filtered misses: ${report.summary.rawSeenFilteredMisses}`);
+  lines.push(
+    `- Raw-seen filtered misses: ${report.summary.rawSeenFilteredMisses}`,
+  );
   lines.push(
     `- Raw pattern matches inside missed targets: ${report.traceTotals.rawPatternMatches}`,
   );
@@ -235,6 +317,41 @@ function buildMarkdown(report: ReturnType<typeof buildReport>): string {
   );
 
   addTable(lines, 'Overall Likely Reason', report.overall.byLikelyReason);
+
+  const analyzer = report.rawZeroAnalyzerAcceptedDossier;
+  lines.push('## Raw-Zero UniParser-Accepted Dossier', '');
+  lines.push(
+    `${analyzer.count} raw-zero miss rows are accepted by UniParser at the analyzer layer. Single-token rows are exact form validation; head-token-only rows validate only the inflected verb component inside a larger generated phrase.`,
+    '',
+  );
+  addTable(lines, 'Analyzer Scope', analyzer.byMorphologyScope);
+  addTable(lines, 'Primary Category', analyzer.byPrimary);
+  addTable(lines, 'Phrase Shape', analyzer.byPhraseShape);
+  addTable(lines, 'Top Signatures', analyzer.bySignature.slice(0, 12));
+  lines.push('### Samples By Primary Category', '');
+  lines.push('| Primary | Count | Samples | Scope | Proof | Reasons |');
+  lines.push('|---|---:|---|---|---|---|');
+  for (const bucket of analyzer.samplesByPrimary) {
+    const samples = bucket.samples
+      .map(
+        (sample) =>
+          `${sample.targetKey} (${sample.lemma}; ${sample.signature})`,
+      )
+      .join('; ');
+    const scopes = [
+      ...new Set(bucket.samples.map((sample) => sample.morphologyScope)),
+    ].join(', ');
+    const proofs = [
+      ...new Set(bucket.samples.map((sample) => sample.morphologyProofLevel)),
+    ].join(', ');
+    const reasons = [
+      ...new Set(bucket.samples.flatMap((sample) => sample.morphologyReasons)),
+    ].join(', ');
+    lines.push(
+      `| ${bucket.key} | ${bucket.count} | ${samples} | ${scopes} | ${proofs} | ${reasons || 'n/a'} |`,
+    );
+  }
+  lines.push('');
 
   lines.push('## Middle-Passive Backlog', '');
   lines.push('| Metric | Targets |');
@@ -339,6 +456,7 @@ function buildReport(audit: MissingAudit) {
       ),
     },
     traceTotals: sumTrace(audit.misses),
+    rawZeroAnalyzerAcceptedDossier: analyzerAcceptedDossier(audit.misses),
     byTraceStatus: Object.fromEntries(
       [...byTraceStatus.entries()]
         .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]))
