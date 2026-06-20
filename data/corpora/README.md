@@ -31,7 +31,7 @@ Derived local artifacts snapshot (2026-06-20):
 
 | Artifact                 | Local cache                         | Size | Purpose                                                        |
 | ------------------------ | ----------------------------------- | ---: | -------------------------------------------------------------- |
-| Candidate sentence cache | `.cache/corpus-candidate-shards/v1` |  66G | Target-independent normalized sentence shards for fast rescans |
+| Candidate sentence cache | `.cache/corpus-candidate-shards/v1` |  65G | Current full-row v1 candidate shards for fast rescans |
 | Retained examples DB     | `.cache/corpus-local-full.sqlite`   | 192M | Compact app-facing examples and occurrence rows                |
 | Tantivy search index     | `.cache/corpus-search-tantivy`      |  36M | Interactive local phrase lookup over retained examples         |
 
@@ -97,13 +97,31 @@ npm run scan:local-corpus
 ```
 
 For repeated full-corpus work, first materialize the target-independent
-candidate cache. Current cache builds store normalized text separately from
-full sentence metadata under `.cache/corpus-candidate-shards/v1`, so cached
-scans can run the matcher over compact normalized shards and load full metadata
-only after a raw match. Target matches, quality decisions, scores, and
-occurrences are still computed fresh by the scanner. Existing v1 full-row
-shards remain readable; use `npm run build:corpus-candidate-cache -- --refresh`
-to rewrite a source partition into the split format.
+candidate cache. The current full local `.cache/corpus-candidate-shards/v1`
+cache is still the older full-row format: 1,907 `.jsonl.zst` shards plus 1,907
+metadata files, with no full-cache `.norm.zst`, `.rows.jsonl.zst`, or
+`.tokens.zst` sidecars yet. Target matches, quality decisions, scores, and
+occurrences are still computed fresh by the scanner.
+
+Current cache builds can also store normalized text separately from full
+sentence metadata, so cached scans can run the matcher over compact normalized
+shards and load full metadata only after a raw match. Existing v1 full-row
+shards remain readable. Build the first full split cache into a separate
+directory instead of refreshing `v1` in place, because the writer does not
+delete old v1 shards:
+
+```bash
+CARGO_TARGET_DIR=.cache/cargo-target cargo run --release \
+  --manifest-path tools/corpus-indexer/Cargo.toml -- build-candidate-cache \
+  --sources=all --jobs=12 \
+  --cache-dir=.cache/corpus-candidate-shards/split-20260620
+```
+
+Before switching cached scan or trace commands to that directory, verify 1,907
+each of `.norm.zst`, `.rows.jsonl.zst`, and `.tokens.zst` files. In-place
+`npm run build:corpus-candidate-cache -- --refresh` is valid, but it writes the
+split files beside the old v1 files and can temporarily push the cache directory
+toward the old plus new cache sizes.
 
 The split format is mainly a missing-form forensics optimization. It speeds up
 raw-zero and low-hit traces because the scanner can avoid metadata

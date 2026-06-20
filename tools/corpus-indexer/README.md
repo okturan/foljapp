@@ -14,9 +14,9 @@ smaller.
   `npm run build:corpus-targets`.
 - `data/corpora/resources.json`: corpus resource ledger.
 - `.cache/datasets/**`: downloaded raw corpora.
-- `.cache/corpus-candidate-shards/v1`: optional parsed candidate cache. Current
-  builds use split normalized/metadata shards; older full-row shards are still
-  readable.
+- `.cache/corpus-candidate-shards/v1`: optional parsed candidate cache. The
+  current full local cache is still v1 full-row JSONL; the current writer can
+  also materialize split normalized/metadata/token shards.
 
 ## Outputs
 
@@ -71,9 +71,23 @@ after reduction, for interactive phrase search over retained examples; it is not
 the replacement for first-pass classification.
 
 Cached scans prefer split cache shards when present. If only older full-row
-cache shards are fresh, the scanner falls back to them. Rebuild with
-`npm run build:corpus-candidate-cache -- --refresh` to get the split format for
-the selected sources.
+cache shards are fresh, the scanner falls back to them. The current full
+`.cache/corpus-candidate-shards/v1` cache has 1,907 v1 full-row shards and no
+`.norm.zst`, `.rows.jsonl.zst`, or `.tokens.zst` sidecars yet. Build the first
+full split cache in a separate directory so the old v1 cache stays usable while
+the heavier materialization runs:
+
+```sh
+CARGO_TARGET_DIR=.cache/cargo-target cargo run --release \
+  --manifest-path tools/corpus-indexer/Cargo.toml -- build-candidate-cache \
+  --sources=all --jobs=12 \
+  --cache-dir=.cache/corpus-candidate-shards/split-20260620
+```
+
+After it finishes, expect 1,907 each of `.norm.zst`, `.rows.jsonl.zst`, and
+`.tokens.zst` files before switching `--candidate-cache-dir` to that directory.
+An in-place `--refresh` under `v1` writes split shards beside the old v1 shards;
+it does not delete the older files.
 
 Fresh split-cache builds also include `.tokens.zst` inventories. `trace-targets`
 uses them to skip source partitions that cannot contain any selected target
