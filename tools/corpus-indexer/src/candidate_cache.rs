@@ -92,11 +92,16 @@ pub struct AnchorRowStream {
     lines: Lines<BufReader<zstd::stream::read::Decoder<'static, BufReader<File>>>>,
     resource_id: String,
     source_candidates_seen: usize,
+    anchor_rows: usize,
 }
 
 impl AnchorRowStream {
     pub fn source_candidates_seen(&self) -> usize {
         self.source_candidates_seen
+    }
+
+    pub fn anchor_rows(&self) -> usize {
+        self.anchor_rows
     }
 }
 
@@ -461,6 +466,7 @@ fn open_anchor_row_stream(
         lines: BufReader::new(zstd::stream::read::Decoder::new(file)?).lines(),
         resource_id: resource.id.clone(),
         source_candidates_seen: meta.source_candidates_seen,
+        anchor_rows: meta.anchor_rows,
     }))
 }
 

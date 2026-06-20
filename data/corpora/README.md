@@ -215,6 +215,16 @@ The full script writes `.cache/corpus-phrase-variant-stress.all.json` and `.md`.
 Direct `--forms` or `--target-ids` runs are not implicitly capped; add
 `--limit-targets` only when a filtered run should be truncated.
 
+Plan a run without scanning candidate rows or building sidecars:
+
+```bash
+npm run report:corpus-phrase-variants:plan
+npm run report:corpus-phrase-variants:all:plan
+```
+
+The plan reports selected targets, stress patterns, anchor tokens, token-inventory
+skips, and existing versus missing anchor-row sidecar partitions.
+
 This uses the Rust split-cache path. It skips partitions through `.tokens.zst`
 inventories, then reuses query-specific `.anchor-rows-*.jsonl.zst` sidecars when
 they already exist. Partitions that need a missing anchor-row sidecar fall back

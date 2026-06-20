@@ -46,6 +46,8 @@ pub(crate) struct PhraseVariantStressArgs {
     target_ids: String,
     #[arg(long)]
     build_anchor_rows: bool,
+    #[arg(long, conflicts_with = "build_anchor_rows")]
+    plan_only: bool,
 }
 
 #[derive(Debug, Deserialize)]
@@ -106,6 +108,7 @@ struct PhraseStressMatcher {
 #[derive(Debug)]
 struct PhraseStressResourceStats {
     resource_id: String,
+    used_anchor_rows: bool,
     source_candidates_seen: usize,
     candidates_seen: usize,
     empty_candidates: usize,
@@ -154,15 +157,21 @@ struct PhraseVariantStressKind {
 
 #[derive(Debug, Serialize)]
 struct PhraseVariantStressSummary {
+    plan_only: bool,
     audit_total_targets: Option<usize>,
     selected_targets: usize,
+    reported_targets: usize,
     stress_patterns: usize,
+    reported_target_patterns: usize,
+    anchor_tokens: usize,
     matched_targets: usize,
     matched_patterns: usize,
     raw_matches: usize,
     source_partitions: usize,
     skipped_partitions: usize,
     scanned_partitions: usize,
+    existing_anchor_row_partitions: usize,
+    missing_anchor_row_partitions: usize,
     candidates_seen: usize,
     anchor_candidates_seen: usize,
     empty_candidates: usize,
@@ -195,10 +204,16 @@ struct PhraseVariantStressPattern {
 #[derive(Debug, Serialize)]
 struct PhraseVariantStressResource {
     resource_id: String,
+    used_anchor_rows: bool,
     source_candidates_seen: usize,
     candidates_seen: usize,
     empty_candidates: usize,
     duration_ms: u128,
+}
+
+struct PhraseStressPlan {
+    existing_resource_stats: Vec<PhraseStressResourceStats>,
+    missing_anchor_row_partitions: usize,
 }
 
 pub(crate) fn phrase_variant_stress(args: PhraseVariantStressArgs) -> Result<()> {
@@ -228,22 +243,37 @@ pub(crate) fn phrase_variant_stress(args: PhraseVariantStressArgs) -> Result<()>
     }
     let matcher = Arc::new(PhraseStressMatcher::new(pattern_rows)?);
     let source_partitions = resources.len();
-    let mut skipped_partitions = 0usize;
-    let mut scan_resources = Vec::new();
-    for resource in resources {
-        match cached_resource_may_contain_any_token(
-            &resource,
+    let (scan_resources, skipped_partitions) =
+        phrase_stress_scan_resources(resources, &args.candidate_cache_dir, &matcher.anchor_tokens)?;
+    if args.plan_only {
+        let plan = phrase_stress_plan_resource_stats(
+            &scan_resources,
             &args.candidate_cache_dir,
             &matcher.anchor_tokens,
-        )? {
-            Some(false) => skipped_partitions += 1,
-            Some(true) => scan_resources.push(resource),
-            None => bail!(
-                "missing or stale split cache/token inventory for {} in {}",
-                resource.id,
-                args.candidate_cache_dir.display()
-            ),
-        }
+        )?;
+        let report = build_phrase_variant_stress_report(
+            &args,
+            &audit,
+            &selected,
+            &matcher.pattern_rows,
+            &vec![0usize; matcher.pattern_rows.len()],
+            plan.existing_resource_stats,
+            Vec::new(),
+            source_partitions,
+            skipped_partitions,
+            plan.missing_anchor_row_partitions,
+            started.elapsed().as_millis(),
+        )?;
+        write_phrase_variant_stress_report(&report, &args.out_json, &args.out_md)?;
+        println!(
+            "Wrote {} and {}: plan for {} target(s), {} stress pattern(s), {} missing anchor-row partition(s)",
+            args.out_json.display(),
+            args.out_md.display(),
+            report.summary.selected_targets,
+            report.summary.stress_patterns,
+            report.summary.missing_anchor_row_partitions
+        );
+        return Ok(());
     }
 
     let jobs = args.jobs.clamp(1, scan_resources.len().max(1));
@@ -314,6 +344,7 @@ pub(crate) fn phrase_variant_stress(args: PhraseVariantStressArgs) -> Result<()>
         samples,
         source_partitions,
         skipped_partitions,
+        0,
         started.elapsed().as_millis(),
     )?;
     write_phrase_variant_stress_report(&report, &args.out_json, &args.out_md)?;
@@ -326,6 +357,57 @@ pub(crate) fn phrase_variant_stress(args: PhraseVariantStressArgs) -> Result<()>
         report.summary.raw_matches
     );
     Ok(())
+}
+
+fn phrase_stress_scan_resources(
+    resources: Vec<ResourceSpec>,
+    candidate_cache_dir: &Path,
+    anchor_tokens: &HashSet<String>,
+) -> Result<(Vec<ResourceSpec>, usize)> {
+    let mut skipped_partitions = 0usize;
+    let mut scan_resources = Vec::new();
+    for resource in resources {
+        match cached_resource_may_contain_any_token(&resource, candidate_cache_dir, anchor_tokens)?
+        {
+            Some(false) => skipped_partitions += 1,
+            Some(true) => scan_resources.push(resource),
+            None => bail!(
+                "missing or stale split cache/token inventory for {} in {}",
+                resource.id,
+                candidate_cache_dir.display()
+            ),
+        }
+    }
+    Ok((scan_resources, skipped_partitions))
+}
+
+fn phrase_stress_plan_resource_stats(
+    resources: &[ResourceSpec],
+    candidate_cache_dir: &Path,
+    anchor_tokens: &HashSet<String>,
+) -> Result<PhraseStressPlan> {
+    let mut existing_resource_stats = Vec::new();
+    let mut missing_anchor_row_partitions = 0usize;
+    for resource in resources {
+        match open_or_build_anchor_row_stream(resource, candidate_cache_dir, anchor_tokens, false)?
+        {
+            Some(stream) => existing_resource_stats.push(PhraseStressResourceStats {
+                resource_id: resource.id.clone(),
+                used_anchor_rows: true,
+                source_candidates_seen: stream.source_candidates_seen(),
+                candidates_seen: stream.anchor_rows(),
+                empty_candidates: 0,
+                duration_ms: 0,
+                matches_by_pattern: Vec::new(),
+                samples: Vec::new(),
+            }),
+            None => missing_anchor_row_partitions += 1,
+        }
+    }
+    Ok(PhraseStressPlan {
+        existing_resource_stats,
+        missing_anchor_row_partitions,
+    })
 }
 
 impl PhraseStressMatcher {
@@ -464,6 +546,7 @@ fn phrase_stress_resource_inner(
         }
         tx.send(PhraseStressEvent::Done(PhraseStressResourceStats {
             resource_id: resource.id,
+            used_anchor_rows: false,
             source_candidates_seen,
             candidates_seen,
             empty_candidates,
@@ -511,6 +594,7 @@ fn phrase_stress_resource_inner(
 
     tx.send(PhraseStressEvent::Done(PhraseStressResourceStats {
         resource_id: resource.id,
+        used_anchor_rows: true,
         source_candidates_seen,
         candidates_seen,
         empty_candidates,
@@ -875,6 +959,7 @@ fn build_phrase_variant_stress_report(
     samples: Vec<PhraseStressSample>,
     source_partitions: usize,
     skipped_partitions: usize,
+    missing_anchor_row_partitions: usize,
     duration_ms: u128,
 ) -> Result<PhraseVariantStressReport> {
     let mut target_patterns = vec![Vec::<PhraseVariantStressPattern>::new(); targets.len()];
@@ -883,11 +968,13 @@ fn build_phrase_variant_stress_report(
     for (index, row) in patterns.iter().enumerate() {
         let raw_matches = matches_by_pattern.get(index).copied().unwrap_or(0);
         target_matches[row.target_index] += raw_matches;
-        target_patterns[row.target_index].push(PhraseVariantStressPattern {
-            kind: row.kind.clone(),
-            pattern: row.pattern.clone(),
-            raw_matches,
-        });
+        if !args.plan_only {
+            target_patterns[row.target_index].push(PhraseVariantStressPattern {
+                kind: row.kind.clone(),
+                pattern: row.pattern.clone(),
+                raw_matches,
+            });
+        }
         let entry = by_kind.entry(row.kind.clone()).or_insert((0, 0));
         entry.0 += 1;
         entry.1 += raw_matches;
@@ -910,6 +997,7 @@ fn build_phrase_variant_stress_report(
     let report_targets = targets
         .iter()
         .enumerate()
+        .take(if args.plan_only { 50 } else { targets.len() })
         .map(|(index, target)| PhraseVariantStressTarget {
             id: target.id.clone(),
             target_key: target.target_key.clone(),
@@ -925,7 +1013,19 @@ fn build_phrase_variant_stress_report(
             patterns: std::mem::take(&mut target_patterns[index]),
         })
         .collect::<Vec<_>>();
-    let scanned_partitions = resource_stats.len();
+    let reported_target_patterns = report_targets
+        .iter()
+        .map(|target| target.patterns.len())
+        .sum::<usize>();
+    let scanned_partitions = if args.plan_only {
+        0
+    } else {
+        resource_stats.len()
+    };
+    let existing_anchor_row_partitions = resource_stats
+        .iter()
+        .filter(|stats| stats.used_anchor_rows)
+        .count();
     let candidates_seen = resource_stats
         .iter()
         .map(|stats| stats.source_candidates_seen)
@@ -943,14 +1043,12 @@ fn build_phrase_variant_stress_report(
         .iter()
         .filter(|count| **count > 0)
         .count();
-    let matched_targets = report_targets
-        .iter()
-        .filter(|target| target.matched)
-        .count();
+    let matched_targets = target_matches.iter().filter(|count| **count > 0).count();
     let resources = resource_stats
         .into_iter()
         .map(|stats| PhraseVariantStressResource {
             resource_id: stats.resource_id,
+            used_anchor_rows: stats.used_anchor_rows,
             source_candidates_seen: stats.source_candidates_seen,
             candidates_seen: stats.candidates_seen,
             empty_candidates: stats.empty_candidates,
@@ -964,19 +1062,29 @@ fn build_phrase_variant_stress_report(
         audit_generated_at: audit.generated_at.clone(),
         candidate_cache_dir: args.candidate_cache_dir.display().to_string(),
         summary: PhraseVariantStressSummary {
+            plan_only: args.plan_only,
             audit_total_targets: audit
                 .summary
                 .get("totalTargets")
                 .and_then(serde_json::Value::as_u64)
                 .map(|value| value as usize),
             selected_targets: targets.len(),
+            reported_targets: report_targets.len(),
             stress_patterns: patterns.len(),
+            reported_target_patterns,
+            anchor_tokens: patterns
+                .iter()
+                .map(|pattern| pattern.anchor.as_str())
+                .collect::<HashSet<_>>()
+                .len(),
             matched_targets,
             matched_patterns,
             raw_matches,
             source_partitions,
             skipped_partitions,
             scanned_partitions,
+            existing_anchor_row_partitions,
+            missing_anchor_row_partitions,
             candidates_seen,
             anchor_candidates_seen,
             empty_candidates,
@@ -1015,8 +1123,18 @@ fn phrase_variant_stress_markdown(report: &PhraseVariantStressReport) -> String 
         String::new(),
         "## Summary".to_owned(),
         String::new(),
+        format!("- Plan only: {}", report.summary.plan_only),
         format!("- Selected targets: {}", report.summary.selected_targets),
+        format!(
+            "- Target rows in report: {}",
+            report.summary.reported_targets
+        ),
         format!("- Stress patterns: {}", report.summary.stress_patterns),
+        format!(
+            "- Target patterns in report: {}",
+            report.summary.reported_target_patterns
+        ),
+        format!("- Unique pattern anchors: {}", report.summary.anchor_tokens),
         format!("- Matched targets: {}", report.summary.matched_targets),
         format!("- Matched patterns: {}", report.summary.matched_patterns),
         format!("- Raw matches: {}", report.summary.raw_matches),
@@ -1028,6 +1146,14 @@ fn phrase_variant_stress_markdown(report: &PhraseVariantStressReport) -> String 
         format!(
             "- Scanned partitions: {}",
             report.summary.scanned_partitions
+        ),
+        format!(
+            "- Existing anchor-row partitions: {}",
+            report.summary.existing_anchor_row_partitions
+        ),
+        format!(
+            "- Missing anchor-row partitions: {}",
+            report.summary.missing_anchor_row_partitions
         ),
         format!(
             "- Source candidates covered: {}",
@@ -1043,6 +1169,7 @@ fn phrase_variant_stress_markdown(report: &PhraseVariantStressReport) -> String 
         ),
         "Raw matches are stress-pattern hits; one sentence can match more than one pattern."
             .to_owned(),
+        "Plan-only reports do not evaluate matches; zero match counts mean not scanned.".to_owned(),
         String::new(),
         "## Variant Kinds".to_owned(),
         String::new(),
