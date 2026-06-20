@@ -45,6 +45,12 @@ const DEFAULT_MORPHOLOGY = join(
   '.cache',
   'external-morphology-audit.json',
 );
+const DEFAULT_MIDDLE_PASSIVE_REVIEW = join(
+  REPO_ROOT,
+  'data',
+  'corpora',
+  'middle-passive-eligibility-review.json',
+);
 
 interface TargetRecord {
   id: string;
@@ -122,6 +128,31 @@ interface ExternalMorphologyAudit {
       reasons?: string[];
       action?: string;
     };
+  }>;
+}
+
+interface MiddlePassiveEligibilityReview {
+  status?: string;
+  sourceArtifacts?: {
+    targetGeneratedAt?: string;
+    coverageGeneratedAt?: string;
+    corpusVersion?: string;
+  };
+  rows?: Array<{
+    verbId: string;
+    action: string;
+    decision?: string;
+  }>;
+}
+
+interface MiddlePassiveReviewEvidence {
+  status: string;
+  path: string;
+  sourceArtifacts: MiddlePassiveEligibilityReview['sourceArtifacts'] | null;
+  rows: Array<{
+    verbId: string;
+    action: string;
+    decision: string;
   }>;
 }
 
@@ -226,6 +257,25 @@ interface VoiceCoverageRow {
   sources: string[];
   flags: Record<string, unknown>;
   middlePassiveOverrideKeys: string[];
+}
+
+interface MiddlePassiveReviewCoverage {
+  status: string;
+  path: string;
+  reviewFileMatchesCurrentInputs: boolean;
+  totalQueueGroups: number;
+  coveredQueueGroups: number;
+  reviewRows: number;
+  reviewVerbIds: number;
+  totalMiddlePassiveMisses: number;
+  reviewedActionTargetMisses: number;
+  unreviewedActionTargetMisses: number;
+  reviewedTotalMiddlePassiveMisses: number;
+  unreviewedMiddlePassiveMisses: number;
+  decisionCounts: CountRow[];
+  unreviewedByAction: CountRow[];
+  unreviewedBySourceLevel: CountRow[];
+  unreviewedByMorphologyForm: CountRow[];
 }
 
 interface DbEvidence {
@@ -537,6 +587,103 @@ function readMorphologyEvidence(
   };
 }
 
+function readMiddlePassiveReviewEvidence(
+  path: string,
+): MiddlePassiveReviewEvidence {
+  if (!existsSync(path)) {
+    return {
+      status: 'missing',
+      path,
+      sourceArtifacts: null,
+      rows: [],
+    };
+  }
+  const review = readJson<MiddlePassiveEligibilityReview>(path);
+  return {
+    status: review.status ?? 'loaded',
+    path,
+    sourceArtifacts: review.sourceArtifacts ?? null,
+    rows: (review.rows ?? [])
+      .filter((row) => row.verbId && row.action)
+      .map((row) => ({
+        verbId: row.verbId,
+        action: row.action,
+        decision: row.decision ?? 'unknown',
+      })),
+  };
+}
+
+function middlePassiveReviewKey(row: {
+  action: string;
+  verbId: string;
+}): string {
+  return `${row.action}\t${row.verbId}`;
+}
+
+function summarizeMiddlePassiveReviewCoverage(
+  review: MiddlePassiveReviewEvidence,
+  targetFile: TargetFile,
+  coverage: CoverageReport,
+  queue: Array<{
+    action: string;
+    verbId: string;
+    targetCount: number;
+    sourceLevel: string;
+    morphologyForms: CountRow[];
+    coveredByReviewFile: boolean;
+  }>,
+): MiddlePassiveReviewCoverage {
+  const reviewedVerbIds = new Set(review.rows.map((row) => row.verbId));
+  const decisionCounts = new Map<string, number>();
+  for (const row of review.rows) add(decisionCounts, row.decision);
+
+  const totalMiddlePassiveMisses = queue.reduce(
+    (total, row) => total + row.targetCount,
+    0,
+  );
+  const reviewedActionTargetMisses = queue
+    .filter((row) => row.coveredByReviewFile)
+    .reduce((total, row) => total + row.targetCount, 0);
+  const reviewedTotalMiddlePassiveMisses = queue
+    .filter((row) => reviewedVerbIds.has(row.verbId))
+    .reduce((total, row) => total + row.targetCount, 0);
+  const unreviewedRows = queue.filter((row) => !row.coveredByReviewFile);
+  const unreviewedByAction = new Map<string, number>();
+  const unreviewedBySourceLevel = new Map<string, number>();
+  const unreviewedByMorphologyForm = new Map<string, number>();
+  for (const row of unreviewedRows) {
+    add(unreviewedByAction, row.action, row.targetCount);
+    add(unreviewedBySourceLevel, row.sourceLevel, row.targetCount);
+    for (const form of row.morphologyForms) {
+      add(unreviewedByMorphologyForm, form.key, form.count);
+    }
+  }
+
+  return {
+    status: review.status,
+    path: review.path,
+    reviewFileMatchesCurrentInputs:
+      review.sourceArtifacts?.targetGeneratedAt === targetFile.generatedAt &&
+      review.sourceArtifacts?.coverageGeneratedAt === coverage.generatedAt &&
+      review.sourceArtifacts?.corpusVersion === targetFile.corpusVersion,
+    totalQueueGroups: queue.length,
+    coveredQueueGroups: queue.filter((row) => row.coveredByReviewFile).length,
+    reviewRows: review.rows.length,
+    reviewVerbIds: reviewedVerbIds.size,
+    totalMiddlePassiveMisses,
+    reviewedActionTargetMisses,
+    unreviewedActionTargetMisses:
+      totalMiddlePassiveMisses - reviewedActionTargetMisses,
+    reviewedTotalMiddlePassiveMisses,
+    unreviewedMiddlePassiveMisses:
+      totalMiddlePassiveMisses - reviewedTotalMiddlePassiveMisses,
+    decisionCounts: topEntries(decisionCounts, decisionCounts.size),
+    unreviewedByAction: topEntries(unreviewedByAction, 20),
+    unreviewedBySourceLevel: topEntries(unreviewedBySourceLevel, 20),
+    unreviewedByMorphologyForm: topEntries(unreviewedByMorphologyForm, 20),
+  };
+}
+
 function sqliteJson<T>(dbPath: string, sql: string): T[] {
   const output = execFileSync(
     'sqlite3',
@@ -669,6 +816,114 @@ function voiceCoverageRows(
     );
 }
 
+function batches<T>(items: T[], size: number): T[][] {
+  const result: T[][] = [];
+  for (let index = 0; index < items.length; index += size) {
+    result.push(items.slice(index, index + size));
+  }
+  return result;
+}
+
+function readVariantOnlyTargetSamples(
+  dbPath: string,
+  targetIds: string[],
+): VariantOnlyTargetSample[] {
+  const rows = batches(targetIds, 200).flatMap((batch) => {
+    const values = batch.map((targetId) => `(${sql(targetId)})`).join(', ');
+    return sqliteJson<VariantOnlyTargetSampleRow>(
+      dbPath,
+      `
+      WITH selected(target_id) AS (VALUES ${values}),
+      per_target AS (
+        SELECT
+          o.target_id,
+          count(*) AS occurrences,
+          count(DISTINCT o.sentence_id) AS sentences,
+          count(DISTINCT s.resource_id) AS resources,
+          group_concat(DISTINCT o.variant_kind) AS variantKinds,
+          group_concat(DISTINCT o.matched_pattern) AS matchedPatterns
+        FROM occurrences o
+        JOIN selected selected_targets ON selected_targets.target_id = o.target_id
+        JOIN sentences s ON s.id = o.sentence_id
+        GROUP BY o.target_id
+      ),
+      ranked_occurrences AS (
+        SELECT
+          pt.*,
+          t.target_key AS targetKey,
+          t.lemma,
+          t.verb_id AS verbId,
+          t.signature,
+          t.translation_en AS translationEn,
+          o.variant_kind AS sampleVariantKind,
+          r.title AS sampleResource,
+          s.url AS sampleUrl,
+          s.sentence AS sampleSentence,
+          row_number() OVER (
+            PARTITION BY pt.target_id, o.variant_kind
+            ORDER BY o.score DESC, o.id ASC
+          ) AS sampleRank
+        FROM per_target pt
+        JOIN targets t ON t.id = pt.target_id
+        JOIN occurrences o ON o.target_id = pt.target_id
+        JOIN sentences s ON s.id = o.sentence_id
+        JOIN resources r ON r.id = s.resource_id
+        WHERE o.variant_kind <> 'canonical'
+      )
+      SELECT
+        target_id AS targetId,
+        targetKey,
+        lemma,
+        verbId,
+        signature,
+        translationEn,
+        variantKinds,
+        matchedPatterns,
+        sampleVariantKind,
+        occurrences,
+        sentences,
+        resources,
+        sampleResource,
+        sampleUrl,
+        sampleSentence
+      FROM ranked_occurrences
+      WHERE sampleRank = 1
+      `,
+    );
+  });
+  const perVariant = new Map<string, number>();
+  return rows
+    .map((row) => ({
+      targetId: row.targetId,
+      targetKey: row.targetKey,
+      lemma: row.lemma,
+      verbId: row.verbId,
+      signature: row.signature,
+      translationEn: row.translationEn,
+      variantKinds: splitSqlList(row.variantKinds),
+      matchedPatterns: splitSqlList(row.matchedPatterns),
+      sampleVariantKind: row.sampleVariantKind,
+      occurrences: row.occurrences,
+      sentences: row.sentences,
+      resources: row.resources,
+      sampleResource: row.sampleResource ?? '',
+      sampleUrl: row.sampleUrl,
+      sampleSentence: row.sampleSentence,
+    }))
+    .sort(
+      (a, b) =>
+        a.sampleVariantKind.localeCompare(b.sampleVariantKind) ||
+        b.occurrences - a.occurrences ||
+        a.targetKey.localeCompare(b.targetKey),
+    )
+    .filter((row) => {
+      const count = perVariant.get(row.sampleVariantKind) ?? 0;
+      if (count >= 30) return false;
+      perVariant.set(row.sampleVariantKind, count + 1);
+      return true;
+    });
+}
+
 function readDbEvidence(
   dbPath: string,
   currentTargetIds: Set<string>,
@@ -719,12 +974,14 @@ function readDbEvidence(
   let variantOnlyHitTargets = 0;
   let maxStoredOccurrencesPerTarget = 0;
   const variantOnlyTargetCounts = new Map<string, number>();
+  const variantOnlyTargetIds: string[] = [];
 
-  for (const target of occurrencesByTarget.values()) {
+  for (const [targetId, target] of occurrencesByTarget.entries()) {
     if (target.canonical) canonicalHitTargets += 1;
     if (target.variants.size > 0) variantHitTargets += 1;
     if (!target.canonical && target.variants.size > 0) {
       variantOnlyHitTargets += 1;
+      variantOnlyTargetIds.push(targetId);
       for (const variantKind of target.variants) {
         add(variantOnlyTargetCounts, variantKind);
       }
@@ -735,96 +992,7 @@ function readDbEvidence(
     );
   }
   const variantOnlyTargetSamples = hasOccurrenceVariantEvidence
-    ? sqliteJson<VariantOnlyTargetSampleRow>(
-        dbPath,
-        `
-        WITH per_target AS (
-          SELECT
-            o.target_id,
-            sum(CASE WHEN o.variant_kind = 'canonical' THEN 1 ELSE 0 END) AS canonical_count,
-            sum(CASE WHEN o.variant_kind <> 'canonical' THEN 1 ELSE 0 END) AS variant_count,
-            count(*) AS occurrences,
-            count(DISTINCT o.sentence_id) AS sentences,
-            count(DISTINCT s.resource_id) AS resources,
-            group_concat(DISTINCT o.variant_kind) AS variantKinds,
-            group_concat(DISTINCT o.matched_pattern) AS matchedPatterns
-          FROM occurrences o
-          JOIN sentences s ON s.id = o.sentence_id
-          GROUP BY o.target_id
-          HAVING canonical_count = 0 AND variant_count > 0
-        ),
-        ranked_occurrences AS (
-          SELECT
-            pt.*,
-            t.target_key AS targetKey,
-            t.lemma,
-            t.verb_id AS verbId,
-            t.signature,
-            t.translation_en AS translationEn,
-            o.variant_kind AS sampleVariantKind,
-            r.title AS sampleResource,
-            s.url AS sampleUrl,
-            s.sentence AS sampleSentence,
-            row_number() OVER (
-              PARTITION BY pt.target_id, o.variant_kind
-              ORDER BY o.score DESC, o.id ASC
-            ) AS sampleRank
-          FROM per_target pt
-          JOIN targets t ON t.id = pt.target_id
-          JOIN occurrences o ON o.target_id = pt.target_id
-          JOIN sentences s ON s.id = o.sentence_id
-          JOIN resources r ON r.id = s.resource_id
-          WHERE o.variant_kind <> 'canonical'
-        ),
-        ranked_targets AS (
-          SELECT
-            *,
-            row_number() OVER (
-              PARTITION BY sampleVariantKind
-              ORDER BY occurrences DESC, targetKey
-            ) AS variantRank
-          FROM ranked_occurrences
-          WHERE sampleRank = 1
-        )
-        SELECT
-          target_id AS targetId,
-          targetKey,
-          lemma,
-          verbId,
-          signature,
-          translationEn,
-          variantKinds,
-          matchedPatterns,
-          sampleVariantKind,
-          occurrences,
-          sentences,
-          resources,
-          sampleResource,
-          sampleUrl,
-          sampleSentence
-        FROM ranked_targets
-        WHERE variantRank <= 30
-        ORDER BY sampleVariantKind, occurrences DESC, targetKey
-        `,
-      )
-        .filter((row) => currentTargetIds.has(row.targetId))
-        .map((row) => ({
-          targetId: row.targetId,
-          targetKey: row.targetKey,
-          lemma: row.lemma,
-          verbId: row.verbId,
-          signature: row.signature,
-          translationEn: row.translationEn,
-          variantKinds: splitSqlList(row.variantKinds),
-          matchedPatterns: splitSqlList(row.matchedPatterns),
-          sampleVariantKind: row.sampleVariantKind,
-          occurrences: row.occurrences,
-          sentences: row.sentences,
-          resources: row.resources,
-          sampleResource: row.sampleResource ?? '',
-          sampleUrl: row.sampleUrl,
-          sampleSentence: row.sampleSentence,
-        }))
+    ? readVariantOnlyTargetSamples(dbPath, variantOnlyTargetIds)
     : [];
 
   const teMosSentenceIds = new Set(
@@ -1260,6 +1428,12 @@ function main(): void {
     targetFile,
     coverage,
     targetsById,
+  );
+  const middlePassiveReviewEvidence = readMiddlePassiveReviewEvidence(
+    DEFAULT_MIDDLE_PASSIVE_REVIEW,
+  );
+  const middlePassiveReviewedKeys = new Set(
+    middlePassiveReviewEvidence.rows.map(middlePassiveReviewKey),
   );
   const missingIds = new Set(coverage.misses.map((miss) => miss.id));
   const verbsById = new Map(verbs.map((verb) => [verb.id, verb]));
@@ -1732,6 +1906,9 @@ function main(): void {
       } = row;
       return {
         ...base,
+        coveredByReviewFile: middlePassiveReviewedKeys.has(
+          middlePassiveReviewKey(base),
+        ),
         sourceLevel: sourceLevel(sources),
         sources,
         morphologyForms: topEntries(morphologyFormCounts, 4),
@@ -1761,6 +1938,12 @@ function main(): void {
         a.action.localeCompare(b.action) ||
         a.lemma.localeCompare(b.lemma),
     );
+  const middlePassiveReviewCoverage = summarizeMiddlePassiveReviewCoverage(
+    middlePassiveReviewEvidence,
+    targetFile,
+    coverage,
+    middlePassiveLemmaReviewQueue,
+  );
   const report = {
     generatedAt: new Date().toISOString(),
     targetsPath,
@@ -1774,6 +1957,7 @@ function main(): void {
       corpusVersion: targetFile.corpusVersion,
       morphologyPath: morphologyEvidence.path,
       morphologyGeneratedAt: morphologyEvidence.generatedAt,
+      middlePassiveReviewPath: middlePassiveReviewEvidence.path,
       analyzerRowsLoaded: morphologyEvidence.external.analyzerRowsLoaded,
       analyzerRowsMatched: morphologyEvidence.external.analyzerRowsMatched,
       analyzerRowsSkipped: morphologyEvidence.external.analyzerRowsSkipped,
@@ -1851,6 +2035,7 @@ function main(): void {
     reviewWorklist,
     middlePassiveReviewActions,
     middlePassiveReviewLemmas,
+    middlePassiveReviewCoverage,
     middlePassiveLemmaReviewQueue,
     evidenceLabels: topEntries(labelCounts, 40),
     dbEvidence,
@@ -2271,6 +2456,50 @@ function main(): void {
         `| ${mdCell(row.title)} | ${row.targetCount} | ${row.lemmaCount} | ${mdCell(row.basis)} | ${mdCell(row.samples.map((sample) => `${sample.targetKey} (${sample.lemma}; ${sample.signature}; ${sample.primary})`).join(', '))} |`,
     ),
     '',
+    '### Middle-Passive Review Coverage',
+    '',
+    'This compares the committed review file with the complete generated middle-passive review queue in this audit run.',
+    '',
+    `- Review file: ${report.middlePassiveReviewCoverage.path}`,
+    `- Status: ${report.middlePassiveReviewCoverage.status}`,
+    `- Matches current target/coverage inputs: ${report.middlePassiveReviewCoverage.reviewFileMatchesCurrentInputs ? 'yes' : 'no'}`,
+    '',
+    '| Metric | Count |',
+    '| --- | ---: |',
+    `| Queue groups | ${report.middlePassiveReviewCoverage.totalQueueGroups} |`,
+    `| Queue groups covered by review file | ${report.middlePassiveReviewCoverage.coveredQueueGroups} |`,
+    `| Review file rows | ${report.middlePassiveReviewCoverage.reviewRows} |`,
+    `| Review file verb IDs | ${report.middlePassiveReviewCoverage.reviewVerbIds} |`,
+    `| Middle-passive target misses in queue | ${report.middlePassiveReviewCoverage.totalMiddlePassiveMisses} |`,
+    `| Covered action-target misses | ${report.middlePassiveReviewCoverage.reviewedActionTargetMisses} |`,
+    `| Uncovered action-target misses | ${report.middlePassiveReviewCoverage.unreviewedActionTargetMisses} |`,
+    `| Middle-passive misses on reviewed lemmas | ${report.middlePassiveReviewCoverage.reviewedTotalMiddlePassiveMisses} |`,
+    `| Middle-passive misses on unreviewed lemmas | ${report.middlePassiveReviewCoverage.unreviewedMiddlePassiveMisses} |`,
+    '',
+    '| Decision | Review Rows |',
+    '| --- | ---: |',
+    ...report.middlePassiveReviewCoverage.decisionCounts.map(
+      (row) => `| ${mdCell(row.key)} | ${row.count} |`,
+    ),
+    '',
+    '| Unreviewed Morphology Action | Target Misses |',
+    '| --- | ---: |',
+    ...report.middlePassiveReviewCoverage.unreviewedByAction.map(
+      (row) => `| ${mdCell(row.key)} | ${row.count} |`,
+    ),
+    '',
+    '| Unreviewed Source Level | Target Misses |',
+    '| --- | ---: |',
+    ...report.middlePassiveReviewCoverage.unreviewedBySourceLevel.map(
+      (row) => `| ${mdCell(row.key)} | ${row.count} |`,
+    ),
+    '',
+    '| Unreviewed Morphology Form Verdict | Target Misses |',
+    '| --- | ---: |',
+    ...report.middlePassiveReviewCoverage.unreviewedByMorphologyForm.map(
+      (row) => `| ${mdCell(row.key)} | ${row.count} |`,
+    ),
+    '',
     '### Middle-Passive Review Actions',
     '',
     'These rows split the middle-passive review bucket by the morphology action joined from `.cache/external-morphology-audit.json`.',
@@ -2299,11 +2528,11 @@ function main(): void {
     '',
     'Every action-by-lemma group in the middle-passive review bucket. A lemma may appear more than once when different generated cells have different morphology actions.',
     '',
-    '| Morphology Action | Lemma | Verb ID | Targets | Verdict Forms | Proof | Scope | Top Reasons | Middle-Passive Coverage | Active Coverage | Source Level | Flags/Overrides | Samples |',
-    '| --- | --- | --- | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
+    '| Morphology Action | Lemma | Verb ID | Review File | Targets | Verdict Forms | Proof | Scope | Top Reasons | Middle-Passive Coverage | Active Coverage | Source Level | Flags/Overrides | Samples |',
+    '| --- | --- | --- | --- | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
     ...report.middlePassiveLemmaReviewQueue.map(
       (row) =>
-        `| ${mdCell(row.action)} | ${mdCell(row.lemma)} | ${mdCell(row.verbId)} | ${row.targetCount} | ${mdCell(countCells(row.morphologyForms))} | ${mdCell(countCells(row.morphologyProofLevels))} | ${mdCell(countCells(row.morphologyScopes))} | ${mdCell(countCells(row.morphologyReasons))} | ${row.middlePassiveCoverage} | ${row.activeCoverage} | ${row.sourceLevel} | ${row.hasNoMiddlePassiveFlag ? 'noMiddlePassive' : 'none'} / ${row.middlePassiveOverrideCount} MP overrides | ${mdCell(row.samples.map((sample) => `${sample.targetKey} (${sample.signature})`).join(', '))} |`,
+        `| ${mdCell(row.action)} | ${mdCell(row.lemma)} | ${mdCell(row.verbId)} | ${row.coveredByReviewFile ? 'covered' : 'unreviewed'} | ${row.targetCount} | ${mdCell(countCells(row.morphologyForms))} | ${mdCell(countCells(row.morphologyProofLevels))} | ${mdCell(countCells(row.morphologyScopes))} | ${mdCell(countCells(row.morphologyReasons))} | ${row.middlePassiveCoverage} | ${row.activeCoverage} | ${row.sourceLevel} | ${row.hasNoMiddlePassiveFlag ? 'noMiddlePassive' : 'none'} / ${row.middlePassiveOverrideCount} MP overrides | ${mdCell(row.samples.map((sample) => `${sample.targetKey} (${sample.signature})`).join(', '))} |`,
     ),
     '',
     '## Corpus Source Levels',
