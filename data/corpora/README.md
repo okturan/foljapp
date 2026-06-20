@@ -25,7 +25,18 @@ This directory tracks the local and candidate corpora used for foljapp example s
 | UD Albanian STAF                        | `.cache/datasets/universal-dependencies/UD_Albanian-STAF-main.zip`                                       |  72K | CoNLL-U train/dev/test treebank                                                               | Morphology/syntax checks                                           |
 | UD Albanian TSA                         | `.cache/datasets/universal-dependencies/UD_Albanian-TSA-main.zip`                                        |  20K | CoNLL-U test treebank                                                                         | Morphology/syntax checks                                           |
 
-Current local cache total: about 71G.
+Current raw dataset cache total: about 70G.
+
+Derived local artifacts snapshot (2026-06-20):
+
+| Artifact                 | Local cache                         | Size | Purpose                                                        |
+| ------------------------ | ----------------------------------- | ---: | -------------------------------------------------------------- |
+| Candidate sentence cache | `.cache/corpus-candidate-shards/v1` |  66G | Target-independent normalized sentence shards for fast rescans |
+| Retained examples DB     | `.cache/corpus-local-full.sqlite`   | 192M | Compact app-facing examples and occurrence rows                |
+| Tantivy search index     | `.cache/corpus-search-tantivy`      |  36M | Interactive local phrase lookup over retained examples         |
+
+Current raw-plus-derived local corpus footprint is about 136G, excluding build
+artifacts such as `.cache/cargo-target`.
 
 ## Candidate resources not downloaded
 
