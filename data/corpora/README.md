@@ -219,7 +219,7 @@ anchor-row sidecars are keyed by the full selected anchor set, so one monolithic
 all-target build can create a large sidecar family that smaller follow-up runs
 cannot reuse.
 
-Use target chunks for full-scale phrase-variant work:
+Use target chunks only for interrupted or debug phrase-variant work:
 
 ```bash
 npm run report:corpus-phrase-variants:all:chunk:plan -- --chunk-index=0
@@ -235,8 +235,9 @@ npm run report:corpus-phrase-variants:all:chunk -- \
 
 The convenience chunk script defaults to 2,000 ranked targets and the base
 command's default output paths. Pass unique `--out-json` and `--out-md` paths
-when retaining multiple chunks from the same plan. A chunked full result is only
-full when every chunk is produced from the same audit and target cache snapshot.
+when retaining multiple chunks from the same plan. A chunked full result is a
+fallback artifact only, and is complete only when every chunk is produced from
+the same audit and target cache snapshot.
 Aggregate completed non-plan chunk reports:
 
 ```bash
@@ -266,7 +267,8 @@ write-free without dropping coverage. Generated clitic/order/contraction
 patterns are verified against checked anchor rows. These are exploratory variant
 hits, not canonical target attestations.
 
-Build missing anchor-row sidecars explicitly when a cold/full pass is intended:
+Build missing anchor-row sidecars explicitly only when deliberately warming
+sidecars for a debug or fallback run:
 
 ```bash
 npm run report:corpus-phrase-variants:build-cache

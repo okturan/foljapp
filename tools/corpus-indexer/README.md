@@ -76,14 +76,15 @@ CARGO_TARGET_DIR=.cache/cargo-target cargo run --release \
   clitic/order/contraction stress patterns using split-cache token inventories
   to skip partitions, then existing query-specific `.anchor-rows-*.jsonl.zst`
   sidecars to verify only rows containing selected lexical anchors. The default
-  run keeps a ranked 200-target iteration slice; pass `--all-targets` for the
-  full eligible raw-zero multiword set and `--build-anchor-rows` when cold
-  sidecar creation is intended. Explicit `--forms` and `--target-ids` runs are
-  not capped unless `--limit-targets` is also passed. Pass `--plan-only` to
-  inventory selection and anchor-row cache readiness without scanning candidate
-  rows. Use `--chunk-size-targets` with `--chunk-index` for full-scale runs;
-  this slices the already-ranked target list before pattern generation, so each
-  chunk gets a smaller anchor set and reusable query-specific sidecars.
+  run keeps a ranked 200-target iteration slice; use
+  `npm run report:corpus-phrase-variants:all` for the full eligible raw-zero
+  multiword set. Explicit `--forms` and `--target-ids` runs are not capped
+  unless `--limit-targets` is also passed. Pass `--plan-only` to inventory
+  selection and anchor-row cache readiness without scanning candidate rows. Use
+  `--build-anchor-rows` only when cold sidecar creation is intended. Use
+  `--chunk-size-targets` with `--chunk-index` only when an interrupted/debug run
+  needs smaller report files; the full single-pass run avoids rescanning the
+  corpus for every chunk.
 - `bench`: compare Aho-Corasick scanning, Tantivy, and SQLite FTS5 over retained
   examples.
 - `build-search-index`: build the Tantivy index from retained SQLite examples.
@@ -151,10 +152,19 @@ partitions, scanned 0 candidates, found no raw or retained match, and reported a
 5 ms trace duration.
 
 Full phrase-variant stress over every eligible raw-zero multiword target should
-run in chunks rather than as one all-target `--build-anchor-rows` job. Anchor-row
-sidecars are keyed by the full selected anchor set; one monolithic all-target run
-creates a large sidecar family that smaller follow-up runs cannot reuse. The
-default local chunk script uses 2,000 ranked targets per chunk:
+use the single-pass all-target report:
+
+```sh
+npm run report:corpus-phrase-variants:all
+```
+
+Measured on the full split cache, the single-pass all-target run selected
+38,169 targets, generated 1,072,356 stress patterns, scanned
+1,317,987,563 candidates, found 83,161 raw variant matches, and took 393.4s.
+The older 20-chunk aggregate found the same 83,161 matches, but its summed chunk
+duration was 7,590.7s because it rescanned the corpus for every chunk. Chunking
+is still useful for interrupted/debug runs, but it is not the fast path. The
+chunk script uses 2,000 ranked targets per chunk:
 
 ```sh
 npm run report:corpus-phrase-variants:all:chunk:plan -- \

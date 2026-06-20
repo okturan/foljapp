@@ -104,6 +104,7 @@ struct StressPattern {
 
 struct PhraseStressMatcher {
     automaton: AhoCorasick,
+    anchor_automaton: Option<AhoCorasick>,
     pattern_indexes_by_automaton: Vec<Vec<usize>>,
     pattern_rows: Vec<StressPattern>,
     anchor_tokens: HashSet<String>,
@@ -493,8 +494,16 @@ impl PhraseStressMatcher {
             patterns.push(pattern);
             pattern_indexes_by_automaton.push(indexes);
         }
+        let mut anchor_patterns = anchor_tokens.iter().cloned().collect::<Vec<_>>();
+        anchor_patterns.sort();
+        let anchor_automaton = if anchor_patterns.len() <= 64 {
+            Some(AhoCorasick::new(&anchor_patterns)?)
+        } else {
+            None
+        };
         Ok(Self {
             automaton: AhoCorasick::new(&patterns)?,
+            anchor_automaton,
             pattern_indexes_by_automaton,
             pattern_rows,
             anchor_tokens,
@@ -505,6 +514,10 @@ impl PhraseStressMatcher {
         if !self.has_anchor_token(normalized) {
             return Vec::new();
         }
+        self.matches_normalized_after_anchor(normalized)
+    }
+
+    fn matches_normalized_after_anchor(&self, normalized: &str) -> Vec<usize> {
         let bytes = normalized.as_bytes();
         let mut matches = Vec::new();
         for matched in self.automaton.find_overlapping_iter(normalized) {
@@ -519,9 +532,17 @@ impl PhraseStressMatcher {
     }
 
     fn has_anchor_token(&self, normalized: &str) -> bool {
-        normalized
-            .split_whitespace()
-            .any(|token| self.anchor_tokens.contains(token))
+        let Some(anchor_automaton) = &self.anchor_automaton else {
+            return normalized
+                .split_whitespace()
+                .any(|token| self.anchor_tokens.contains(token));
+        };
+        let bytes = normalized.as_bytes();
+        anchor_automaton
+            .find_overlapping_iter(normalized)
+            .any(|matched| {
+                is_space_boundary(bytes, matched.start()) && is_space_boundary(bytes, matched.end())
+            })
     }
 }
 
@@ -582,7 +603,7 @@ fn phrase_stress_resource_inner(
                 continue;
             }
             candidates_seen += 1;
-            let matched_patterns = matcher.matches_normalized(&normalized);
+            let matched_patterns = matcher.matches_normalized_after_anchor(&normalized);
             if matched_patterns.is_empty() {
                 continue;
             }
