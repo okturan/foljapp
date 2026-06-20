@@ -196,6 +196,10 @@ This writes `.cache/corpus-target-provenance.json` and
 the selected generated targets and separates raw pattern matches,
 variant-guard rejects, source-partition cap drops, quality rejects,
 worker-emitted matches, and retained SQLite occurrences.
+`npm run audit:corpus-misses` auto-joins the default trace sidecar when it
+exists, labeling untraced misses as `not_traced` and traced rows by scanner
+stage. A selected trace is therefore target-specific evidence, not a full
+absence scan for every missing form.
 
 Build an optional local morphology review artifact:
 

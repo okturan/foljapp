@@ -45,6 +45,11 @@ const DEFAULT_MORPHOLOGY = join(
   '.cache',
   'external-morphology-audit.json',
 );
+const DEFAULT_TRACE_PROVENANCE = join(
+  REPO_ROOT,
+  '.cache',
+  'corpus-target-provenance.json',
+);
 const DEFAULT_MIDDLE_PASSIVE_REVIEWS = [
   join(REPO_ROOT, 'data', 'corpora', 'middle-passive-eligibility-review.json'),
   join(
@@ -204,6 +209,78 @@ interface MorphologyEvidence {
     webCorporaStatus: string | null;
   };
   byTargetId: Map<string, MorphologyTargetVerdict>;
+}
+
+type TraceStatus =
+  | 'not_traced'
+  | 'raw_zero'
+  | 'raw_seen_filtered'
+  | 'raw_seen_local_cap_dropped'
+  | 'raw_seen_emitted_not_retained'
+  | 'retained_despite_coverage_miss'
+  | 'raw_seen_unclassified';
+
+interface TraceCounts {
+  raw_pattern_matches: number;
+  variant_supported_matches: number;
+  variant_rejected_matches: number;
+  local_cap_dropped_matches: number;
+  quality_rejected_matches: number;
+  emitted_matches_before_writer_cap: number;
+}
+
+interface TraceTargetEvidence {
+  status: TraceStatus;
+  targetId: string;
+  targetKey: string;
+  lemma: string;
+  signature: string;
+  counts: TraceCounts;
+  retained: {
+    retained_occurrences: number;
+    retained_resources: number;
+    retained_variants: string[];
+  };
+  resources: Array<{
+    resource_id: string;
+    counts: TraceCounts;
+  }>;
+  samples: Array<{
+    stage: string;
+    resource_id: string;
+    variant_kind: string;
+    matched_pattern: string;
+    flags: string[];
+    sentence: string;
+  }>;
+}
+
+interface TraceProvenanceEvidence {
+  status: string;
+  path: string;
+  generatedAt: string | null;
+  targetsPath: string | null;
+  sourceDb: string | null;
+  selectedSources: string | null;
+  candidateCacheDir: string | null;
+  requireCandidateCache: boolean | null;
+  rawScanPerformed: boolean | null;
+  resourcePartitions: number | null;
+  maxPerTarget: number | null;
+  sampleLimit: number | null;
+  candidatesSeen: number | null;
+  emptyCandidates: number | null;
+  durationMs: number | null;
+  tracedTargets: number;
+  currentTargets: number;
+  staleTargets: number;
+  staleSamples: Array<{
+    targetId: string;
+    targetKey: string | null;
+    signature: string | null;
+  }>;
+  boundaries: string[];
+  byTargetId: Map<string, TraceTargetEvidence>;
 }
 
 interface VerbEntry {
@@ -633,6 +710,229 @@ function readMorphologyEvidence(
     },
     byTargetId,
   };
+}
+
+function emptyTraceProvenanceEvidence(
+  status: string,
+  path: string,
+  overrides: Partial<TraceProvenanceEvidence> = {},
+): TraceProvenanceEvidence {
+  return {
+    status,
+    path,
+    generatedAt: null,
+    targetsPath: null,
+    sourceDb: null,
+    selectedSources: null,
+    candidateCacheDir: null,
+    requireCandidateCache: null,
+    rawScanPerformed: null,
+    resourcePartitions: null,
+    maxPerTarget: null,
+    sampleLimit: null,
+    candidatesSeen: null,
+    emptyCandidates: null,
+    durationMs: null,
+    tracedTargets: 0,
+    currentTargets: 0,
+    staleTargets: 0,
+    staleSamples: [],
+    boundaries: [],
+    byTargetId: new Map(),
+    ...overrides,
+  };
+}
+
+function traceNumber(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : 0;
+}
+
+function traceString(value: unknown): string | null {
+  return typeof value === 'string' ? value : null;
+}
+
+function traceCounts(value: unknown): TraceCounts {
+  const row = (value ?? {}) as Record<string, unknown>;
+  return {
+    raw_pattern_matches: traceNumber(row.raw_pattern_matches),
+    variant_supported_matches: traceNumber(row.variant_supported_matches),
+    variant_rejected_matches: traceNumber(row.variant_rejected_matches),
+    local_cap_dropped_matches: traceNumber(row.local_cap_dropped_matches),
+    quality_rejected_matches: traceNumber(row.quality_rejected_matches),
+    emitted_matches_before_writer_cap: traceNumber(
+      row.emitted_matches_before_writer_cap,
+    ),
+  };
+}
+
+function traceStatusFor(
+  counts: TraceCounts,
+  retainedOccurrences: number,
+): TraceStatus {
+  if (retainedOccurrences > 0) return 'retained_despite_coverage_miss';
+  if (counts.emitted_matches_before_writer_cap > 0) {
+    return 'raw_seen_emitted_not_retained';
+  }
+  if (counts.local_cap_dropped_matches > 0) {
+    return 'raw_seen_local_cap_dropped';
+  }
+  if (
+    counts.quality_rejected_matches > 0 ||
+    counts.variant_rejected_matches > 0
+  ) {
+    return 'raw_seen_filtered';
+  }
+  if (counts.raw_pattern_matches === 0) return 'raw_zero';
+  return 'raw_seen_unclassified';
+}
+
+function readTraceProvenanceEvidence(
+  path: string,
+  targetsById: Map<string, TargetRecord>,
+): TraceProvenanceEvidence {
+  if (!existsSync(path)) return emptyTraceProvenanceEvidence('missing', path);
+
+  let report: Record<string, unknown>;
+  try {
+    report = readJson<Record<string, unknown>>(path);
+  } catch (error) {
+    console.warn(
+      `Ignoring optional trace provenance at ${path}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    return emptyTraceProvenanceEvidence('invalid', path);
+  }
+
+  const rows = report.targets;
+  if (!Array.isArray(rows)) {
+    console.warn(
+      `Ignoring optional trace provenance at ${path}: missing targets[]`,
+    );
+    return emptyTraceProvenanceEvidence('invalid', path);
+  }
+
+  const byTargetId = new Map<string, TraceTargetEvidence>();
+  const staleSamples: TraceProvenanceEvidence['staleSamples'] = [];
+  let staleTargets = 0;
+  for (const row of rows as Array<Record<string, unknown>>) {
+    const targetId = traceString(row.target_id);
+    const targetKey = traceString(row.target_key);
+    const signature = traceString(row.signature);
+    const current = targetId ? targetsById.get(targetId) : null;
+    if (
+      !targetId ||
+      !targetKey ||
+      !signature ||
+      !current ||
+      current.targetKey !== targetKey ||
+      current.signature !== signature
+    ) {
+      staleTargets += 1;
+      if (staleSamples.length < 10) {
+        staleSamples.push({ targetId: targetId ?? '', targetKey, signature });
+      }
+      continue;
+    }
+
+    const counts = traceCounts(row.counts);
+    const retainedRow = (row.retained ?? {}) as Record<string, unknown>;
+    const retained = {
+      retained_occurrences: traceNumber(retainedRow.retained_occurrences),
+      retained_resources: traceNumber(retainedRow.retained_resources),
+      retained_variants: Array.isArray(retainedRow.retained_variants)
+        ? retainedRow.retained_variants.filter(
+            (variant): variant is string => typeof variant === 'string',
+          )
+        : [],
+    };
+    const resources = Array.isArray(row.resources)
+      ? row.resources
+          .slice(0, 8)
+          .map((resource) => resource as Record<string, unknown>)
+          .map((resource) => ({
+            resource_id: traceString(resource.resource_id) ?? '',
+            counts: traceCounts(resource.counts),
+          }))
+      : [];
+    const samples = Array.isArray(row.samples)
+      ? row.samples
+          .slice(0, 5)
+          .map((sample) => sample as Record<string, unknown>)
+          .map((sample) => ({
+            stage: traceString(sample.stage) ?? '',
+            resource_id: traceString(sample.resource_id) ?? '',
+            variant_kind: traceString(sample.variant_kind) ?? '',
+            matched_pattern: traceString(sample.matched_pattern) ?? '',
+            flags: Array.isArray(sample.flags)
+              ? sample.flags.filter((flag): flag is string => typeof flag === 'string')
+              : [],
+            sentence: traceString(sample.sentence) ?? '',
+          }))
+      : [];
+
+    byTargetId.set(targetId, {
+      status: traceStatusFor(counts, retained.retained_occurrences),
+      targetId,
+      targetKey,
+      lemma: traceString(row.lemma) ?? current.lemma,
+      signature,
+      counts,
+      retained,
+      resources,
+      samples,
+    });
+  }
+
+  return emptyTraceProvenanceEvidence(
+    staleTargets === rows.length && rows.length > 0
+      ? 'stale'
+      : staleTargets > 0
+        ? 'loaded_with_stale_rows'
+        : 'loaded',
+    path,
+    {
+      generatedAt: traceString(report.generated_at),
+      targetsPath: traceString(report.targets_path),
+      sourceDb: traceString(report.source_db),
+      selectedSources: traceString(report.selected_sources),
+      candidateCacheDir: traceString(report.candidate_cache_dir),
+      requireCandidateCache:
+        typeof report.require_candidate_cache === 'boolean'
+          ? report.require_candidate_cache
+          : null,
+      rawScanPerformed:
+        typeof report.raw_scan_performed === 'boolean'
+          ? report.raw_scan_performed
+          : null,
+      resourcePartitions:
+        typeof report.resource_partitions === 'number'
+          ? report.resource_partitions
+          : null,
+      maxPerTarget:
+        typeof report.max_per_target === 'number' ? report.max_per_target : null,
+      sampleLimit:
+        typeof report.sample_limit === 'number' ? report.sample_limit : null,
+      candidatesSeen:
+        typeof report.candidates_seen === 'number'
+          ? report.candidates_seen
+          : null,
+      emptyCandidates:
+        typeof report.empty_candidates === 'number'
+          ? report.empty_candidates
+          : null,
+      durationMs:
+        typeof report.duration_ms === 'number' ? report.duration_ms : null,
+      tracedTargets: rows.length,
+      currentTargets: byTargetId.size,
+      staleTargets,
+      staleSamples,
+      boundaries: Array.isArray(report.boundaries)
+        ? report.boundaries.filter(
+            (boundary): boundary is string => typeof boundary === 'string',
+          )
+        : [],
+      byTargetId,
+    },
+  );
 }
 
 function readMiddlePassiveReviewEvidence(
@@ -1685,6 +1985,19 @@ function countCells(rows: CountRow[]): string {
   return rows.map((row) => `${row.key} ${row.count}`).join(', ');
 }
 
+function traceSummaryCell(entry: {
+  traceStatus: string;
+  trace: { counts: TraceCounts; retained: { retained_occurrences: number } } | null;
+}): string {
+  if (!entry.trace) return entry.traceStatus;
+  return [
+    entry.traceStatus,
+    `raw ${entry.trace.counts.raw_pattern_matches}`,
+    `emitted ${entry.trace.counts.emitted_matches_before_writer_cap}`,
+    `retained ${entry.trace.retained.retained_occurrences}`,
+  ].join('; ');
+}
+
 function sourceCacheEvidenceCell(
   evidence: SourceCacheMiddlePassiveEvidence,
 ): string {
@@ -1776,6 +2089,10 @@ function main(): void {
     morphologyPath,
     targetFile,
     coverage,
+    targetsById,
+  );
+  const traceEvidence = readTraceProvenanceEvidence(
+    DEFAULT_TRACE_PROVENANCE,
     targetsById,
   );
   const middlePassiveReviewEvidence = readMiddlePassiveReviewEvidence(
@@ -1894,11 +2211,15 @@ function main(): void {
   const wordOrderAlternantCounts = new Map<string, number>();
   const scannerVariantCounts = new Map<string, number>();
   const variantProbeSummary = new Map<string, VariantProbeSummary>();
+  const traceStatusCounts = new Map<string, number>();
   const auditedMisses = coverage.misses.map((miss) => {
     const target = targetsById.get(miss.id);
     if (!target)
       throw new Error(`Coverage miss not found in targets: ${miss.id}`);
     const morphology = morphologyEvidence.byTargetId.get(target.id);
+    const trace = traceEvidence.byTargetId.get(target.id) ?? null;
+    const traceStatus = trace?.status ?? 'not_traced';
+    add(traceStatusCounts, traceStatus);
     const labels = labelMiss(
       target,
       byCell.get(cellKey(target))!,
@@ -1961,6 +2282,15 @@ function main(): void {
       morphologyProofLevel: morphology?.proofLevel ?? null,
       morphologyScope: morphology?.scope ?? null,
       morphologyReasons: morphology?.reasons ?? [],
+      traceStatus,
+      trace: trace
+        ? {
+            counts: trace.counts,
+            retained: trace.retained,
+            resources: trace.resources,
+            samples: trace.samples,
+          }
+        : null,
       wordOrderAlternants: wordOrder,
       scannerVariantAlternants: scannerVariants,
       variantProbes: probes,
@@ -2035,6 +2365,20 @@ function main(): void {
   const missesWithScannerVariantAlternants = auditedMisses.filter(
     (miss) => miss.scannerVariantAlternants.length > 0,
   ).length;
+  const tracedMisses = auditedMisses.filter((miss) => miss.trace);
+  const tracedMissSamples = tracedMisses.slice(0, 20).map((miss) => ({
+    targetKey: miss.targetKey,
+    lemma: miss.lemma,
+    signature: miss.signature,
+    traceStatus: miss.traceStatus,
+    rawPatternMatches: miss.trace?.counts.raw_pattern_matches ?? 0,
+    variantRejectedMatches: miss.trace?.counts.variant_rejected_matches ?? 0,
+    localCapDroppedMatches: miss.trace?.counts.local_cap_dropped_matches ?? 0,
+    qualityRejectedMatches: miss.trace?.counts.quality_rejected_matches ?? 0,
+    emittedMatchesBeforeWriterCap:
+      miss.trace?.counts.emitted_matches_before_writer_cap ?? 0,
+    retainedOccurrences: miss.trace?.retained.retained_occurrences ?? 0,
+  }));
   const primaryCategoryDetails = topEntries(primaryCounts, 20).map(
     (primary) => {
       const rows = auditedMisses.filter((miss) => miss.primary === primary.key);
@@ -2416,6 +2760,8 @@ function main(): void {
       corpusVersion: targetFile.corpusVersion,
       morphologyPath: morphologyEvidence.path,
       morphologyGeneratedAt: morphologyEvidence.generatedAt,
+      traceProvenancePath: traceEvidence.path,
+      traceProvenanceGeneratedAt: traceEvidence.generatedAt,
       middlePassiveReviewPath: middlePassiveReviewEvidence.path,
       analyzerRowsLoaded: morphologyEvidence.external.analyzerRowsLoaded,
       analyzerRowsMatched: morphologyEvidence.external.analyzerRowsMatched,
@@ -2465,6 +2811,17 @@ function main(): void {
       scannerVariantsRecorded,
       missesWithWordOrderAlternants,
       missesWithScannerVariantAlternants,
+      traceProvenanceStatus: traceEvidence.status,
+      traceProvenanceTargets: traceEvidence.tracedTargets,
+      traceProvenanceCurrentTargets: traceEvidence.currentTargets,
+      traceProvenanceStaleTargets: traceEvidence.staleTargets,
+      traceProvenanceTracedMissTargets: tracedMisses.length,
+      traceProvenanceRawZeroMissTargets:
+        traceStatusCounts.get('raw_zero') ?? 0,
+      traceProvenanceEmittedNotRetainedMissTargets:
+        traceStatusCounts.get('raw_seen_emitted_not_retained') ?? 0,
+      traceProvenanceRetainedDespiteMissTargets:
+        traceStatusCounts.get('retained_despite_coverage_miss') ?? 0,
       morphologyStatus: morphologyEvidence.status,
       morphologyMatchedMissTargets: morphologyEvidence.matchedMissRows,
       morphologyAnalyzerRowsLoaded:
@@ -2514,6 +2871,30 @@ function main(): void {
       duplicateTargetIds: morphologyEvidence.duplicateTargetIds,
       summary: morphologyEvidence.summary,
       external: morphologyEvidence.external,
+    },
+    traceProvenance: {
+      status: traceEvidence.status,
+      path: traceEvidence.path,
+      generatedAt: traceEvidence.generatedAt,
+      targetsPath: traceEvidence.targetsPath,
+      sourceDb: traceEvidence.sourceDb,
+      selectedSources: traceEvidence.selectedSources,
+      candidateCacheDir: traceEvidence.candidateCacheDir,
+      requireCandidateCache: traceEvidence.requireCandidateCache,
+      rawScanPerformed: traceEvidence.rawScanPerformed,
+      resourcePartitions: traceEvidence.resourcePartitions,
+      maxPerTarget: traceEvidence.maxPerTarget,
+      sampleLimit: traceEvidence.sampleLimit,
+      candidatesSeen: traceEvidence.candidatesSeen,
+      emptyCandidates: traceEvidence.emptyCandidates,
+      durationMs: traceEvidence.durationMs,
+      tracedTargets: traceEvidence.tracedTargets,
+      currentTargets: traceEvidence.currentTargets,
+      staleTargets: traceEvidence.staleTargets,
+      staleSamples: traceEvidence.staleSamples,
+      statusCounts: topEntries(traceStatusCounts, 20),
+      tracedMissSamples,
+      boundaries: traceEvidence.boundaries,
     },
     wordOrderAlternants: topEntries(wordOrderAlternantCounts, 100),
     scannerVariantAlternants: topEntries(scannerVariantCounts, 100),
@@ -2670,6 +3051,8 @@ function main(): void {
             action: morphology.action,
           }
         : null,
+      traceStatus: miss.traceStatus,
+      trace: miss.trace,
       wordOrderAlternants: miss.wordOrderAlternants,
       scannerVariantAlternants: miss.scannerVariantAlternants,
       variantProbes: miss.variantProbes,
@@ -2744,6 +3127,7 @@ function main(): void {
     `- Verbs flagged noMiddlePassive: ${report.summary.noMiddlePassiveFlaggedVerbs}`,
     `- Verbs with explicit middle-passive overrides: ${report.summary.verbsWithMiddlePassiveOverrides}`,
     `- External morphology audit: ${report.summary.morphologyStatus}; joined target verdicts: ${report.summary.morphologyMatchedMissTargets}`,
+    `- Target trace provenance: ${report.summary.traceProvenanceStatus}; traced current targets: ${report.summary.traceProvenanceCurrentTargets} / ${report.summary.traceProvenanceTargets}; traced misses: ${report.summary.traceProvenanceTracedMissTargets}`,
     `- Unbucketed misses after heuristics: ${report.summary.unexplainedMisses}`,
     '',
     '## Methodology & Caveats',
@@ -2753,6 +3137,7 @@ function main(): void {
     'Evidence labels overlap; the primary category is a single prioritized bucket per missed target.',
     'Exact retained absence is not universal raw-corpus absence. Ungenerated alternants, OCR/tokenization variants, filtered examples, and examples dropped by the per-target cap can all remain outside the retained SQLite evidence.',
     'External morphology verdicts, when present, are review hints only. They do not change hit/miss counts and do not prove corpus attestation or impossibility.',
+    'Target trace provenance, when present, is selected-form raw scanner evidence. Untraced misses remain `not_traced`; traced raw-zero rows are stronger local evidence than retained SQLite absence, but still only for configured local resources.',
     '`analyzer_valid_exact_absence` means UniParser accepted the exact single-token form. `component_valid_phrase_absence` means the target is a multiword phrase where only the head token or lemma has morphology evidence.',
     '',
     '## DB Cap/Filter Evidence',
@@ -2783,6 +3168,41 @@ function main(): void {
           'The SQLite DB was not available, so scanner cap/filter evidence could not be summarized.',
         ]),
     '',
+    '## Target Trace Provenance',
+    '',
+    `Status: ${report.traceProvenance.status}`,
+    `Path: ${report.traceProvenance.path}`,
+    `Generated: ${report.traceProvenance.generatedAt ?? 'unknown'}`,
+    `Trace targets path: ${report.traceProvenance.targetsPath ?? 'unknown'}`,
+    `Trace source DB: ${report.traceProvenance.sourceDb ?? 'unknown'}`,
+    `Selected sources: ${report.traceProvenance.selectedSources ?? 'unknown'}`,
+    `Raw scan performed: ${report.traceProvenance.rawScanPerformed === null ? 'unknown' : report.traceProvenance.rawScanPerformed ? 'yes' : 'no'}`,
+    `Resource partitions: ${report.traceProvenance.resourcePartitions ?? 'unknown'}`,
+    `Candidates scanned in trace: ${report.traceProvenance.candidatesSeen ?? 'unknown'}`,
+    `Selected traced targets: ${report.traceProvenance.tracedTargets}`,
+    `Current traced targets: ${report.traceProvenance.currentTargets}`,
+    `Stale trace targets skipped: ${report.traceProvenance.staleTargets}`,
+    `Traced target misses: ${report.summary.traceProvenanceTracedMissTargets}`,
+    '',
+    'Trace rows explain only selected target IDs. `not_traced` means the target has no row in the current trace sidecar, not that raw corpora were skipped or searched unsuccessfully for that target.',
+    '',
+    '| Trace Status | Target Misses |',
+    '| --- | ---: |',
+    ...report.traceProvenance.statusCounts.map(
+      (row) => `| ${mdCell(row.key)} | ${row.count} |`,
+    ),
+    '',
+    ...(report.traceProvenance.tracedMissSamples.length
+      ? [
+          '| Target | Lemma | Signature | Status | Raw | Variant Rejected | Local Cap Dropped | Quality Rejected | Emitted | Retained |',
+          '| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |',
+          ...report.traceProvenance.tracedMissSamples.map(
+            (row) =>
+              `| ${mdCell(row.targetKey)} | ${mdCell(row.lemma)} | ${mdCell(row.signature)} | ${mdCell(row.traceStatus)} | ${row.rawPatternMatches} | ${row.variantRejectedMatches} | ${row.localCapDroppedMatches} | ${row.qualityRejectedMatches} | ${row.emittedMatchesBeforeWriterCap} | ${row.retainedOccurrences} |`,
+          ),
+          '',
+        ]
+      : ['No current missed targets are present in the trace sidecar.', '']),
     ...(report.dbEvidence
       ? [
           '## Corpus Source-Family Contribution',
@@ -3170,6 +3590,7 @@ function main(): void {
     `- Analyzer accepted targets: ${report.summary.morphologyAnalyzerAcceptedTargets ?? 'unknown'}`,
     `- Analyzer analyzed targets: ${report.summary.morphologyAnalyzerAnalyzedTargets ?? 'unknown'}`,
     `- Analyzer no-token-analysis targets: ${report.summary.morphologyAnalyzerNoTokenAnalysisTargets ?? 'unknown'}`,
+    `- Target trace provenance: ${report.summary.traceProvenanceStatus}; traced misses: ${report.summary.traceProvenanceTracedMissTargets}`,
     '',
     '## Selected By Primary',
     '',
@@ -3188,11 +3609,11 @@ function main(): void {
     'Morphology columns are review hints. They refine the likely explanation for a miss but never change hit/miss counts.',
     'Priority `lemma outlier` means sampled from a high-miss lemma; `primary: lemma outlier` means the row itself has primary category `lemma_outlier`.',
     '',
-    '| Priority | Target | Lemma | Signature | Cell Hit Rate | Lemma Hit Rate | Primary | Morphology Form | Voice Eligibility | Proof | Scope | Morphology Reasons |',
-    '| --- | --- | --- | --- | ---: | ---: | --- | --- | --- | --- | --- | --- |',
+    '| Priority | Target | Lemma | Signature | Cell Hit Rate | Lemma Hit Rate | Primary | Trace | Morphology Form | Voice Eligibility | Proof | Scope | Morphology Reasons |',
+    '| --- | --- | --- | --- | ---: | ---: | --- | --- | --- | --- | --- | --- | --- |',
     ...dossier.entries.map(
       (entry) =>
-        `| ${mdCell(entry.priority.join(', '))} | ${mdCell(entry.targetKey)} | ${mdCell(entry.lemma)} | ${mdCell(entry.signature)} | ${entry.cellHitRate} | ${entry.lemmaHitRate} | ${mdCell(entry.primary)} | ${mdCell(entry.morphology?.form ?? 'not joined')} | ${mdCell(entry.morphology?.voiceEligibility ?? '')} | ${mdCell(entry.morphology?.proofLevel ?? '')} | ${mdCell(entry.morphology?.scope ?? '')} | ${mdCell(entry.morphology?.reasons.join(', ') ?? '')} |`,
+        `| ${mdCell(entry.priority.join(', '))} | ${mdCell(entry.targetKey)} | ${mdCell(entry.lemma)} | ${mdCell(entry.signature)} | ${entry.cellHitRate} | ${entry.lemmaHitRate} | ${mdCell(entry.primary)} | ${mdCell(traceSummaryCell(entry))} | ${mdCell(entry.morphology?.form ?? 'not joined')} | ${mdCell(entry.morphology?.voiceEligibility ?? '')} | ${mdCell(entry.morphology?.proofLevel ?? '')} | ${mdCell(entry.morphology?.scope ?? '')} | ${mdCell(entry.morphology?.reasons.join(', ') ?? '')} |`,
     ),
     '',
     '## SQLite Lookup Anchors',
