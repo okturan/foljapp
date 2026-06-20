@@ -55,8 +55,9 @@ CARGO_TARGET_DIR=.cache/cargo-target cargo run --release \
   and write the SQLite corpus DB.
 - `build-candidate-cache`: parse raw resources once into zstd candidate shards
   for faster repeat scans. New builds write compact `.norm.zst` normalized-text
-  shards plus `.rows.jsonl.zst` metadata shards, so no-hit candidates avoid
-  full metadata deserialization during cached scans.
+  shards plus `.rows.jsonl.zst` metadata shards. They also write exact
+  `.target-hits.zst` sidecars for the generated target file, so no-hit traces can
+  skip whole partitions without reading candidate rows.
 - `trace-targets`: explain selected target IDs or forms by raw matches,
   rejected variants, quality rejection, and retained occurrences.
 - `bench`: compare Aho-Corasick scanning, Tantivy, and SQLite FTS5 over retained
@@ -76,8 +77,9 @@ Cached scans prefer split cache shards when present. If only older full-row
 cache shards are fresh, the scanner falls back to them. The legacy
 `.cache/corpus-candidate-shards/v1` cache has 1,907 v1 full-row shards. The
 current full split cache lives at `.cache/corpus-candidate-shards/split-20260620`
-and has 1,907 each of `.norm.zst`, `.rows.jsonl.zst`, and `.tokens.zst` files.
-It was built in a separate directory so the old v1 cache stayed usable:
+and has 1,907 each of `.norm.zst`, `.rows.jsonl.zst`, `.tokens.zst`, and
+`.target-hits.zst` files. It was built in a separate directory so the old v1
+cache stayed usable:
 
 ```sh
 CARGO_TARGET_DIR=.cache/cargo-target cargo run --release \
@@ -91,10 +93,17 @@ normalized, 1,343.0 seconds, 89G on disk. An in-place `--refresh` under `v1`
 writes split shards beside the old v1 shards; it does not delete the older
 files.
 
-Fresh split-cache builds also include `.tokens.zst` inventories. `trace-targets`
-uses them to skip source partitions that cannot contain any selected target
-anchor token. Missing inventories are not an error; the trace falls back to
-scanning that partition.
+Target-hit backfill result on the existing split cache: 1,317,991,933
+candidates from 1,907 partitions, 0 empty normalized, 278.8 seconds. The 1,907
+`.target-hits.zst` sidecars total 58.2 MiB.
+
+Fresh split-cache builds also include `.tokens.zst` inventories and
+`.target-hits.zst` sidecars. `trace-targets` first checks whether the selected
+generated target IDs occurred in a partition during cache build. If a target-hit
+sidecar is missing or older than `.cache/corpus-targets.json`, the trace falls
+back to token inventories and then to scanning that partition. Running
+`build-candidate-cache` against an existing fresh split cache backfills missing
+target-hit sidecars from `.norm.zst` without reparsing raw sources.
 
 Sanity trace with the full split cache:
 
@@ -108,6 +117,11 @@ CARGO_TARGET_DIR=.cache/cargo-target cargo run --release \
   --out-md=.cache/corpus-target-provenance.sanity-split-20260620.md
 ```
 
-That trace skipped 1,722 of 1,907 partitions by token inventory, scanned the
-remaining 185 partitions and 1,024,539,453 candidates, found no raw match for
-`mos të ledhatojë`, and finished in 105,043 ms.
+Before exact target-hit inventories, that trace skipped 1,722 of 1,907
+partitions by token inventory, scanned the remaining 185 partitions and
+1,024,539,453 candidates, found no raw match for `mos të ledhatojë`, and
+finished in 105,043 ms.
+
+With exact target-hit inventories, the same trace skipped 1,907 of 1,907
+partitions, scanned 0 candidates, found no raw or retained match, and reported a
+5 ms trace duration.

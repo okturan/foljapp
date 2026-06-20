@@ -97,14 +97,15 @@ npm run build:corpus-targets
 npm run scan:local-corpus
 ```
 
-For repeated full-corpus work, use the target-independent candidate cache.
-Target matches, quality decisions, scores, and occurrences are still computed
-fresh by the scanner. The legacy `.cache/corpus-candidate-shards/v1` cache is
-the older full-row format: 1,907 `.jsonl.zst` shards plus 1,907 metadata files.
-The current full split cache is
-`.cache/corpus-candidate-shards/split-20260620`: 1,907 `.norm.zst`, 1,907
-`.rows.jsonl.zst`, and 1,907 `.tokens.zst` shards, built from 1,317,991,933
-candidates in 1,343.0 seconds.
+For repeated full-corpus work, use the candidate cache. Target matches, quality
+decisions, scores, and occurrences are still computed fresh by the scanner. The
+legacy `.cache/corpus-candidate-shards/v1` cache is the older full-row format:
+1,907 `.jsonl.zst` shards plus 1,907 metadata files. The current full split
+cache is `.cache/corpus-candidate-shards/split-20260620`: 1,907 `.norm.zst`,
+1,907 `.rows.jsonl.zst`, 1,907 `.tokens.zst`, and 1,907 `.target-hits.zst`
+shards, built from 1,317,991,933 candidates in 1,343.0 seconds. The target-hit
+sidecars were backfilled from existing `.norm.zst` shards in 278.8 seconds and
+total 58.2 MiB.
 
 Current cache builds store normalized text separately from full sentence
 metadata, so cached scans can run the matcher over compact normalized shards
@@ -120,15 +121,19 @@ CARGO_TARGET_DIR=.cache/cargo-target cargo run --release \
 ```
 
 The post-build verification found 1,907 each of `.norm.zst`,
-`.rows.jsonl.zst`, and `.tokens.zst` files and zero temp files. In-place
+`.rows.jsonl.zst`, `.tokens.zst`, and `.target-hits.zst` files and zero temp
+files. In-place
 `npm run build:corpus-candidate-cache -- --refresh` is valid, but it writes the
 split files beside the old v1 files and can temporarily push the cache directory
 toward the old plus new cache sizes.
 
 Sanity trace with `--candidate-cache-dir=.cache/corpus-candidate-shards/split-20260620`
-and `--require-candidate-cache` skipped 1,722 of 1,907 partitions by token
-inventory for `mos të ledhatojë`, scanned the remaining 185 partitions and
+and `--require-candidate-cache` previously skipped 1,722 of 1,907 partitions by
+token inventory for `mos të ledhatojë`, scanned the remaining 185 partitions and
 1,024,539,453 candidates, found no raw match, and finished in 105,043 ms.
+With exact target-hit sidecars, the same trace skipped 1,907 of 1,907
+partitions, scanned 0 candidates, found no raw or retained match, and reported a
+5 ms trace duration.
 
 The split format is mainly a missing-form forensics optimization. It speeds up
 raw-zero and low-hit traces because the scanner can avoid metadata
@@ -136,11 +141,14 @@ deserialization for most candidates. It is not expected to produce a large gain
 on hit-heavy match scans, and it can be larger on disk than the old full-row
 cache.
 
-Fresh split-cache builds also write compressed token inventories. `trace-targets`
-uses those inventories to skip whole source partitions when none of the selected
-target anchor tokens occurs in that partition. Older split caches without
-`.tokens.zst` sidecars and v1 full-row caches still scan normally; rebuild a
-selected source with `--refresh` to add inventories.
+Fresh split-cache builds also write compressed token inventories and exact
+target-hit sidecars. `trace-targets` uses target-hit sidecars first: if none of
+the selected generated target IDs occurred in a partition during cache build, the
+trace skips that partition. Older split caches without target-hit sidecars, stale
+sidecars from an older target file, and v1 full-row caches still fall back to
+token inventories or normal scans; rerun `build-candidate-cache` to backfill
+missing `.target-hits.zst` files from existing `.norm.zst` shards, or rebuild a
+selected source with `--refresh`.
 
 ```bash
 npm run build:corpus-candidate-cache

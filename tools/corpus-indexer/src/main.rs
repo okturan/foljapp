@@ -8,8 +8,8 @@ mod text;
 use aho_corasick::AhoCorasick;
 use anyhow::{bail, Context, Result};
 use candidate_cache::{
-    build_resource_cache, cached_resource_may_contain_any_token, open_candidate_stream,
-    CacheBuildStats,
+    build_resource_cache, cached_resource_may_contain_any_target_id,
+    cached_resource_may_contain_any_token, open_candidate_stream, CacheBuildStats,
 };
 use clap::{Args, Parser, Subcommand};
 use db::ExampleDb;
@@ -94,6 +94,8 @@ struct MatchArgs {
 
 #[derive(Args)]
 struct BuildCandidateCacheArgs {
+    #[arg(long, default_value = ".cache/corpus-targets.json")]
+    targets: PathBuf,
     #[arg(long, default_value = ".cache/corpus-candidate-shards/v1")]
     cache_dir: PathBuf,
     #[arg(long, default_value = "all")]
@@ -569,6 +571,8 @@ fn trace_targets(args: TraceTargetsArgs) -> Result<()> {
     let skipped_resource_partitions = skip_trace_resources_by_inventory(
         &mut resources,
         args.candidate_cache_dir.as_deref(),
+        &args.targets,
+        &selected_ids,
         target_matcher.anchor_tokens(),
     )?;
     let (tx, rx) = mpsc::channel();
@@ -728,7 +732,7 @@ fn trace_targets(args: TraceTargetsArgs) -> Result<()> {
             "Emitted matches are worker output before the global SQLite writer cap.",
             "Retained occurrences are read from the supplied SQLite DB and may come from an earlier scan.",
             "When --candidate-cache-dir is supplied, the trace reads cached normalized candidates where fresh shards exist and preserves raw-resource fallback unless --require-candidate-cache is set.",
-            "Fresh split-cache token inventories may skip source partitions that contain none of the selected target anchor tokens.",
+            "Fresh split-cache target inventories may skip source partitions where no selected generated target ID had a raw normalized pattern match; stale or missing target inventories fall back to token inventories.",
         ],
         targets: target_outputs,
     };
@@ -861,18 +865,36 @@ fn select_trace_targets(targets: &[Target], args: &TraceTargetsArgs) -> Result<V
 fn skip_trace_resources_by_inventory(
     resources: &mut Vec<ResourceSpec>,
     candidate_cache_dir: Option<&Path>,
-    target_tokens: Option<&HashSet<String>>,
+    targets_path: &Path,
+    selected_ids: &HashSet<String>,
+    fallback_tokens: Option<&HashSet<String>>,
 ) -> Result<usize> {
-    let (Some(cache_dir), Some(target_tokens)) = (candidate_cache_dir, target_tokens) else {
+    let Some(cache_dir) = candidate_cache_dir else {
         return Ok(0);
     };
     let original = std::mem::take(resources);
     let mut kept = Vec::with_capacity(original.len());
     let mut skipped = 0usize;
     for resource in original {
-        match cached_resource_may_contain_any_token(&resource, cache_dir, target_tokens)? {
-            Some(false) => skipped += 1,
-            Some(true) | None => kept.push(resource),
+        match cached_resource_may_contain_any_target_id(
+            &resource,
+            cache_dir,
+            targets_path,
+            selected_ids,
+        )? {
+            Some(false) => {
+                skipped += 1;
+            }
+            Some(true) => kept.push(resource),
+            None => match fallback_tokens {
+                Some(tokens) => {
+                    match cached_resource_may_contain_any_token(&resource, cache_dir, tokens)? {
+                        Some(false) => skipped += 1,
+                        Some(true) | None => kept.push(resource),
+                    }
+                }
+                None => kept.push(resource),
+            },
         }
     }
     *resources = kept;
@@ -1900,10 +1922,18 @@ fn build_candidate_cache(args: BuildCandidateCacheArgs) -> Result<()> {
     for resource in selected_resources {
         resources.extend(expand_resource_partitions(&resource)?);
     }
+    let targets = load_targets(&args.targets)
+        .with_context(|| format!("load targets from {}", args.targets.display()))?;
+    if targets.is_empty() {
+        bail!("no targets in {}", args.targets.display());
+    }
+    let target_count = targets.len();
+    let target_matcher = Arc::new(TargetMatcher::new_with_anchor_prefilter(targets)?);
 
     println!(
-        "Building candidate cache: {} source partition(s) -> {}",
+        "Building candidate cache: {} source partition(s), {} target row(s) -> {}",
         resources.len(),
+        target_count,
         args.cache_dir.display()
     );
 
@@ -1923,13 +1953,21 @@ fn build_candidate_cache(args: BuildCandidateCacheArgs) -> Result<()> {
         let worker_work = Arc::clone(&work);
         let worker_tx = tx.clone();
         let cache_dir = args.cache_dir.clone();
+        let targets_path = args.targets.clone();
+        let worker_matcher = Arc::clone(&target_matcher);
         let refresh = args.refresh;
         handles.push(thread::spawn(move || loop {
             let Some(resource) = worker_work.lock().expect("work queue").pop_front() else {
                 break;
             };
-            let result = build_resource_cache(&resource, &cache_dir, refresh)
-                .with_context(|| format!("build candidate cache for {}", resource.id));
+            let result = build_resource_cache(
+                &resource,
+                &cache_dir,
+                refresh,
+                Some(worker_matcher.as_ref()),
+                Some(&targets_path),
+            )
+            .with_context(|| format!("build candidate cache for {}", resource.id));
             if worker_tx.send(result).is_err() {
                 break;
             }

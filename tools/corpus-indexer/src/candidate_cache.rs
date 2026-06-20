@@ -1,4 +1,5 @@
 use crate::sources::{open_resource, Candidate, CandidateStream, ResourceSpec};
+use crate::targets::TargetMatcher;
 use crate::text::normalized_text;
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
@@ -90,9 +91,12 @@ pub fn build_resource_cache(
     resource: &ResourceSpec,
     cache_dir: &Path,
     refresh: bool,
+    target_matcher: Option<&TargetMatcher>,
+    targets_path: Option<&Path>,
 ) -> Result<CacheBuildStats> {
     if !refresh {
         if let Some(meta) = fresh_v2_meta(resource, cache_dir)? {
+            ensure_target_hits(resource, cache_dir, target_matcher, targets_path)?;
             return Ok(CacheBuildStats {
                 resource_id: resource.id.clone(),
                 candidates_seen: meta.candidates_seen,
@@ -105,10 +109,12 @@ pub fn build_resource_cache(
     let norm_path = norm_path(resource, cache_dir);
     let rows_path = rows_path(resource, cache_dir);
     let token_path = token_path(resource, cache_dir);
+    let target_hits_path = target_hits_path(resource, cache_dir);
     let meta_path = meta_path(resource, cache_dir);
     let tmp_norm_path = tmp_path(&norm_path);
     let tmp_rows_path = tmp_path(&rows_path);
     let tmp_token_path = tmp_path(&token_path);
+    let tmp_target_hits_path = tmp_path(&target_hits_path);
     let tmp_meta_path = tmp_path(&meta_path);
 
     let norm_file = File::create(&tmp_norm_path)
@@ -121,6 +127,7 @@ pub fn build_resource_cache(
     let mut rows_writer = zstd::stream::write::Encoder::new(rows_file, 3)?;
     let mut token_writer = zstd::stream::write::Encoder::new(token_file, 3)?;
     let mut tokens = HashSet::<String>::new();
+    let mut target_ids = HashSet::<String>::new();
     let mut candidates_seen = 0usize;
     let mut empty_candidates = 0usize;
     let stream = open_resource(resource).with_context(|| format!("open source {}", resource.id))?;
@@ -134,6 +141,9 @@ pub fn build_resource_cache(
         }
         for token in normalized.split_whitespace() {
             tokens.insert(token.to_owned());
+        }
+        if let Some(matcher) = target_matcher {
+            collect_target_hits(matcher, &normalized, &mut target_ids);
         }
         let row = CacheMetadataRow {
             doc_id: candidate.doc_id,
@@ -159,6 +169,9 @@ pub fn build_resource_cache(
         token_writer.write_all(b"\n")?;
     }
     token_writer.finish()?;
+    if target_matcher.is_some() {
+        write_target_hits(&target_ids, &tmp_target_hits_path)?;
+    }
 
     let fingerprint = fingerprint(resource)?;
     let meta = CacheMeta {
@@ -175,6 +188,9 @@ pub fn build_resource_cache(
     fs::rename(tmp_norm_path, norm_path)?;
     fs::rename(tmp_rows_path, rows_path)?;
     fs::rename(tmp_token_path, token_path)?;
+    if target_matcher.is_some() {
+        fs::rename(tmp_target_hits_path, target_hits_path)?;
+    }
     fs::rename(tmp_meta_path, meta_path)?;
 
     Ok(CacheBuildStats {
@@ -182,6 +198,33 @@ pub fn build_resource_cache(
         candidates_seen,
         empty_candidates,
     })
+}
+
+pub fn cached_resource_may_contain_any_target_id(
+    resource: &ResourceSpec,
+    cache_dir: &Path,
+    targets_path: &Path,
+    target_ids: &HashSet<String>,
+) -> Result<Option<bool>> {
+    if target_ids.is_empty() {
+        return Ok(Some(false));
+    }
+    if fresh_v2_meta(resource, cache_dir)?.is_none() {
+        return Ok(None);
+    }
+    if !target_hits_fresh(resource, cache_dir, targets_path)? {
+        return Ok(None);
+    }
+    let target_hits_path = target_hits_path(resource, cache_dir);
+    let file = File::open(&target_hits_path)
+        .with_context(|| format!("open {}", target_hits_path.display()))?;
+    let lines = BufReader::new(zstd::stream::read::Decoder::new(file)?).lines();
+    for line in lines {
+        if target_ids.contains(&line?) {
+            return Ok(Some(true));
+        }
+    }
+    Ok(Some(false))
 }
 
 pub fn cached_resource_may_contain_any_token(
@@ -207,6 +250,80 @@ pub fn cached_resource_may_contain_any_token(
         }
     }
     Ok(Some(false))
+}
+
+fn ensure_target_hits(
+    resource: &ResourceSpec,
+    cache_dir: &Path,
+    target_matcher: Option<&TargetMatcher>,
+    targets_path: Option<&Path>,
+) -> Result<()> {
+    let (Some(matcher), Some(targets_path)) = (target_matcher, targets_path) else {
+        return Ok(());
+    };
+    if target_hits_fresh(resource, cache_dir, targets_path)? {
+        return Ok(());
+    }
+    let norm_path = norm_path(resource, cache_dir);
+    let target_hits_path = target_hits_path(resource, cache_dir);
+    let tmp_target_hits_path = tmp_path(&target_hits_path);
+    build_target_hits_from_norm(&norm_path, &tmp_target_hits_path, matcher)?;
+    fs::rename(tmp_target_hits_path, target_hits_path)?;
+    Ok(())
+}
+
+fn build_target_hits_from_norm(
+    norm_path: &Path,
+    out_path: &Path,
+    matcher: &TargetMatcher,
+) -> Result<()> {
+    let norm_file =
+        File::open(norm_path).with_context(|| format!("open {}", norm_path.display()))?;
+    let norm_lines = BufReader::new(zstd::stream::read::Decoder::new(norm_file)?).lines();
+    let mut target_ids = HashSet::<String>::new();
+    for line in norm_lines {
+        collect_target_hits(matcher, &line?, &mut target_ids);
+    }
+    write_target_hits(&target_ids, out_path)
+}
+
+fn collect_target_hits(
+    matcher: &TargetMatcher,
+    normalized: &str,
+    target_ids: &mut HashSet<String>,
+) {
+    for matched in matcher.matches_normalized(normalized) {
+        target_ids.insert(matched.id.to_owned());
+    }
+}
+
+fn write_target_hits(target_ids: &HashSet<String>, path: &Path) -> Result<()> {
+    let file = File::create(path).with_context(|| format!("create {}", path.display()))?;
+    let mut writer = zstd::stream::write::Encoder::new(file, 3)?;
+    let mut sorted = target_ids.iter().collect::<Vec<_>>();
+    sorted.sort();
+    for target_id in sorted {
+        writer.write_all(target_id.as_bytes())?;
+        writer.write_all(b"\n")?;
+    }
+    writer.finish()?;
+    Ok(())
+}
+
+fn target_hits_fresh(
+    resource: &ResourceSpec,
+    cache_dir: &Path,
+    targets_path: &Path,
+) -> Result<bool> {
+    let target_hits_path = target_hits_path(resource, cache_dir);
+    if !target_hits_path.exists() {
+        return Ok(false);
+    }
+    let hits_modified = fs::metadata(target_hits_path)?.modified()?;
+    let targets_modified = fs::metadata(targets_path)
+        .with_context(|| format!("stat {}", targets_path.display()))?
+        .modified()?;
+    Ok(hits_modified >= targets_modified)
 }
 
 fn open_cached_resource(
@@ -434,6 +551,13 @@ fn token_path(resource: &ResourceSpec, cache_dir: &Path) -> PathBuf {
     cache_dir.join(format!("{}.tokens.zst", safe_resource_id(&resource.id)))
 }
 
+fn target_hits_path(resource: &ResourceSpec, cache_dir: &Path) -> PathBuf {
+    cache_dir.join(format!(
+        "{}.target-hits.zst",
+        safe_resource_id(&resource.id)
+    ))
+}
+
 fn meta_path(resource: &ResourceSpec, cache_dir: &Path) -> PathBuf {
     cache_dir.join(format!("{}.json", safe_resource_id(&resource.id)))
 }
@@ -490,10 +614,12 @@ struct Fingerprint {
 #[cfg(test)]
 mod tests {
     use super::{
-        build_resource_cache, cached_resource_may_contain_any_token, safe_resource_id,
+        build_resource_cache, cached_resource_may_contain_any_target_id,
+        cached_resource_may_contain_any_token, safe_resource_id, target_hits_path,
         CacheMetadataRow, CacheV2CandidateSource, CachedCandidateSource,
     };
     use crate::sources::{ResourceSpec, SourceKind};
+    use crate::targets::{Target, TargetMatcher};
     use std::collections::HashSet;
     use std::fs::{self, File};
     use std::io::{BufRead, BufReader, Write};
@@ -610,7 +736,7 @@ mod tests {
             kind: SourceKind::SeeUniversityTxtLines,
         };
 
-        build_resource_cache(&resource, &cache_dir, true).expect("build cache");
+        build_resource_cache(&resource, &cache_dir, true, None, None).expect("build cache");
 
         assert_eq!(
             cached_resource_may_contain_any_token(
@@ -632,6 +758,118 @@ mod tests {
         );
 
         fs::remove_dir_all(dir).expect("remove temp dir");
+    }
+
+    #[test]
+    fn split_cache_target_inventory_skips_impossible_targets() {
+        let dir = std::env::temp_dir().join(format!(
+            "foljapp-cache-target-test-{}",
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("time")
+                .as_nanos()
+        ));
+        let source_path = dir.join("source.txt");
+        let targets_path = dir.join("targets.json");
+        let cache_dir = dir.join("cache");
+        fs::create_dir_all(&dir).expect("create temp dir");
+        fs::write(&targets_path, "{}").expect("write targets marker");
+        fs::write(
+            &source_path,
+            "Punoj këtu.\nDua të punoj nesër.\nMos të shkoj vonë.\n",
+        )
+        .expect("write source");
+        let resource = ResourceSpec {
+            id: "test-source".to_owned(),
+            title: "Test Source".to_owned(),
+            resource_kind: "test".to_owned(),
+            source_url: None,
+            local_path_text: source_path.to_string_lossy().into_owned(),
+            local_path: source_path,
+            format: Some("txt".to_owned()),
+            license: None,
+            kind: SourceKind::SeeUniversityTxtLines,
+        };
+        let matcher = TargetMatcher::new(vec![
+            target("target-punoj", "punoj", &["punoj"]),
+            target("target-te-punoj", "të punoj", &["të", "punoj"]),
+            target(
+                "target-mos-te-punoj",
+                "mos të punoj",
+                &["mos", "të", "punoj"],
+            ),
+        ])
+        .expect("matcher");
+
+        build_resource_cache(
+            &resource,
+            &cache_dir,
+            true,
+            Some(&matcher),
+            Some(&targets_path),
+        )
+        .expect("build cache");
+
+        assert_eq!(
+            cached_resource_may_contain_any_target_id(
+                &resource,
+                &cache_dir,
+                &targets_path,
+                &HashSet::from(["target-te-punoj".to_owned()]),
+            )
+            .expect("read target inventory"),
+            Some(true)
+        );
+        assert_eq!(
+            cached_resource_may_contain_any_target_id(
+                &resource,
+                &cache_dir,
+                &targets_path,
+                &HashSet::from(["target-mos-te-punoj".to_owned()]),
+            )
+            .expect("read target inventory"),
+            Some(false)
+        );
+
+        fs::remove_file(target_hits_path(&resource, &cache_dir)).expect("remove target sidecar");
+        assert_eq!(
+            cached_resource_may_contain_any_target_id(
+                &resource,
+                &cache_dir,
+                &targets_path,
+                &HashSet::from(["target-te-punoj".to_owned()]),
+            )
+            .expect("missing target inventory"),
+            None
+        );
+        build_resource_cache(
+            &resource,
+            &cache_dir,
+            false,
+            Some(&matcher),
+            Some(&targets_path),
+        )
+        .expect("backfill sidecar");
+        assert!(target_hits_path(&resource, &cache_dir).exists());
+
+        fs::remove_dir_all(dir).expect("remove temp dir");
+    }
+
+    fn target(id: &str, target_key: &str, tokens: &[&str]) -> Target {
+        Target {
+            id: id.to_owned(),
+            target_key: target_key.to_owned(),
+            display_form: target_key.to_owned(),
+            tokens: tokens.iter().map(|token| (*token).to_owned()).collect(),
+            signature: "test".to_owned(),
+            anc_tags: Vec::new(),
+            anc_query: String::new(),
+            cell_label: String::new(),
+            verb_id: "punoj".to_owned(),
+            lemma: "punoj".to_owned(),
+            translation_en: "to work".to_owned(),
+            options_json: "{}".to_owned(),
+        }
     }
 
     fn row(doc_id: &str, sentence: &str) -> CacheMetadataRow {

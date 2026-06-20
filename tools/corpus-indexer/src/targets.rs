@@ -134,7 +134,6 @@ impl TargetMatcher {
                 .filter_map(|pattern| anchor_for_pattern(pattern))
                 .collect()
         });
-
         Ok(Self {
             automaton: AhoCorasick::new(&patterns)?,
             anchor_tokens,
