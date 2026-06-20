@@ -53,6 +53,12 @@ const DEFAULT_MIDDLE_PASSIVE_REVIEWS = [
     'corpora',
     'middle-passive-source-cache-review.json',
   ),
+  join(
+    REPO_ROOT,
+    'data',
+    'corpora',
+    'middle-passive-lexicon-review.json',
+  ),
 ];
 
 interface TargetRecord {

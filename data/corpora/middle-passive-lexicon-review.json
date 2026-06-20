@@ -1,0 +1,220 @@
+{
+  "title": "Middle-passive lexicon review: no direct source-cache support",
+  "status": "open",
+  "sourceArtifacts": {
+    "corpusMissingAudit": ".cache/corpus-missing-audit.json",
+    "externalMorphologyAudit": ".cache/external-morphology-audit.json",
+    "targetGeneratedAt": "2026-06-19T13:58:35.608Z",
+    "coverageGeneratedAt": "2026-06-19T14:15:36.252Z",
+    "corpusVersion": "0.1.5",
+    "rerun": "npm run audit:corpus-misses:full"
+  },
+  "scope": "Highest-volume lexicon-only middle-passive action groups with zero direct Husic/Kaikki source-cache support. Decisions here use UniParser lexeme/analyzer evidence plus retained local corpus distribution; they are not exact paradigm-source attestations.",
+  "allowedDecisions": [
+    "keep",
+    "noMiddlePassive",
+    "middlePassiveThirdPersonOnly",
+    "needs_source"
+  ],
+  "decisionMeaning": {
+    "keep": "Retain generated middle-passive forms; lexeme/analyzer evidence and retained corpus distribution support them enough for now.",
+    "noMiddlePassive": "Suppress generated middle-passive forms after source review confirms non-active forms should not be produced.",
+    "middlePassiveThirdPersonOnly": "Restrict finite middle-passive output to third person after evidence supports real third-person passive use but not personal first/second-person generation.",
+    "needs_source": "Do not change generation yet; current local evidence is insufficient for a generation decision."
+  },
+  "summary": {
+    "groups": 16,
+    "actionTargetMisses": 1869,
+    "decisionCounts": {
+      "keep": 7,
+      "noMiddlePassive": 0,
+      "middlePassiveThirdPersonOnly": 4,
+      "needs_source": 5
+    }
+  },
+  "rows": [
+    {
+      "verbId": "kooperoj",
+      "lemma": "kooperoj",
+      "action": "review_medial_or_reflexive_candidate",
+      "decision": "needs_source",
+      "actionTargetMisses": 229,
+      "reviewNote": "UniParser has an explicit medial/transitive lexeme and retained middle-passive hits exist, but support is sparse and mostly third-person; this argues against pruning but does not prove the full analytic paradigm."
+    },
+    {
+      "verbId": "kooperoj",
+      "lemma": "kooperoj",
+      "action": "review_as_analyzer_accepted",
+      "decision": "keep",
+      "actionTargetMisses": 20,
+      "decisionEvidence": [
+        {
+          "source": ".cache/external-morphology-audit.json",
+          "basis": "UniParser analyzer accepts generated middle-passive head forms for kooperoj, and retained examples include non-active forms such as kooperohem, kooperohet, and kooperohen. This is morphology support, not frequency evidence."
+        }
+      ]
+    },
+    {
+      "verbId": "farmakos",
+      "lemma": "farmakos",
+      "action": "review_component_supported_phrase",
+      "decision": "needs_source",
+      "actionTargetMisses": 228,
+      "reviewNote": "The lexeme is transitive/intransitive and the analyzer supports head components, but there is no medial lexeme tag or direct source-cache paradigm for the full phrase bucket."
+    },
+    {
+      "verbId": "farmakos",
+      "lemma": "farmakos",
+      "action": "review_as_analyzer_accepted",
+      "decision": "keep",
+      "actionTargetMisses": 19,
+      "decisionEvidence": [
+        {
+          "source": ".cache/external-morphology-audit.json",
+          "basis": "UniParser analyzer accepts farmakos middle-passive forms and retained examples include farmakosem, farmakoseni, u farmakosëm, and farmakoset. Some examples are noisy, but the non-active form itself is locally supported."
+        }
+      ]
+    },
+    {
+      "verbId": "firmoj",
+      "lemma": "firmoj",
+      "action": "review_component_supported_phrase",
+      "decision": "middlePassiveThirdPersonOnly",
+      "actionTargetMisses": 223,
+      "decisionEvidence": [
+        {
+          "source": ".cache/corpus-local-full.sqlite",
+          "basis": "Retained middle-passive evidence is overwhelmingly third person: strong examples include firmohet, firmohen, u firmua, and është firmuar; the few non-third hits are malformed or corrupted diacriticless text."
+        }
+      ]
+    },
+    {
+      "verbId": "firmoj",
+      "lemma": "firmoj",
+      "action": "review_as_analyzer_accepted",
+      "decision": "middlePassiveThirdPersonOnly",
+      "actionTargetMisses": 16,
+      "decisionEvidence": [
+        {
+          "source": ".cache/corpus-local-full.sqlite",
+          "basis": "Analyzer acceptance alone is weaker than the retained corpus distribution: credible passive evidence is third-person, while non-third examples such as firmohesh are malformed."
+        }
+      ]
+    },
+    {
+      "verbId": "kuvendoj",
+      "lemma": "kuvendoj",
+      "action": "review_component_supported_phrase",
+      "decision": "needs_source",
+      "actionTargetMisses": 219,
+      "reviewNote": "The lexeme is transitive/intransitive and local examples include non-active forms, but the large missing bucket is still only head-component supported and full-phrase unchecked."
+    },
+    {
+      "verbId": "kuvendoj",
+      "lemma": "kuvendoj",
+      "action": "review_as_analyzer_accepted",
+      "decision": "keep",
+      "actionTargetMisses": 17,
+      "decisionEvidence": [
+        {
+          "source": ".cache/external-morphology-audit.json",
+          "basis": "UniParser analyzer accepts generated middle-passive forms and local retained examples include plausible non-active uses across non-third and third person, such as kuvendohem, kuvendohemi, kuvendohesh, and kuvendohet."
+        }
+      ]
+    },
+    {
+      "verbId": "dhemb",
+      "lemma": "dhemb",
+      "action": "review_medial_or_reflexive_candidate",
+      "decision": "needs_source",
+      "actionTargetMisses": 219,
+      "reviewNote": "UniParser has medial and intransitive entries, but dhemb/dhëmb ambiguity, nonstandard tags, dental-form false positives, and dative/experiencer syntax make the local evidence too ambiguous for a generation change."
+    },
+    {
+      "verbId": "dhemb",
+      "lemma": "dhemb",
+      "action": "review_as_analyzer_accepted",
+      "decision": "needs_source",
+      "actionTargetMisses": 15,
+      "reviewNote": "Analyzer accepts a few forms and local examples include dhembem/dhembesha/të dhembesh, but false positives such as dental dhembesh/dhembet need separation before keep or restriction."
+    },
+    {
+      "verbId": "farketoj",
+      "lemma": "farkëtoj",
+      "action": "review_medial_or_reflexive_candidate",
+      "decision": "keep",
+      "actionTargetMisses": 209,
+      "decisionEvidence": [
+        {
+          "source": ".cache/external-morphology-audit.json",
+          "basis": "UniParser lexeme evidence tags farkëtoj as both medial and transitive, the analyzer accepts multiple middle-passive head forms, and retained local corpus examples attest non-third-person and third-person middle-passive usage such as farkëtohem, farkëtohemi, farkëtohesh, jam farkëtuar, and jemi farkëtuar."
+        }
+      ]
+    },
+    {
+      "verbId": "farketoj",
+      "lemma": "farkëtoj",
+      "action": "review_as_analyzer_accepted",
+      "decision": "keep",
+      "actionTargetMisses": 16,
+      "decisionEvidence": [
+        {
+          "source": ".cache/external-morphology-audit.json",
+          "basis": "Analyzer acceptance aligns with retained non-third-person middle-passive evidence for farkëtoj; this is lexeme-plus-corpus support, not exact Husić source-cache support."
+        }
+      ]
+    },
+    {
+      "verbId": "fabrikoj",
+      "lemma": "fabrikoj",
+      "action": "review_component_supported_phrase",
+      "decision": "middlePassiveThirdPersonOnly",
+      "actionTargetMisses": 208,
+      "decisionEvidence": [
+        {
+          "source": ".cache/corpus-local-full.sqlite",
+          "basis": "Retained middle-passive evidence is overwhelmingly third person: strong examples include fabrikohet, fabrikohen, u fabrikua, and është fabrikuar; the only non-third surface is a duplicated corrupted diacriticless phrase, not reliable personal passive evidence."
+        }
+      ]
+    },
+    {
+      "verbId": "fabrikoj",
+      "lemma": "fabrikoj",
+      "action": "review_as_analyzer_accepted",
+      "decision": "middlePassiveThirdPersonOnly",
+      "actionTargetMisses": 16,
+      "decisionEvidence": [
+        {
+          "source": ".cache/corpus-local-full.sqlite",
+          "basis": "Analyzer acceptance is outweighed by retained corpus distribution: credible middle-passive evidence is third-person passive, while non-third retained evidence is corrupted or duplicated."
+        }
+      ]
+    },
+    {
+      "verbId": "gudulis",
+      "lemma": "gudulis",
+      "action": "review_medial_or_reflexive_candidate",
+      "decision": "keep",
+      "actionTargetMisses": 209,
+      "decisionEvidence": [
+        {
+          "source": ".cache/external-morphology-audit.json",
+          "basis": "UniParser lexeme evidence tags gudulis as both medial and transitive, and retained local corpus examples attest middle-passive usage across first, second, and third person forms such as gudulisem, gudulisemi, gudulisesh, guduliseni, u gudulisa, u gudulisëm, and janë gudulisur."
+        }
+      ]
+    },
+    {
+      "verbId": "gudulis",
+      "lemma": "gudulis",
+      "action": "review_as_analyzer_accepted",
+      "decision": "keep",
+      "actionTargetMisses": 6,
+      "decisionEvidence": [
+        {
+          "source": ".cache/external-morphology-audit.json",
+          "basis": "Analyzer-supported gudulis middle-passive heads align with retained examples across person and number, supporting keep rather than a third-person-only restriction."
+        }
+      ]
+    }
+  ]
+}

@@ -13,6 +13,12 @@ const REVIEW_PATHS = [
     'corpora',
     'middle-passive-source-cache-review.json',
   ),
+  join(
+    REPO_ROOT,
+    'data',
+    'corpora',
+    'middle-passive-lexicon-review.json',
+  ),
 ];
 const MISSING_AUDIT_PATH = join(
   REPO_ROOT,

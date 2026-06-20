@@ -172,6 +172,12 @@ Rows in that file mean Husić/Kaikki source-cache paradigm support, not corpus
 usage attestation. They keep source-backed forms out of the unresolved
 overgeneration queue without claiming the forms are common.
 
+High-volume lexicon-only groups with no direct source-cache support are tracked
+in [`middle-passive-lexicon-review.json`](./middle-passive-lexicon-review.json).
+Those rows use UniParser lexeme/analyzer evidence plus retained local corpus
+distribution to distinguish `keep`, `middlePassiveThirdPersonOnly`, and
+`needs_source` cases.
+
 After rerunning the full local audit, validate that tracked review queue against
 the current ignored `.cache` artifacts:
 
