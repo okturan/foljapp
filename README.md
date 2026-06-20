@@ -24,6 +24,16 @@ openspec/              Specs, changes, and roadmap
 Local generated artifacts, downloaded corpora, SQLite indexes, and build caches
 belong under `.cache/` and are intentionally not deployed.
 
+## App vs Corpus Lab
+
+`apps/`, `packages/`, `data/verbs/`, and `data/opus/examples.json` are the
+website/runtime surface. They should stay small enough to build and deploy.
+
+`data/corpora/`, `scripts/*corpus*`, and `tools/corpus-indexer/` are the local
+corpus lab. They download, scan, audit, and explain large corpora from `.cache/`;
+their outputs are evidence for development and future backend services, not
+Cloudflare Pages assets.
+
 ## Roadmap
 
 The full roadmap and per-capability specs live in [`openspec/`](./openspec/).
@@ -61,7 +71,9 @@ npm run search:corpus -- --query="të punoj"
 ```
 
 See [`data/corpora/README.md`](./data/corpora/README.md) for downloaded corpus
-inventory and source notes.
+inventory and source notes, and
+[`tools/corpus-indexer/README.md`](./tools/corpus-indexer/README.md) for the
+Rust scanner commands.
 
 ## Quality gates
 

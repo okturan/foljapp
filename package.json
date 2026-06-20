@@ -30,6 +30,7 @@
     "build:uniparser-analysis-requests": "node --experimental-strip-types scripts/build-uniparser-analysis-requests.ts",
     "run:uniparser-analysis": "PYTHONDONTWRITEBYTECODE=1 python3 scripts/run-uniparser-analysis.py",
     "audit:corpus-misses": "node --experimental-strip-types scripts/audit-corpus-misses.ts",
+    "report:corpus-missing-forensics": "node --experimental-strip-types scripts/report-corpus-missing-forensics.ts",
     "audit:corpus-misses:full": "npm run build:uniparser-analysis-requests -- --kind=all --out=.cache/uniparser-analysis-requests.all-misses.jsonl && npm run run:uniparser-analysis -- --requests=.cache/uniparser-analysis-requests.all-misses.jsonl --out=.cache/uniparser-analysis.all-misses.jsonl && npm run audit:external-morphology -- --uniparser-analysis=.cache/uniparser-analysis.all-misses.jsonl && npm run audit:corpus-misses -- --morphology=.cache/external-morphology-audit.json",
     "bench:corpus-search": "CARGO_TARGET_DIR=.cache/cargo-target cargo run --release --manifest-path tools/corpus-indexer/Cargo.toml -- bench",
     "build:corpus-search-index": "CARGO_TARGET_DIR=.cache/cargo-target cargo run --release --manifest-path tools/corpus-indexer/Cargo.toml -- build-search-index",

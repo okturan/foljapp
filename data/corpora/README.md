@@ -125,6 +125,16 @@ The same audit command also writes a compact missing-form dossier to
 The audit explains retained-evidence misses in `.cache/corpus-local-full.sqlite`;
 it is not a proof that a form is absent from every scanned raw sentence.
 
+After tracing misses, summarize why the current miss set remains uncovered:
+
+```bash
+npm run report:corpus-missing-forensics
+```
+
+This writes `.cache/corpus-missing-forensics.json` and `.md`, grouped by trace
+status, likely reason, mood, tense, voice, polarity, modality, phrase shape, and
+lemma. It does not rescan corpora.
+
 For the strongest local review, join the full UniParser analyzer pass before
 writing the missing-form audit:
 
