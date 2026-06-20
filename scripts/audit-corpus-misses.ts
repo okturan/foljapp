@@ -239,6 +239,7 @@ interface DbEvidence {
   variantHitTargets: number;
   variantOnlyHitTargets: number;
   variantOnlyTargetCounts: CountRow[];
+  variantOnlyTargetSamples: VariantOnlyTargetSample[];
   scannedResources: number;
   candidatesSeen: number;
   unmatchedRejectedCandidates: number;
@@ -254,6 +255,42 @@ interface DbEvidence {
   mosTeTargetsMatchedInTeMosOrder: number;
   retainedSentencesWithSApostrophe: number;
   sourceFamilies: SourceFamilyEvidenceRow[];
+}
+
+interface VariantOnlyTargetSample {
+  targetId: string;
+  targetKey: string;
+  lemma: string;
+  verbId: string;
+  signature: string;
+  translationEn: string;
+  variantKinds: string[];
+  matchedPatterns: string[];
+  sampleVariantKind: string;
+  occurrences: number;
+  sentences: number;
+  resources: number;
+  sampleResource: string;
+  sampleUrl: string | null;
+  sampleSentence: string;
+}
+
+interface VariantOnlyTargetSampleRow {
+  targetId: string;
+  targetKey: string;
+  lemma: string;
+  verbId: string;
+  signature: string;
+  translationEn: string;
+  variantKinds: string | null;
+  matchedPatterns: string | null;
+  sampleVariantKind: string;
+  occurrences: number;
+  sentences: number;
+  resources: number;
+  sampleResource: string | null;
+  sampleUrl: string | null;
+  sampleSentence: string;
 }
 
 interface OccurrenceDbRow {
@@ -296,6 +333,15 @@ function valueAfter(prefix: string): string | undefined {
 function readJson<T>(path: string): T {
   if (!existsSync(path)) throw new Error(`Missing file: ${path}`);
   return JSON.parse(readFileSync(path, 'utf8')) as T;
+}
+
+function splitSqlList(value: string | null): string[] {
+  return value
+    ? value
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean)
+    : [];
 }
 
 function requireFreshInputs(
@@ -688,6 +734,98 @@ function readDbEvidence(
       target.count,
     );
   }
+  const variantOnlyTargetSamples = hasOccurrenceVariantEvidence
+    ? sqliteJson<VariantOnlyTargetSampleRow>(
+        dbPath,
+        `
+        WITH per_target AS (
+          SELECT
+            o.target_id,
+            sum(CASE WHEN o.variant_kind = 'canonical' THEN 1 ELSE 0 END) AS canonical_count,
+            sum(CASE WHEN o.variant_kind <> 'canonical' THEN 1 ELSE 0 END) AS variant_count,
+            count(*) AS occurrences,
+            count(DISTINCT o.sentence_id) AS sentences,
+            count(DISTINCT s.resource_id) AS resources,
+            group_concat(DISTINCT o.variant_kind) AS variantKinds,
+            group_concat(DISTINCT o.matched_pattern) AS matchedPatterns
+          FROM occurrences o
+          JOIN sentences s ON s.id = o.sentence_id
+          GROUP BY o.target_id
+          HAVING canonical_count = 0 AND variant_count > 0
+        ),
+        ranked_occurrences AS (
+          SELECT
+            pt.*,
+            t.target_key AS targetKey,
+            t.lemma,
+            t.verb_id AS verbId,
+            t.signature,
+            t.translation_en AS translationEn,
+            o.variant_kind AS sampleVariantKind,
+            r.title AS sampleResource,
+            s.url AS sampleUrl,
+            s.sentence AS sampleSentence,
+            row_number() OVER (
+              PARTITION BY pt.target_id, o.variant_kind
+              ORDER BY o.score DESC, o.id ASC
+            ) AS sampleRank
+          FROM per_target pt
+          JOIN targets t ON t.id = pt.target_id
+          JOIN occurrences o ON o.target_id = pt.target_id
+          JOIN sentences s ON s.id = o.sentence_id
+          JOIN resources r ON r.id = s.resource_id
+          WHERE o.variant_kind <> 'canonical'
+        ),
+        ranked_targets AS (
+          SELECT
+            *,
+            row_number() OVER (
+              PARTITION BY sampleVariantKind
+              ORDER BY occurrences DESC, targetKey
+            ) AS variantRank
+          FROM ranked_occurrences
+          WHERE sampleRank = 1
+        )
+        SELECT
+          target_id AS targetId,
+          targetKey,
+          lemma,
+          verbId,
+          signature,
+          translationEn,
+          variantKinds,
+          matchedPatterns,
+          sampleVariantKind,
+          occurrences,
+          sentences,
+          resources,
+          sampleResource,
+          sampleUrl,
+          sampleSentence
+        FROM ranked_targets
+        WHERE variantRank <= 30
+        ORDER BY sampleVariantKind, occurrences DESC, targetKey
+        `,
+      )
+        .filter((row) => currentTargetIds.has(row.targetId))
+        .map((row) => ({
+          targetId: row.targetId,
+          targetKey: row.targetKey,
+          lemma: row.lemma,
+          verbId: row.verbId,
+          signature: row.signature,
+          translationEn: row.translationEn,
+          variantKinds: splitSqlList(row.variantKinds),
+          matchedPatterns: splitSqlList(row.matchedPatterns),
+          sampleVariantKind: row.sampleVariantKind,
+          occurrences: row.occurrences,
+          sentences: row.sentences,
+          resources: row.resources,
+          sampleResource: row.sampleResource ?? '',
+          sampleUrl: row.sampleUrl,
+          sampleSentence: row.sampleSentence,
+        }))
+    : [];
 
   const teMosSentenceIds = new Set(
     sqliteJson<{ id: number }>(
@@ -809,6 +947,7 @@ function readDbEvidence(
     variantOnlyTargetCounts: hasOccurrenceVariantEvidence
       ? topEntries(variantOnlyTargetCounts, variantOnlyTargetCounts.size)
       : [],
+    variantOnlyTargetSamples,
     scannedResources: sqliteCount(
       dbPath,
       'SELECT count(*) AS count FROM resource_stats',
@@ -2030,6 +2169,17 @@ function main(): void {
           '| --- | ---: |',
           ...report.dbEvidence.variantOnlyTargetCounts.map(
             (row) => `| ${row.key} | ${row.count} |`,
+          ),
+          '',
+          '## Variant-Only Target Samples',
+          '',
+          'These targets have retained examples only through non-canonical scanner variants, not canonical exact matches. They count as hits, not misses.',
+          '',
+          '| Target | Lemma | Signature | Sample Variant | Matched Patterns | Occurrences | Resources | Sample Source | Sample Sentence |',
+          '| --- | --- | --- | --- | --- | ---: | ---: | --- | --- |',
+          ...report.dbEvidence.variantOnlyTargetSamples.map(
+            (row) =>
+              `| ${mdCell(row.targetKey)} | ${mdCell(row.lemma)} | ${mdCell(row.signature)} | ${mdCell(row.sampleVariantKind)} | ${mdCell(row.matchedPatterns.join(', '))} | ${row.occurrences} | ${row.resources} | ${mdCell(row.sampleResource)} | ${mdCell(row.sampleSentence)} |`,
           ),
           '',
         ]
