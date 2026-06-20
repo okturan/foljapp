@@ -907,16 +907,15 @@ fn trace_resource_inner(
     let mut counts_by_target = HashMap::<String, TraceCounts>::new();
     let mut samples = Vec::<TraceSample>::new();
     let mut sample_counts = HashMap::<String, usize>::new();
-    let stream = open_candidate_stream(
+    let mut stream = open_candidate_stream(
         &resource,
         candidate_cache_dir.as_deref(),
         require_candidate_cache,
     )
     .with_context(|| format!("open candidates for {}", resource.id))?;
 
-    for item in stream {
+    while let Some(item) = stream.next_normalized() {
         let cached = item.with_context(|| format!("read source {}", resource.id))?;
-        let candidate = cached.candidate;
         let normalized = cached.normalized;
         candidates_seen += 1;
         if candidates_seen.is_multiple_of(1_000_000) {
@@ -937,6 +936,7 @@ fn trace_resource_inner(
             continue;
         }
 
+        let candidate = stream.current_candidate()?;
         let mut quality_candidates = Vec::new();
         for matched in raw_matches {
             let counts = counts_by_target.entry(matched.id.to_owned()).or_default();
@@ -1964,16 +1964,15 @@ fn scan_resource_for_matches_inner(
     let mut quality_rejected = 0usize;
     let mut unmatched_rejected = 0usize;
     let mut local_counts = HashMap::<String, usize>::new();
-    let stream = open_candidate_stream(
+    let mut stream = open_candidate_stream(
         &resource,
         candidate_cache_dir.as_deref(),
         require_candidate_cache,
     )
     .with_context(|| format!("open candidates for {}", resource.id))?;
 
-    for item in stream {
+    while let Some(item) = stream.next_normalized() {
         let cached = item.with_context(|| format!("read source {}", resource.id))?;
-        let candidate = cached.candidate;
         let normalized = cached.normalized;
         candidates_seen += 1;
         if candidates_seen.is_multiple_of(1_000_000) {
@@ -1993,6 +1992,7 @@ fn scan_resource_for_matches_inner(
             continue;
         }
 
+        let candidate = stream.current_candidate()?;
         let saturated = saturated_targets.read().expect("saturated target set");
         let matches = raw_matches
             .into_iter()

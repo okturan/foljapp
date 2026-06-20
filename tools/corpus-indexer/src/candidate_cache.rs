@@ -4,17 +4,22 @@ use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use std::ffi::OsString;
 use std::fs::{self, File};
-use std::io::{BufRead, BufReader, Write};
+use std::io::{BufRead, BufReader, Lines, Write};
 use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
 
-const CACHE_VERSION: u32 = 1;
+const CACHE_VERSION_V1: u32 = 1;
+const CACHE_VERSION_V2: u32 = 2;
 const NORMALIZER_VERSION: &str = "normalized_text_v1";
 
 #[derive(Debug)]
-pub struct CachedCandidate {
-    pub candidate: Candidate,
+pub struct NormalizedCandidate {
     pub normalized: String,
+}
+
+pub trait CachedCandidateSource {
+    fn next_normalized(&mut self) -> Option<Result<NormalizedCandidate>>;
+    fn current_candidate(&mut self) -> Result<Candidate>;
 }
 
 #[derive(Debug)]
@@ -48,7 +53,18 @@ struct CacheRow {
     normalized: String,
 }
 
-pub type CachedCandidateStream = Box<dyn Iterator<Item = Result<CachedCandidate>> + Send>;
+#[derive(Debug, Serialize, Deserialize)]
+struct CacheMetadataRow {
+    doc_id: String,
+    title: Option<String>,
+    url: Option<String>,
+    domain: Option<String>,
+    genre: Option<String>,
+    quality: Option<String>,
+    sentence: String,
+}
+
+pub type CachedCandidateStream = Box<dyn CachedCandidateSource + Send>;
 
 pub fn open_candidate_stream(
     resource: &ResourceSpec,
@@ -65,6 +81,7 @@ pub fn open_candidate_stream(
 
     Ok(Box::new(RawCandidateIter {
         inner: open_resource(resource).with_context(|| format!("open source {}", resource.id))?,
+        current: None,
     }))
 }
 
@@ -74,7 +91,7 @@ pub fn build_resource_cache(
     refresh: bool,
 ) -> Result<CacheBuildStats> {
     if !refresh {
-        if let Some(meta) = fresh_meta(resource, cache_dir)? {
+        if let Some(meta) = fresh_v2_meta(resource, cache_dir)? {
             return Ok(CacheBuildStats {
                 resource_id: resource.id.clone(),
                 candidates_seen: meta.candidates_seen,
@@ -84,14 +101,19 @@ pub fn build_resource_cache(
     }
 
     fs::create_dir_all(cache_dir)?;
-    let cache_path = data_path(resource, cache_dir);
+    let norm_path = norm_path(resource, cache_dir);
+    let rows_path = rows_path(resource, cache_dir);
     let meta_path = meta_path(resource, cache_dir);
-    let tmp_cache_path = tmp_path(&cache_path);
+    let tmp_norm_path = tmp_path(&norm_path);
+    let tmp_rows_path = tmp_path(&rows_path);
     let tmp_meta_path = tmp_path(&meta_path);
 
-    let file = File::create(&tmp_cache_path)
-        .with_context(|| format!("create {}", tmp_cache_path.display()))?;
-    let mut writer = zstd::stream::write::Encoder::new(file, 3)?;
+    let norm_file = File::create(&tmp_norm_path)
+        .with_context(|| format!("create {}", tmp_norm_path.display()))?;
+    let rows_file = File::create(&tmp_rows_path)
+        .with_context(|| format!("create {}", tmp_rows_path.display()))?;
+    let mut norm_writer = zstd::stream::write::Encoder::new(norm_file, 3)?;
+    let mut rows_writer = zstd::stream::write::Encoder::new(rows_file, 3)?;
     let mut candidates_seen = 0usize;
     let mut empty_candidates = 0usize;
     let stream = open_resource(resource).with_context(|| format!("open source {}", resource.id))?;
@@ -103,7 +125,7 @@ pub fn build_resource_cache(
         if normalized.is_empty() {
             empty_candidates += 1;
         }
-        let row = CacheRow {
+        let row = CacheMetadataRow {
             doc_id: candidate.doc_id,
             title: candidate.title,
             url: candidate.url,
@@ -111,17 +133,19 @@ pub fn build_resource_cache(
             genre: candidate.genre,
             quality: candidate.quality,
             sentence: candidate.sentence,
-            normalized,
         };
-        serde_json::to_writer(&mut writer, &row)?;
-        writer.write_all(b"\n")?;
+        norm_writer.write_all(normalized.as_bytes())?;
+        norm_writer.write_all(b"\n")?;
+        serde_json::to_writer(&mut rows_writer, &row)?;
+        rows_writer.write_all(b"\n")?;
     }
 
-    writer.finish()?;
+    norm_writer.finish()?;
+    rows_writer.finish()?;
 
     let fingerprint = fingerprint(resource)?;
     let meta = CacheMeta {
-        version: CACHE_VERSION,
+        version: CACHE_VERSION_V2,
         normalizer: NORMALIZER_VERSION.to_owned(),
         resource_id: resource.id.clone(),
         local_path: resource.local_path_text.clone(),
@@ -131,7 +155,8 @@ pub fn build_resource_cache(
         empty_candidates,
     };
     fs::write(&tmp_meta_path, serde_json::to_vec_pretty(&meta)?)?;
-    fs::rename(tmp_cache_path, cache_path)?;
+    fs::rename(tmp_norm_path, norm_path)?;
+    fs::rename(tmp_rows_path, rows_path)?;
     fs::rename(tmp_meta_path, meta_path)?;
 
     Ok(CacheBuildStats {
@@ -145,27 +170,59 @@ fn open_cached_resource(
     resource: &ResourceSpec,
     cache_dir: &Path,
 ) -> Result<Option<CachedCandidateStream>> {
-    if fresh_meta(resource, cache_dir)?.is_none() {
+    if fresh_v2_meta(resource, cache_dir)?.is_some() {
+        let norm_path = norm_path(resource, cache_dir);
+        let rows_path = rows_path(resource, cache_dir);
+        let norm_file =
+            File::open(&norm_path).with_context(|| format!("open {}", norm_path.display()))?;
+        return Ok(Some(Box::new(CacheV2CandidateSource {
+            resource_id: resource.id.clone(),
+            norm_lines: BufReader::new(zstd::stream::read::Decoder::new(norm_file)?).lines(),
+            rows_path,
+            row_lines: None,
+            current_index: None,
+            next_row_index: 0,
+            cached_candidate: None,
+        })));
+    }
+
+    if fresh_v1_meta(resource, cache_dir)?.is_none() {
         return Ok(None);
     }
 
-    let cache_path = data_path(resource, cache_dir);
+    let cache_path = v1_data_path(resource, cache_dir);
     let file = File::open(&cache_path).with_context(|| format!("open {}", cache_path.display()))?;
     let decoder = zstd::stream::read::Decoder::new(file)?;
-    Ok(Some(Box::new(CacheCandidateIter {
+    Ok(Some(Box::new(CacheV1CandidateSource {
         resource_id: resource.id.clone(),
         lines: BufReader::new(decoder).lines(),
+        current: None,
     })))
 }
 
-fn fresh_meta(resource: &ResourceSpec, cache_dir: &Path) -> Result<Option<CacheMeta>> {
-    let cache_path = data_path(resource, cache_dir);
+fn fresh_v2_meta(resource: &ResourceSpec, cache_dir: &Path) -> Result<Option<CacheMeta>> {
+    let norm_path = norm_path(resource, cache_dir);
+    let rows_path = rows_path(resource, cache_dir);
+    let meta_path = meta_path(resource, cache_dir);
+    if !norm_path.exists() || !rows_path.exists() || !meta_path.exists() {
+        return Ok(None);
+    }
+    let meta = read_meta(resource, cache_dir)?;
+    if meta.version == CACHE_VERSION_V2 && fresh(resource, &meta)? {
+        Ok(Some(meta))
+    } else {
+        Ok(None)
+    }
+}
+
+fn fresh_v1_meta(resource: &ResourceSpec, cache_dir: &Path) -> Result<Option<CacheMeta>> {
+    let cache_path = v1_data_path(resource, cache_dir);
     let meta_path = meta_path(resource, cache_dir);
     if !cache_path.exists() || !meta_path.exists() {
         return Ok(None);
     }
     let meta = read_meta(resource, cache_dir)?;
-    if fresh(resource, &meta)? {
+    if meta.version == CACHE_VERSION_V1 && fresh(resource, &meta)? {
         Ok(Some(meta))
     } else {
         Ok(None)
@@ -181,8 +238,7 @@ fn read_meta(resource: &ResourceSpec, cache_dir: &Path) -> Result<CacheMeta> {
 
 fn fresh(resource: &ResourceSpec, meta: &CacheMeta) -> Result<bool> {
     let fingerprint = fingerprint(resource)?;
-    Ok(meta.version == CACHE_VERSION
-        && meta.normalizer == NORMALIZER_VERSION
+    Ok(meta.normalizer == NORMALIZER_VERSION
         && meta.resource_id == resource.id
         && meta.local_path == resource.local_path_text
         && meta.byte_len == fingerprint.byte_len
@@ -191,33 +247,35 @@ fn fresh(resource: &ResourceSpec, meta: &CacheMeta) -> Result<bool> {
 
 struct RawCandidateIter {
     inner: CandidateStream,
+    current: Option<Candidate>,
 }
 
-impl Iterator for RawCandidateIter {
-    type Item = Result<CachedCandidate>;
-
-    fn next(&mut self) -> Option<Self::Item> {
+impl CachedCandidateSource for RawCandidateIter {
+    fn next_normalized(&mut self) -> Option<Result<NormalizedCandidate>> {
         let candidate = match self.inner.next()? {
             Ok(candidate) => candidate,
             Err(err) => return Some(Err(err)),
         };
         let normalized = normalized_text(&candidate.sentence);
-        Some(Ok(CachedCandidate {
-            candidate,
-            normalized,
-        }))
+        self.current = Some(candidate);
+        Some(Ok(NormalizedCandidate { normalized }))
+    }
+
+    fn current_candidate(&mut self) -> Result<Candidate> {
+        self.current
+            .clone()
+            .context("candidate metadata requested before reading a candidate")
     }
 }
 
-struct CacheCandidateIter<R: BufRead> {
+struct CacheV1CandidateSource<R: BufRead> {
     resource_id: String,
-    lines: std::io::Lines<R>,
+    lines: Lines<R>,
+    current: Option<Candidate>,
 }
 
-impl<R: BufRead> Iterator for CacheCandidateIter<R> {
-    type Item = Result<CachedCandidate>;
-
-    fn next(&mut self) -> Option<Self::Item> {
+impl<R: BufRead> CachedCandidateSource for CacheV1CandidateSource<R> {
+    fn next_normalized(&mut self) -> Option<Result<NormalizedCandidate>> {
         let line = match self.lines.next()? {
             Ok(line) => line,
             Err(err) => return Some(Err(err.into())),
@@ -226,24 +284,107 @@ impl<R: BufRead> Iterator for CacheCandidateIter<R> {
             Ok(row) => row,
             Err(err) => return Some(Err(err.into())),
         };
-        Some(Ok(CachedCandidate {
-            normalized: row.normalized,
-            candidate: Candidate {
-                resource_id: self.resource_id.clone(),
-                doc_id: row.doc_id,
-                title: row.title,
-                url: row.url,
-                domain: row.domain,
-                genre: row.genre,
-                quality: row.quality,
-                sentence: row.sentence,
-            },
-        }))
+        let normalized = row.normalized;
+        self.current = Some(Candidate {
+            resource_id: self.resource_id.clone(),
+            doc_id: row.doc_id,
+            title: row.title,
+            url: row.url,
+            domain: row.domain,
+            genre: row.genre,
+            quality: row.quality,
+            sentence: row.sentence,
+        });
+        Some(Ok(NormalizedCandidate { normalized }))
+    }
+
+    fn current_candidate(&mut self) -> Result<Candidate> {
+        self.current
+            .clone()
+            .context("candidate metadata requested before reading a candidate")
     }
 }
 
-fn data_path(resource: &ResourceSpec, cache_dir: &Path) -> PathBuf {
+struct CacheV2CandidateSource {
+    resource_id: String,
+    norm_lines: Lines<BufReader<zstd::stream::read::Decoder<'static, BufReader<File>>>>,
+    rows_path: PathBuf,
+    row_lines: Option<Lines<BufReader<zstd::stream::read::Decoder<'static, BufReader<File>>>>>,
+    current_index: Option<usize>,
+    next_row_index: usize,
+    cached_candidate: Option<(usize, Candidate)>,
+}
+
+impl CachedCandidateSource for CacheV2CandidateSource {
+    fn next_normalized(&mut self) -> Option<Result<NormalizedCandidate>> {
+        let normalized = match self.norm_lines.next()? {
+            Ok(line) => line,
+            Err(err) => return Some(Err(err.into())),
+        };
+        self.current_index = Some(self.current_index.map_or(0, |index| index + 1));
+        self.cached_candidate = None;
+        Some(Ok(NormalizedCandidate { normalized }))
+    }
+
+    fn current_candidate(&mut self) -> Result<Candidate> {
+        let index = self
+            .current_index
+            .context("candidate metadata requested before reading a candidate")?;
+        if let Some((cached_index, candidate)) = &self.cached_candidate {
+            if *cached_index == index {
+                return Ok(candidate.clone());
+            }
+        }
+
+        if self.row_lines.is_none() {
+            let file = File::open(&self.rows_path)
+                .with_context(|| format!("open {}", self.rows_path.display()))?;
+            self.row_lines = Some(BufReader::new(zstd::stream::read::Decoder::new(file)?).lines());
+        }
+        let lines = self.row_lines.as_mut().expect("row lines");
+        while self.next_row_index <= index {
+            let line = match lines.next() {
+                Some(Ok(line)) => line,
+                Some(Err(err)) => return Err(err.into()),
+                None => bail!(
+                    "candidate metadata cache ended before row {} in {}",
+                    index,
+                    self.rows_path.display()
+                ),
+            };
+            if self.next_row_index == index {
+                let row: CacheMetadataRow = serde_json::from_str(&line)?;
+                let candidate = Candidate {
+                    resource_id: self.resource_id.clone(),
+                    doc_id: row.doc_id,
+                    title: row.title,
+                    url: row.url,
+                    domain: row.domain,
+                    genre: row.genre,
+                    quality: row.quality,
+                    sentence: row.sentence,
+                };
+                self.cached_candidate = Some((index, candidate.clone()));
+                self.next_row_index += 1;
+                return Ok(candidate);
+            }
+            self.next_row_index += 1;
+        }
+
+        bail!("candidate metadata for row {index} was already skipped")
+    }
+}
+
+fn v1_data_path(resource: &ResourceSpec, cache_dir: &Path) -> PathBuf {
     cache_dir.join(format!("{}.jsonl.zst", safe_resource_id(&resource.id)))
+}
+
+fn norm_path(resource: &ResourceSpec, cache_dir: &Path) -> PathBuf {
+    cache_dir.join(format!("{}.norm.zst", safe_resource_id(&resource.id)))
+}
+
+fn rows_path(resource: &ResourceSpec, cache_dir: &Path) -> PathBuf {
+    cache_dir.join(format!("{}.rows.jsonl.zst", safe_resource_id(&resource.id)))
 }
 
 fn meta_path(resource: &ResourceSpec, cache_dir: &Path) -> PathBuf {
@@ -301,7 +442,12 @@ struct Fingerprint {
 
 #[cfg(test)]
 mod tests {
-    use super::safe_resource_id;
+    use super::{
+        safe_resource_id, CacheMetadataRow, CacheV2CandidateSource, CachedCandidateSource,
+    };
+    use std::fs::{self, File};
+    use std::io::{BufRead, BufReader, Write};
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]
     fn safe_resource_id_keeps_partition_names_as_paths() {
@@ -310,5 +456,114 @@ mod tests {
         assert!(safe.starts_with("opus_zips_foo.zip_"));
         assert!(!safe.contains('#'));
         assert!(!safe.contains('/'));
+    }
+
+    #[test]
+    fn split_cache_keeps_metadata_aligned_with_normalized_rows() {
+        let dir = std::env::temp_dir().join(format!(
+            "foljapp-cache-v2-test-{}",
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("time")
+                .as_nanos()
+        ));
+        fs::create_dir_all(&dir).expect("create temp dir");
+        let norm_path = dir.join("test.norm.zst");
+        let rows_path = dir.join("test.rows.jsonl.zst");
+        write_zstd_lines(&norm_path, &["alpha", "punoj ketu", "omega"]);
+        write_zstd_json_rows(
+            &rows_path,
+            &[
+                row("doc-1", "Alpha."),
+                row("doc-2", "Punoj ketu."),
+                row("doc-3", "Omega."),
+            ],
+        );
+
+        let norm_file = File::open(&norm_path).expect("open norm");
+        let mut source = CacheV2CandidateSource {
+            resource_id: "test-resource".to_owned(),
+            norm_lines: BufReader::new(zstd::stream::read::Decoder::new(norm_file).expect("zstd"))
+                .lines(),
+            rows_path: rows_path.clone(),
+            row_lines: None,
+            current_index: None,
+            next_row_index: 0,
+            cached_candidate: None,
+        };
+
+        assert_eq!(
+            source
+                .next_normalized()
+                .expect("first")
+                .expect("first ok")
+                .normalized,
+            "alpha"
+        );
+        assert_eq!(
+            source
+                .next_normalized()
+                .expect("second")
+                .expect("second ok")
+                .normalized,
+            "punoj ketu"
+        );
+        assert_eq!(
+            source.current_candidate().expect("candidate").doc_id,
+            "doc-2"
+        );
+        assert_eq!(
+            source
+                .current_candidate()
+                .expect("cached candidate")
+                .sentence,
+            "Punoj ketu."
+        );
+        assert_eq!(
+            source
+                .next_normalized()
+                .expect("third")
+                .expect("third ok")
+                .normalized,
+            "omega"
+        );
+        assert_eq!(
+            source.current_candidate().expect("third candidate").doc_id,
+            "doc-3"
+        );
+
+        fs::remove_dir_all(dir).expect("remove temp dir");
+    }
+
+    fn row(doc_id: &str, sentence: &str) -> CacheMetadataRow {
+        CacheMetadataRow {
+            doc_id: doc_id.to_owned(),
+            title: None,
+            url: None,
+            domain: None,
+            genre: None,
+            quality: None,
+            sentence: sentence.to_owned(),
+        }
+    }
+
+    fn write_zstd_lines(path: &std::path::Path, lines: &[&str]) {
+        let file = File::create(path).expect("create zstd lines");
+        let mut writer = zstd::stream::write::Encoder::new(file, 3).expect("zstd writer");
+        for line in lines {
+            writer.write_all(line.as_bytes()).expect("write line");
+            writer.write_all(b"\n").expect("write newline");
+        }
+        writer.finish().expect("finish zstd lines");
+    }
+
+    fn write_zstd_json_rows(path: &std::path::Path, rows: &[CacheMetadataRow]) {
+        let file = File::create(path).expect("create zstd rows");
+        let mut writer = zstd::stream::write::Encoder::new(file, 3).expect("zstd writer");
+        for row in rows {
+            serde_json::to_writer(&mut writer, row).expect("write row");
+            writer.write_all(b"\n").expect("write newline");
+        }
+        writer.finish().expect("finish zstd rows");
     }
 }

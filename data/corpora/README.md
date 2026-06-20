@@ -95,10 +95,13 @@ npm run scan:local-corpus
 ```
 
 For repeated full-corpus work, first materialize the target-independent
-candidate cache. It stores each parsed candidate sentence with its normalized
-text in compressed local shards under `.cache/corpus-candidate-shards/v1`;
-target matches, quality decisions, scores, and occurrences are still computed
-fresh by the scanner.
+candidate cache. Current cache builds store normalized text separately from
+full sentence metadata under `.cache/corpus-candidate-shards/v1`, so cached
+scans can run the matcher over compact normalized shards and load full metadata
+only after a raw match. Target matches, quality decisions, scores, and
+occurrences are still computed fresh by the scanner. Existing v1 full-row
+shards remain readable; use `npm run build:corpus-candidate-cache -- --refresh`
+to rewrite a source partition into the split format.
 
 ```bash
 npm run build:corpus-candidate-cache
