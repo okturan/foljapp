@@ -259,6 +259,20 @@ interface VoiceCoverageRow {
   middlePassiveOverrideKeys: string[];
 }
 
+interface SourceCacheEvidenceSource {
+  path: string | null;
+  middlePassiveFormCount: number;
+  middlePassiveForms: string[];
+  middlePassiveTemplates: string[];
+}
+
+interface SourceCacheMiddlePassiveEvidence {
+  hasEvidence: boolean;
+  sources: string[];
+  husic: SourceCacheEvidenceSource;
+  kaikki: SourceCacheEvidenceSource;
+}
+
 interface MiddlePassiveReviewCoverage {
   status: string;
   path: string;
@@ -272,6 +286,11 @@ interface MiddlePassiveReviewCoverage {
   unreviewedActionTargetMisses: number;
   reviewedTotalMiddlePassiveMisses: number;
   unreviewedMiddlePassiveMisses: number;
+  sourceCacheEvidenceGroups: number;
+  sourceCacheEvidenceTargetMisses: number;
+  unreviewedSourceCacheEvidenceGroups: number;
+  unreviewedSourceCacheEvidenceTargetMisses: number;
+  sourceCacheEvidenceBySource: CountRow[];
   decisionCounts: CountRow[];
   unreviewedByAction: CountRow[];
   unreviewedBySourceLevel: CountRow[];
@@ -631,6 +650,7 @@ function summarizeMiddlePassiveReviewCoverage(
     sourceLevel: string;
     morphologyForms: CountRow[];
     coveredByReviewFile: boolean;
+    sourceCacheMiddlePassiveEvidence: SourceCacheMiddlePassiveEvidence;
   }>,
 ): MiddlePassiveReviewCoverage {
   const reviewedVerbIds = new Set(review.rows.map((row) => row.verbId));
@@ -651,6 +671,12 @@ function summarizeMiddlePassiveReviewCoverage(
   const unreviewedByAction = new Map<string, number>();
   const unreviewedBySourceLevel = new Map<string, number>();
   const unreviewedByMorphologyForm = new Map<string, number>();
+  const sourceCacheEvidenceBySource = new Map<string, number>();
+  for (const row of queue) {
+    for (const source of row.sourceCacheMiddlePassiveEvidence.sources) {
+      add(sourceCacheEvidenceBySource, source, row.targetCount);
+    }
+  }
   for (const row of unreviewedRows) {
     add(unreviewedByAction, row.action, row.targetCount);
     add(unreviewedBySourceLevel, row.sourceLevel, row.targetCount);
@@ -677,6 +703,22 @@ function summarizeMiddlePassiveReviewCoverage(
     reviewedTotalMiddlePassiveMisses,
     unreviewedMiddlePassiveMisses:
       totalMiddlePassiveMisses - reviewedTotalMiddlePassiveMisses,
+    sourceCacheEvidenceGroups: queue.filter(
+      (row) => row.sourceCacheMiddlePassiveEvidence.hasEvidence,
+    ).length,
+    sourceCacheEvidenceTargetMisses: queue
+      .filter((row) => row.sourceCacheMiddlePassiveEvidence.hasEvidence)
+      .reduce((total, row) => total + row.targetCount, 0),
+    unreviewedSourceCacheEvidenceGroups: unreviewedRows.filter(
+      (row) => row.sourceCacheMiddlePassiveEvidence.hasEvidence,
+    ).length,
+    unreviewedSourceCacheEvidenceTargetMisses: unreviewedRows
+      .filter((row) => row.sourceCacheMiddlePassiveEvidence.hasEvidence)
+      .reduce((total, row) => total + row.targetCount, 0),
+    sourceCacheEvidenceBySource: topEntries(
+      sourceCacheEvidenceBySource,
+      sourceCacheEvidenceBySource.size,
+    ),
     decisionCounts: topEntries(decisionCounts, decisionCounts.size),
     unreviewedByAction: topEntries(unreviewedByAction, 20),
     unreviewedBySourceLevel: topEntries(unreviewedBySourceLevel, 20),
@@ -1168,6 +1210,166 @@ function noDiacritics(text: string): string {
   return text.replaceAll('ë', 'e').replaceAll('ç', 'c');
 }
 
+function sourceCachePath(
+  kind: 'husic' | 'kaikki',
+  verbId: string,
+  lemma: string,
+): string | null {
+  const names = [
+    verbId,
+    noDiacritics(verbId),
+    lemma,
+    noDiacritics(lemma),
+  ];
+  for (const name of [...new Set(names)].filter(Boolean)) {
+    const path = join(REPO_ROOT, '.cache', kind, `${name}.jsonl`);
+    if (existsSync(path)) return path;
+  }
+  return null;
+}
+
+function readJsonLines(path: string): unknown[] {
+  try {
+    return readFileSync(path, 'utf8')
+      .split(/\n+/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => JSON.parse(line) as unknown);
+  } catch {
+    return [];
+  }
+}
+
+function uniqueStrings(values: unknown[]): string[] {
+  return [
+    ...new Set(
+      values.filter((value): value is string => typeof value === 'string'),
+    ),
+  ];
+}
+
+function isMiddlePassiveLikeForm(value: string): boolean {
+  return (
+    /(?:^|\s)u\s+\p{L}+/u.test(value) ||
+    /\b\p{L}+(?:ohem|ohesh|ohet|ohemi|oheni|ohen|ohesha|oheshe|ohej|oheshim|oheshit|oheshin)\b/u.test(
+      value,
+    ) ||
+    /^(?:jam|je|është|jemi|jeni|janë)\s+\p{L}+/u.test(value)
+  );
+}
+
+function emptySourceCacheEvidence(path: string | null): SourceCacheEvidenceSource {
+  return {
+    path,
+    middlePassiveFormCount: 0,
+    middlePassiveForms: [],
+    middlePassiveTemplates: [],
+  };
+}
+
+function readHusicMiddlePassiveEvidence(
+  path: string | null,
+): SourceCacheEvidenceSource {
+  if (!path) return emptySourceCacheEvidence(null);
+  const forms = uniqueStrings(
+    readJsonLines(path)
+      .filter((row) => {
+        if (!row || typeof row !== 'object') return false;
+        const tags = (row as { tags?: unknown }).tags;
+        return Array.isArray(tags) && tags.includes('middle-passive');
+      })
+      .map((row) => (row as { form?: unknown }).form),
+  );
+  return {
+    path,
+    middlePassiveFormCount: forms.length,
+    middlePassiveForms: forms.slice(0, 10),
+    middlePassiveTemplates: [],
+  };
+}
+
+function readKaikkiMiddlePassiveEvidence(
+  path: string | null,
+): SourceCacheEvidenceSource {
+  if (!path) return emptySourceCacheEvidence(null);
+  const templateNames: string[] = [];
+  const forms: string[] = [];
+  for (const row of readJsonLines(path)) {
+    if (!row || typeof row !== 'object') continue;
+    const entry = row as {
+      inflection_templates?: Array<{ name?: unknown; args?: unknown }>;
+      forms?: Array<{ form?: unknown; source?: unknown; tags?: unknown }>;
+    };
+    const templates = Array.isArray(entry.inflection_templates)
+      ? entry.inflection_templates
+      : [];
+    const middlePassiveTemplates = templates.filter((template) =>
+      /(?:^|-)o?hem$|middle|passive/i.test(String(template.name ?? '')),
+    );
+    templateNames.push(
+      ...middlePassiveTemplates.map((template) => String(template.name)),
+    );
+    const templatesToSample =
+      middlePassiveTemplates.length > 0
+        ? templates.filter(
+            (template) =>
+              middlePassiveTemplates.includes(template) ||
+              template.name === 'sq-conj-2',
+          )
+        : middlePassiveTemplates;
+    for (const template of templatesToSample) {
+      if (!template.args || typeof template.args !== 'object') continue;
+      forms.push(
+        ...Object.values(template.args).filter(
+          (value): value is string =>
+            typeof value === 'string' && isMiddlePassiveLikeForm(value),
+        ),
+      );
+    }
+    for (const form of Array.isArray(entry.forms) ? entry.forms : []) {
+      if (typeof form.form !== 'string') continue;
+      if (form.source !== 'conjugation') continue;
+      if (
+        (Array.isArray(form.tags) && form.tags.includes('middle-passive')) ||
+        isMiddlePassiveLikeForm(form.form)
+      ) {
+        forms.push(form.form);
+      }
+    }
+  }
+  const uniqueForms = uniqueStrings(forms);
+  return {
+    path,
+    middlePassiveFormCount: uniqueForms.length,
+    middlePassiveForms: uniqueForms.slice(0, 10),
+    middlePassiveTemplates: uniqueStrings(templateNames),
+  };
+}
+
+function readSourceCacheMiddlePassiveEvidence(
+  verbId: string,
+  lemma: string,
+): SourceCacheMiddlePassiveEvidence {
+  const husic = readHusicMiddlePassiveEvidence(
+    sourceCachePath('husic', verbId, lemma),
+  );
+  const kaikki = readKaikkiMiddlePassiveEvidence(
+    sourceCachePath('kaikki', verbId, lemma),
+  );
+  const sources = [
+    husic.middlePassiveFormCount > 0 ? 'husic' : null,
+    kaikki.middlePassiveFormCount > 0 || kaikki.middlePassiveTemplates.length > 0
+      ? 'kaikki'
+      : null,
+  ].filter((source): source is string => Boolean(source));
+  return {
+    hasEvidence: sources.length > 0,
+    sources,
+    husic,
+    kaikki,
+  };
+}
+
 function variantProbes(
   target: TargetRecord,
   scannerVariantsRecorded: boolean,
@@ -1401,6 +1603,32 @@ function countCells(rows: CountRow[]): string {
   return rows.map((row) => `${row.key} ${row.count}`).join(', ');
 }
 
+function sourceCacheEvidenceCell(
+  evidence: SourceCacheMiddlePassiveEvidence,
+): string {
+  const parts: string[] = [];
+  if (evidence.husic.middlePassiveFormCount > 0) {
+    parts.push(
+      `husic ${evidence.husic.middlePassiveFormCount} forms: ${evidence.husic.middlePassiveForms.slice(0, 4).join(', ')}`,
+    );
+  }
+  if (
+    evidence.kaikki.middlePassiveTemplates.length > 0 ||
+    evidence.kaikki.middlePassiveFormCount > 0
+  ) {
+    const templateText =
+      evidence.kaikki.middlePassiveTemplates.length > 0
+        ? ` templates ${evidence.kaikki.middlePassiveTemplates.join(', ')}`
+        : '';
+    const formText =
+      evidence.kaikki.middlePassiveForms.length > 0
+        ? ` forms ${evidence.kaikki.middlePassiveForms.slice(0, 4).join(', ')}`
+        : '';
+    parts.push(`kaikki${templateText}${formText}`);
+  }
+  return parts.join('; ') || 'none';
+}
+
 function main(): void {
   const targetsPath = valueAfter('--targets=') ?? DEFAULT_TARGETS;
   const coveragePath = valueAfter('--coverage=') ?? DEFAULT_COVERAGE;
@@ -1435,6 +1663,18 @@ function main(): void {
   const middlePassiveReviewedKeys = new Set(
     middlePassiveReviewEvidence.rows.map(middlePassiveReviewKey),
   );
+  const sourceCacheEvidenceByVerb = new Map<
+    string,
+    SourceCacheMiddlePassiveEvidence
+  >();
+  const sourceCacheEvidenceFor = (verbId: string, lemma: string) => {
+    const key = `${verbId}\t${lemma}`;
+    const existing = sourceCacheEvidenceByVerb.get(key);
+    if (existing) return existing;
+    const evidence = readSourceCacheMiddlePassiveEvidence(verbId, lemma);
+    sourceCacheEvidenceByVerb.set(key, evidence);
+    return evidence;
+  };
   const missingIds = new Set(coverage.misses.map((miss) => miss.id));
   const verbsById = new Map(verbs.map((verb) => [verb.id, verb]));
 
@@ -1911,6 +2151,10 @@ function main(): void {
         ),
         sourceLevel: sourceLevel(sources),
         sources,
+        sourceCacheMiddlePassiveEvidence: sourceCacheEvidenceFor(
+          row.verbId,
+          row.lemma,
+        ),
         morphologyForms: topEntries(morphologyFormCounts, 4),
         morphologyVoiceEligibility: topEntries(
           morphologyVoiceEligibilityCounts,
@@ -2475,10 +2719,20 @@ function main(): void {
     `| Uncovered action-target misses | ${report.middlePassiveReviewCoverage.unreviewedActionTargetMisses} |`,
     `| Middle-passive misses on reviewed lemmas | ${report.middlePassiveReviewCoverage.reviewedTotalMiddlePassiveMisses} |`,
     `| Middle-passive misses on unreviewed lemmas | ${report.middlePassiveReviewCoverage.unreviewedMiddlePassiveMisses} |`,
+    `| Queue groups with source-cache middle-passive evidence | ${report.middlePassiveReviewCoverage.sourceCacheEvidenceGroups} |`,
+    `| Target misses with source-cache middle-passive evidence | ${report.middlePassiveReviewCoverage.sourceCacheEvidenceTargetMisses} |`,
+    `| Unreviewed queue groups with source-cache evidence | ${report.middlePassiveReviewCoverage.unreviewedSourceCacheEvidenceGroups} |`,
+    `| Unreviewed target misses with source-cache evidence | ${report.middlePassiveReviewCoverage.unreviewedSourceCacheEvidenceTargetMisses} |`,
     '',
     '| Decision | Review Rows |',
     '| --- | ---: |',
     ...report.middlePassiveReviewCoverage.decisionCounts.map(
+      (row) => `| ${mdCell(row.key)} | ${row.count} |`,
+    ),
+    '',
+    '| Source Cache | Target Misses With Evidence |',
+    '| --- | ---: |',
+    ...report.middlePassiveReviewCoverage.sourceCacheEvidenceBySource.map(
       (row) => `| ${mdCell(row.key)} | ${row.count} |`,
     ),
     '',
@@ -2528,11 +2782,11 @@ function main(): void {
     '',
     'Every action-by-lemma group in the middle-passive review bucket. A lemma may appear more than once when different generated cells have different morphology actions.',
     '',
-    '| Morphology Action | Lemma | Verb ID | Review File | Targets | Verdict Forms | Proof | Scope | Top Reasons | Middle-Passive Coverage | Active Coverage | Source Level | Flags/Overrides | Samples |',
-    '| --- | --- | --- | --- | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
+    '| Morphology Action | Lemma | Verb ID | Review File | Targets | Source Cache Evidence | Verdict Forms | Proof | Scope | Top Reasons | Middle-Passive Coverage | Active Coverage | Source Level | Flags/Overrides | Samples |',
+    '| --- | --- | --- | --- | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
     ...report.middlePassiveLemmaReviewQueue.map(
       (row) =>
-        `| ${mdCell(row.action)} | ${mdCell(row.lemma)} | ${mdCell(row.verbId)} | ${row.coveredByReviewFile ? 'covered' : 'unreviewed'} | ${row.targetCount} | ${mdCell(countCells(row.morphologyForms))} | ${mdCell(countCells(row.morphologyProofLevels))} | ${mdCell(countCells(row.morphologyScopes))} | ${mdCell(countCells(row.morphologyReasons))} | ${row.middlePassiveCoverage} | ${row.activeCoverage} | ${row.sourceLevel} | ${row.hasNoMiddlePassiveFlag ? 'noMiddlePassive' : 'none'} / ${row.middlePassiveOverrideCount} MP overrides | ${mdCell(row.samples.map((sample) => `${sample.targetKey} (${sample.signature})`).join(', '))} |`,
+        `| ${mdCell(row.action)} | ${mdCell(row.lemma)} | ${mdCell(row.verbId)} | ${row.coveredByReviewFile ? 'covered' : 'unreviewed'} | ${row.targetCount} | ${mdCell(sourceCacheEvidenceCell(row.sourceCacheMiddlePassiveEvidence))} | ${mdCell(countCells(row.morphologyForms))} | ${mdCell(countCells(row.morphologyProofLevels))} | ${mdCell(countCells(row.morphologyScopes))} | ${mdCell(countCells(row.morphologyReasons))} | ${row.middlePassiveCoverage} | ${row.activeCoverage} | ${row.sourceLevel} | ${row.hasNoMiddlePassiveFlag ? 'noMiddlePassive' : 'none'} / ${row.middlePassiveOverrideCount} MP overrides | ${mdCell(row.samples.map((sample) => `${sample.targetKey} (${sample.signature})`).join(', '))} |`,
     ),
     '',
     '## Corpus Source Levels',
