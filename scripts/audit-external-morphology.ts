@@ -74,6 +74,7 @@ interface VerbEntry {
   id: string;
   lemma: string;
   translationEn: string;
+  principalParts?: Record<string, string>;
   flags?: Record<string, unknown>;
   sources?: Array<{ source: string; reference?: string }>;
   cellOverrides?: Record<string, Record<string, string>>;
@@ -132,6 +133,7 @@ interface AnalyzerEvidence {
   noDiacritics: AnalyzerMatch[];
   accepted: boolean;
   componentSupported: boolean;
+  lemmaAliasLemmas: string[];
   analyzedRows: number;
   compatibleRows: number;
   componentRows: number;
@@ -160,6 +162,7 @@ interface VoiceRow {
 
 interface LemmaAnalyzerSummary {
   accepted: number;
+  lemmaAlias: number;
   incompatible: number;
   noTokenAnalysis: number;
   notProvided: number;
@@ -640,6 +643,7 @@ function analyzerEvidence(
       noDiacritics: [],
       accepted: false,
       componentSupported: false,
+      lemmaAliasLemmas: [],
       analyzedRows: 0,
       compatibleRows: 0,
       componentRows: 0,
@@ -666,6 +670,7 @@ function analyzerEvidence(
     noDiacritics: noDiacriticsMatches,
     accepted: compatibleRows > 0,
     componentSupported: componentRows > 0,
+    lemmaAliasLemmas: [],
     analyzedRows: all.length,
     compatibleRows,
     componentRows,
@@ -679,10 +684,38 @@ function emptyAnalyzerEvidence(): AnalyzerEvidence {
     noDiacritics: [],
     accepted: false,
     componentSupported: false,
+    lemmaAliasLemmas: [],
     analyzedRows: 0,
     compatibleRows: 0,
     componentRows: 0,
   };
+}
+
+function analyzerVerbLemmas(analyzer: AnalyzerEvidence): string[] {
+  return unique(
+    [...analyzer.strict, ...analyzer.noDiacritics]
+      .filter((match) => match.tags.includes('V') && match.lemma)
+      .map((match) => String(match.lemma)),
+  );
+}
+
+function localPrincipalPartAliases(verb: VerbEntry | undefined): string[] {
+  if (!verb?.principalParts) return [];
+  const canonical = new Set([noDiacritics(verb.id), noDiacritics(verb.lemma)]);
+  return unique(Object.values(verb.principalParts))
+    .map(noDiacritics)
+    .filter((part) => !canonical.has(part));
+}
+
+function analyzerLemmaAliases(
+  verb: VerbEntry | undefined,
+  analyzer: AnalyzerEvidence,
+): string[] {
+  const localAliases = new Set(localPrincipalPartAliases(verb));
+  if (localAliases.size === 0) return [];
+  return analyzerVerbLemmas(analyzer).filter((lemma) =>
+    localAliases.has(noDiacritics(lemma)),
+  );
 }
 
 function expectedFromOptions(target: TargetRecord): Record<string, unknown> {
@@ -727,6 +760,7 @@ function classifyVoice(
   verb: VerbEntry | undefined,
   lexeme: ReturnType<typeof lexemeEvidence>,
   analyzer: AnalyzerEvidence,
+  analyzerAliasLemmas: string[],
   row: VoiceRow,
 ): {
   form: string;
@@ -761,6 +795,10 @@ function classifyVoice(
     reasons.push('uniparser_analyzer_accepts_head_token');
   } else if (analyzer.componentSupported) {
     reasons.push('uniparser_analyzer_supports_head_component');
+  } else if (analyzerAliasLemmas.length > 0) {
+    reasons.push(
+      `uniparser_analyzer_lemma_alias:${analyzerAliasLemmas.join(',')}`,
+    );
   } else if (analyzer.status === 'analyzed_incompatible') {
     reasons.push('uniparser_analyzer_incompatible_head_token');
   } else if (analyzer.status === 'no_token_analysis') {
@@ -855,6 +893,16 @@ function classifyVoice(
       proofLevel: 'lexeme',
       reasons,
       action: 'review_lemma_status',
+    };
+  }
+
+  if (analyzerAliasLemmas.length > 0 && localSourceLevel === 'lexicon-only') {
+    return {
+      form: 'analyzer_lemma_alias',
+      voiceEligibility: 'lemma_alias_unresolved',
+      proofLevel: 'analyzer',
+      reasons,
+      action: 'review_lemma_alias_source',
     };
   }
 
@@ -1041,7 +1089,22 @@ function main(): void {
         lexemeByVerb.get(target.verbId) ?? lexemeEvidence(verb, lexemes);
       const analyzer =
         analyzerFile.byTargetId.get(target.id) ?? emptyAnalyzerEvidence();
-      const verdict = classifyVoice(target, verb, lexeme, analyzer, voiceRow);
+      const analyzerAliasLemmas = analyzerLemmaAliases(verb, analyzer);
+      analyzer.lemmaAliasLemmas = analyzerAliasLemmas;
+      if (
+        analyzerAliasLemmas.length > 0 &&
+        analyzer.status === 'analyzed_incompatible'
+      ) {
+        analyzer.status = 'analyzed_lemma_alias';
+      }
+      const verdict = classifyVoice(
+        target,
+        verb,
+        lexeme,
+        analyzer,
+        analyzerAliasLemmas,
+        voiceRow,
+      );
       return {
         targetId: target.id,
         targetKey: target.targetKey,
@@ -1082,6 +1145,7 @@ function main(): void {
             status: analyzer.status,
             accepted: analyzer.accepted,
             componentSupported: analyzer.componentSupported,
+            lemmaAliasLemmas: analyzer.lemmaAliasLemmas,
             analyzedRows: analyzer.analyzedRows,
             compatibleRows: analyzer.compatibleRows,
             componentRows: analyzer.componentRows,
@@ -1107,6 +1171,7 @@ function main(): void {
     if (audit.expected.voice !== 'middle-passive') continue;
     const summary = analyzerByVerb.get(audit.verbId) ?? {
       accepted: 0,
+      lemmaAlias: 0,
       incompatible: 0,
       noTokenAnalysis: 0,
       notProvided: 0,
@@ -1119,6 +1184,8 @@ function main(): void {
       if (summary.acceptedSamples.length < 2) {
         summary.acceptedSamples.push(audit.targetKey);
       }
+    } else if (audit.verdict.action === 'review_lemma_alias_source') {
+      summary.lemmaAlias += 1;
     } else if (isAnalyzerNonacceptance(audit)) {
       summary.incompatible += 1;
     } else if (analyzer.status === 'no_token_analysis') {
@@ -1168,6 +1235,7 @@ function main(): void {
         lexemeVoiceBucket: lexemeVoiceBucket(lexeme.tags),
         analyzerSummary: analyzerByVerb.get(verb.id) ?? {
           accepted: 0,
+          lemmaAlias: 0,
           incompatible: 0,
           noTokenAnalysis: 0,
           notProvided: 0,
@@ -1179,6 +1247,7 @@ function main(): void {
           verb,
           lexeme,
           emptyAnalyzerEvidence(),
+          [],
           row,
         ),
       };
@@ -1261,6 +1330,7 @@ function main(): void {
       'Analyzer rejection would not prove impossibility.',
       'Multiword targets are token/head checks, not whole-phrase validation.',
       '`component_supported` means UniParser recognized the head token as a verb form for the expected lemma, while auxiliary/person/tense features remain phrase-level and unchecked.',
+      '`analyzer_lemma_alias` means UniParser recognized the head token as a verb, but under a local principal-part alias rather than foljapp’s lemma ID.',
       '`source_backed_composed` means a Husić-backed active simple-cell override composes with the middle-passive `u` marker; it is source-backed morphology, not corpus attestation.',
       'This script never edits data/verbs/*.json.',
     ],
@@ -1408,13 +1478,13 @@ function main(): void {
       : []),
     '## Top Lemma Reviews',
     '',
-    '| Lemma | Verb ID | Flags | MP Misses | MP Hit Rate | Active Hit Rate | Source Level | Lexeme Bucket | MP Analyzer Accepted | MP Analyzer Nonacceptance | Accepted Samples | Lexeme Tags | Voice Verdict | Action |',
-    '| --- | --- | --- | ---: | ---: | ---: | --- | --- | ---: | ---: | --- | --- | --- | --- |',
+    '| Lemma | Verb ID | Flags | MP Misses | MP Hit Rate | Active Hit Rate | Source Level | Lexeme Bucket | MP Analyzer Accepted | MP Analyzer Alias | MP Analyzer Nonacceptance | Accepted Samples | Lexeme Tags | Voice Verdict | Action |',
+    '| --- | --- | --- | ---: | ---: | ---: | --- | --- | ---: | ---: | ---: | --- | --- | --- | --- |',
     ...report.verbs
       .slice(0, 60)
       .map(
         (row) =>
-          `| ${md(row.lemma)} | ${md(row.verbId)} | ${md(flagsText(row.flags))} | ${row.middlePassiveMisses} | ${row.middlePassiveHitRate} | ${row.activeHitRate} | ${row.sourceLevel} | ${row.lexemeVoiceBucket} | ${row.analyzerSummary.accepted} | ${row.analyzerSummary.incompatible} | ${md(row.analyzerSummary.acceptedSamples.join(', '))} | ${md(row.lexeme.tags.join(', ') || '')} | ${row.verdict.voiceEligibility} | ${row.verdict.action} |`,
+          `| ${md(row.lemma)} | ${md(row.verbId)} | ${md(flagsText(row.flags))} | ${row.middlePassiveMisses} | ${row.middlePassiveHitRate} | ${row.activeHitRate} | ${row.sourceLevel} | ${row.lexemeVoiceBucket} | ${row.analyzerSummary.accepted} | ${row.analyzerSummary.lemmaAlias} | ${row.analyzerSummary.incompatible} | ${md(row.analyzerSummary.acceptedSamples.join(', '))} | ${md(row.lexeme.tags.join(', ') || '')} | ${row.verdict.voiceEligibility} | ${row.verdict.action} |`,
       ),
     '',
     '## Top Target Reviews',

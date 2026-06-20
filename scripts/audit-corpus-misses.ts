@@ -932,6 +932,13 @@ function labelMiss(
         : 'analyzer_accepted_head_token_absence',
     );
   }
+  if (morphology?.form === 'analyzer_lemma_alias') {
+    labels.push(
+      target.tokens.length === 1
+        ? 'analyzer_lemma_alias_exact_absence'
+        : 'analyzer_lemma_alias_head_token_absence',
+    );
+  }
   if (labels.length > 0) return labels;
   if (
     target.tokens.length > 1 &&
@@ -984,6 +991,12 @@ function primaryCategory(labels: string[]): string {
     return 'variant_probe_candidate';
   if (labels.includes('analyzer_accepted_exact_absence')) {
     return 'analyzer_valid_exact_absence';
+  }
+  if (
+    labels.includes('analyzer_lemma_alias_exact_absence') ||
+    labels.includes('analyzer_lemma_alias_head_token_absence')
+  ) {
+    return 'analyzer_lemma_alias_absence';
   }
   if (labels.includes('component_morphology_only_exact_absence')) {
     return 'component_valid_phrase_absence';
