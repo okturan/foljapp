@@ -5,7 +5,7 @@
     "corpusMissingAudit": ".cache/corpus-missing-audit.json",
     "externalMorphologyAudit": ".cache/external-morphology-audit.json",
     "targetGeneratedAt": "2026-06-19T13:58:35.608Z",
-    "coverageGeneratedAt": "2026-06-19T14:15:36.252Z",
+    "coverageGeneratedAt": "2026-06-20T04:03:12.275Z",
     "corpusVersion": "0.1.5",
     "rerun": "npm run audit:corpus-misses:full"
   },
@@ -24,9 +24,9 @@
   },
   "summary": {
     "groups": 10,
-    "actionTargetMisses": 1592,
+    "actionTargetMisses": 1593,
     "exactSourceCacheTargetMisses": 684,
-    "headTokenSourceCacheTargetMisses": 908,
+    "headTokenSourceCacheTargetMisses": 909,
     "decisionCounts": {
       "keep": 10,
       "noMiddlePassive": 0,
@@ -55,9 +55,9 @@
       "lemma": "bisedoj",
       "action": "review_component_supported_phrase",
       "decision": "keep",
-      "actionTargetMisses": 177,
+      "actionTargetMisses": 178,
       "exactSourceCacheTargetMisses": 80,
-      "headTokenSourceCacheTargetMisses": 97,
+      "headTokenSourceCacheTargetMisses": 98,
       "decisionEvidence": [
         {
           "source": ".cache/husic/bisedoj.jsonl",

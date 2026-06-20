@@ -5,7 +5,7 @@
     "corpusMissingAudit": ".cache/corpus-missing-audit.json",
     "externalMorphologyAudit": ".cache/external-morphology-audit.json",
     "targetGeneratedAt": "2026-06-19T13:58:35.608Z",
-    "coverageGeneratedAt": "2026-06-19T14:15:36.252Z",
+    "coverageGeneratedAt": "2026-06-20T04:03:12.275Z",
     "corpusVersion": "0.1.5",
     "rerun": "npm run audit:corpus-misses:full"
   },
@@ -25,8 +25,8 @@
   },
   "summary": {
     "lemmas": 8,
-    "actionTargetMisses": 1296,
-    "totalMiddlePassiveMisses": 1372,
+    "actionTargetMisses": 1295,
+    "totalMiddlePassiveMisses": 1371,
     "decisionCounts": {
       "keep": 3,
       "noMiddlePassive": 0,
@@ -123,7 +123,7 @@
       "action": "review_vi_tagged_nonactive_candidate",
       "actionTargetMisses": 196,
       "middlePassiveCoverage": "53/264 (20.1%)",
-      "activeCoverage": "204/268 (76.1%)",
+      "activeCoverage": "205/268 (76.5%)",
       "sourceLevel": "lexicon-only",
       "sources": ["kaikki", "manual"],
       "currentFlags": {},
@@ -420,15 +420,15 @@
         }
       ],
       "action": "review_vi_tagged_nonactive_candidate",
-      "actionTargetMisses": 147,
-      "middlePassiveCoverage": "108/264 (40.9%)",
+      "actionTargetMisses": 146,
+      "middlePassiveCoverage": "109/264 (41.3%)",
       "activeCoverage": "231/268 (86.2%)",
       "sourceLevel": "husic-backed",
       "sources": ["husic", "kaikki", "manual"],
       "currentFlags": {},
       "middlePassiveOverrideKeys": [],
       "totalMiddlePassiveTargets": 264,
-      "totalMiddlePassiveMisses": 156,
+      "totalMiddlePassiveMisses": 155,
       "lexemeVoiceBucket": "vi-only",
       "uniparserLexeme": {
         "found": true,
@@ -445,7 +445,7 @@
         "lemmaAlias": 0,
         "incompatible": 0,
         "noTokenAnalysis": 0,
-        "notProvided": 147,
+        "notProvided": 146,
         "compatibleRows": 9,
         "acceptedSamples": ["nuk shkohem", "nuk shkohemi"]
       },
