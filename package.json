@@ -35,6 +35,7 @@
     "report:corpus-phrase-variants:all:chunk": "npm run report:corpus-phrase-variants -- --all-targets --chunk-size-targets=2000",
     "report:corpus-phrase-variants:all:chunk:plan": "npm run report:corpus-phrase-variants:all:chunk -- --plan-only",
     "report:corpus-phrase-variants:all:chunk:build-cache": "npm run report:corpus-phrase-variants:all:chunk -- --build-anchor-rows",
+    "report:corpus-phrase-variants:aggregate": "node --experimental-strip-types scripts/aggregate-corpus-phrase-variants.ts",
     "audit:external-morphology": "node --experimental-strip-types scripts/audit-external-morphology.ts",
     "check:middle-passive-review": "node --experimental-strip-types scripts/check-middle-passive-review.ts",
     "build:uniparser-analysis-requests": "node --experimental-strip-types scripts/build-uniparser-analysis-requests.ts",

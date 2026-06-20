@@ -173,6 +173,14 @@ npm run report:corpus-phrase-variants:all:chunk -- \
 
 Pass explicit `--out-json` and `--out-md` paths when keeping more than one chunk
 report from the same run series.
+Aggregate completed non-plan chunk reports with:
+
+```sh
+npm run report:corpus-phrase-variants:aggregate
+```
+
+The aggregate reports completed and missing chunks. Its candidate and partition
+counts are chunk-summed operational metrics, not unique corpus totals.
 
 Measured chunk-0 baseline on the full split cache: the plan selected 2,000 of
 38,169 eligible targets, generated 59,460 stress patterns over 2,387 anchors,

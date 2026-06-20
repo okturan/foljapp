@@ -81,6 +81,8 @@ struct AnchorRowsMeta {
     byte_len: u64,
     modified_unix_nanos: String,
     anchor_hash: String,
+    #[serde(default)]
+    anchors: Vec<String>,
     anchors_count: usize,
     source_candidates_seen: usize,
     anchor_rows: usize,
@@ -360,13 +362,13 @@ pub fn open_or_build_anchor_row_stream(
         return Ok(None);
     }
     let anchor_hash = anchor_set_hash(anchors);
-    if !anchor_rows_fresh(resource, cache_dir, &anchor_hash)? {
+    if !anchor_rows_fresh(resource, cache_dir, anchors, &anchor_hash)? {
         if !build_missing {
             return Ok(None);
         }
         build_anchor_rows(resource, cache_dir, anchors, &anchor_hash)?;
     }
-    open_anchor_row_stream(resource, cache_dir, &anchor_hash)
+    open_anchor_row_stream(resource, cache_dir, anchors, &anchor_hash)
 }
 
 fn ensure_target_hits(
@@ -442,6 +444,7 @@ fn build_anchor_rows(
         byte_len: fingerprint.byte_len,
         modified_unix_nanos: fingerprint.modified_unix_nanos,
         anchor_hash: anchor_hash.to_owned(),
+        anchors: sorted_anchors(anchors),
         anchors_count: anchors.len(),
         source_candidates_seen,
         anchor_rows,
@@ -455,9 +458,10 @@ fn build_anchor_rows(
 fn open_anchor_row_stream(
     resource: &ResourceSpec,
     cache_dir: &Path,
+    anchors: &HashSet<String>,
     anchor_hash: &str,
 ) -> Result<Option<AnchorRowStream>> {
-    let Some(meta) = read_fresh_anchor_rows_meta(resource, cache_dir, anchor_hash)? else {
+    let Some(meta) = read_fresh_anchor_rows_meta(resource, cache_dir, anchors, anchor_hash)? else {
         return Ok(None);
     };
     let data_path = anchor_rows_path(resource, cache_dir, anchor_hash);
@@ -470,13 +474,19 @@ fn open_anchor_row_stream(
     }))
 }
 
-fn anchor_rows_fresh(resource: &ResourceSpec, cache_dir: &Path, anchor_hash: &str) -> Result<bool> {
-    Ok(read_fresh_anchor_rows_meta(resource, cache_dir, anchor_hash)?.is_some())
+fn anchor_rows_fresh(
+    resource: &ResourceSpec,
+    cache_dir: &Path,
+    anchors: &HashSet<String>,
+    anchor_hash: &str,
+) -> Result<bool> {
+    Ok(read_fresh_anchor_rows_meta(resource, cache_dir, anchors, anchor_hash)?.is_some())
 }
 
 fn read_fresh_anchor_rows_meta(
     resource: &ResourceSpec,
     cache_dir: &Path,
+    anchors: &HashSet<String>,
     anchor_hash: &str,
 ) -> Result<Option<AnchorRowsMeta>> {
     let data_path = anchor_rows_path(resource, cache_dir, anchor_hash);
@@ -488,6 +498,7 @@ fn read_fresh_anchor_rows_meta(
         &fs::read(&meta_path).with_context(|| format!("read {}", meta_path.display()))?,
     )?;
     let fingerprint = fingerprint(resource)?;
+    let sorted_anchors = sorted_anchors(anchors);
     if meta.version == CACHE_VERSION_V2
         && meta.normalizer == NORMALIZER_VERSION
         && meta.resource_id == resource.id
@@ -495,6 +506,8 @@ fn read_fresh_anchor_rows_meta(
         && meta.byte_len == fingerprint.byte_len
         && meta.modified_unix_nanos == fingerprint.modified_unix_nanos
         && meta.anchor_hash == anchor_hash
+        && meta.anchors_count == sorted_anchors.len()
+        && meta.anchors == sorted_anchors
     {
         Ok(Some(meta))
     } else {
@@ -504,9 +517,7 @@ fn read_fresh_anchor_rows_meta(
 
 fn anchor_set_hash(anchors: &HashSet<String>) -> String {
     let mut hash = 0xcbf29ce484222325u64;
-    let mut sorted = anchors.iter().collect::<Vec<_>>();
-    sorted.sort();
-    for anchor in sorted {
+    for anchor in sorted_anchors(anchors) {
         for byte in anchor.as_bytes() {
             hash ^= u64::from(*byte);
             hash = hash.wrapping_mul(0x100000001b3);
@@ -515,6 +526,12 @@ fn anchor_set_hash(anchors: &HashSet<String>) -> String {
         hash = hash.wrapping_mul(0x100000001b3);
     }
     format!("{hash:016x}")
+}
+
+fn sorted_anchors(anchors: &HashSet<String>) -> Vec<String> {
+    let mut sorted = anchors.iter().cloned().collect::<Vec<_>>();
+    sorted.sort();
+    sorted
 }
 
 fn build_target_hits_from_norm(
@@ -875,10 +892,10 @@ struct Fingerprint {
 #[cfg(test)]
 mod tests {
     use super::{
-        build_resource_cache, cached_resource_may_contain_any_target_id,
-        cached_resource_may_contain_any_token, cached_resource_token_hits,
-        open_or_build_anchor_row_stream, safe_resource_id, target_hits_path, CacheMetadataRow,
-        CacheV2CandidateSource, CachedCandidateSource,
+        anchor_rows_meta_path, anchor_set_hash, build_resource_cache,
+        cached_resource_may_contain_any_target_id, cached_resource_may_contain_any_token,
+        cached_resource_token_hits, open_or_build_anchor_row_stream, safe_resource_id,
+        target_hits_path, CacheMetadataRow, CacheV2CandidateSource, CachedCandidateSource,
     };
     use crate::sources::{ResourceSpec, SourceKind};
     use crate::targets::{Target, TargetMatcher};
@@ -1036,19 +1053,37 @@ mod tests {
         .expect("open-only anchor rows")
         .is_none());
 
-        let anchor_rows = open_or_build_anchor_row_stream(
-            &resource,
-            &cache_dir,
-            &HashSet::from(["punoj".to_owned()]),
-            true,
-        )
-        .expect("open anchor rows")
-        .expect("anchor stream")
-        .collect::<Result<Vec<_>, _>>()
-        .expect("collect anchor rows");
+        let anchors = HashSet::from(["punoj".to_owned()]);
+        let anchor_rows = open_or_build_anchor_row_stream(&resource, &cache_dir, &anchors, true)
+            .expect("open anchor rows")
+            .expect("anchor stream")
+            .collect::<Result<Vec<_>, _>>()
+            .expect("collect anchor rows");
         assert_eq!(anchor_rows.len(), 1);
         assert_eq!(anchor_rows[0].normalized, "punoj këtu");
         assert_eq!(anchor_rows[0].candidate.sentence, "Punoj këtu.");
+
+        let meta_path = anchor_rows_meta_path(&resource, &cache_dir, &anchor_set_hash(&anchors));
+        let meta: serde_json::Value =
+            serde_json::from_slice(&fs::read(&meta_path).expect("read anchor meta"))
+                .expect("parse anchor meta");
+        assert_eq!(meta["anchors"], serde_json::json!(["punoj"]));
+
+        let mut legacy_meta = meta.clone();
+        legacy_meta
+            .as_object_mut()
+            .expect("legacy meta object")
+            .remove("anchors");
+        fs::write(
+            &meta_path,
+            serde_json::to_vec_pretty(&legacy_meta).expect("legacy meta json"),
+        )
+        .expect("write legacy anchor meta");
+        assert!(
+            open_or_build_anchor_row_stream(&resource, &cache_dir, &anchors, false)
+                .expect("open legacy anchor rows")
+                .is_none()
+        );
 
         fs::remove_dir_all(dir).expect("remove temp dir");
     }

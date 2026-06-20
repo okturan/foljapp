@@ -237,6 +237,16 @@ The convenience chunk script defaults to 2,000 ranked targets and the base
 command's default output paths. Pass unique `--out-json` and `--out-md` paths
 when retaining multiple chunks from the same plan. A chunked full result is only
 full when every chunk is produced from the same audit and target cache snapshot.
+Aggregate completed non-plan chunk reports:
+
+```bash
+npm run report:corpus-phrase-variants:aggregate
+```
+
+The aggregate writes `.cache/corpus-phrase-variant-stress.aggregate.json` and
+`.md`. It fails on duplicate chunk indexes and reports missing chunks. Candidate
+and partition counts in the aggregate are chunk-summed operational metrics, not
+unique corpus totals.
 
 Plan a run without scanning candidate rows or building sidecars:
 
