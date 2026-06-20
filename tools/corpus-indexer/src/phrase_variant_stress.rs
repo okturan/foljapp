@@ -48,6 +48,10 @@ pub(crate) struct PhraseVariantStressArgs {
     build_anchor_rows: bool,
     #[arg(long, conflicts_with = "build_anchor_rows")]
     plan_only: bool,
+    #[arg(long, default_value_t = 0)]
+    chunk_index: usize,
+    #[arg(long)]
+    chunk_size_targets: Option<usize>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -159,6 +163,12 @@ struct PhraseVariantStressKind {
 struct PhraseVariantStressSummary {
     plan_only: bool,
     audit_total_targets: Option<usize>,
+    pre_chunk_targets: usize,
+    chunk_index: Option<usize>,
+    chunk_count: Option<usize>,
+    chunk_size_targets: Option<usize>,
+    chunk_start: usize,
+    chunk_end: usize,
     selected_targets: usize,
     reported_targets: usize,
     stress_patterns: usize,
@@ -172,6 +182,7 @@ struct PhraseVariantStressSummary {
     scanned_partitions: usize,
     existing_anchor_row_partitions: usize,
     missing_anchor_row_partitions: usize,
+    fallback_anchor_row_partitions: usize,
     candidates_seen: usize,
     anchor_candidates_seen: usize,
     empty_candidates: usize,
@@ -216,9 +227,25 @@ struct PhraseStressPlan {
     missing_anchor_row_partitions: usize,
 }
 
+#[derive(Debug)]
+struct PhraseStressTargetChunk {
+    pre_chunk_targets: usize,
+    chunk_index: Option<usize>,
+    chunk_count: Option<usize>,
+    chunk_size_targets: Option<usize>,
+    start: usize,
+    end: usize,
+}
+
 pub(crate) fn phrase_variant_stress(args: PhraseVariantStressArgs) -> Result<()> {
     if args.limit_targets == Some(0) {
         bail!("--limit-targets must be greater than zero");
+    }
+    if args.chunk_size_targets == Some(0) {
+        bail!("--chunk-size-targets must be greater than zero");
+    }
+    if args.chunk_index > 0 && args.chunk_size_targets.is_none() {
+        bail!("--chunk-index requires --chunk-size-targets");
     }
     let started = Instant::now();
     let audit_raw = fs::read_to_string(&args.audit)
@@ -237,6 +264,8 @@ pub(crate) fn phrase_variant_stress(args: PhraseVariantStressArgs) -> Result<()>
     if selected.is_empty() {
         bail!("no raw-zero multiword targets selected for phrase-variant stress");
     }
+    let chunk = phrase_stress_target_chunk(selected.len(), &args)?;
+    let selected = selected[chunk.start..chunk.end].to_vec();
     let pattern_rows = build_phrase_stress_patterns(&selected);
     if pattern_rows.is_empty() {
         bail!("selected targets produced no stress patterns");
@@ -259,6 +288,7 @@ pub(crate) fn phrase_variant_stress(args: PhraseVariantStressArgs) -> Result<()>
             &vec![0usize; matcher.pattern_rows.len()],
             plan.existing_resource_stats,
             Vec::new(),
+            &chunk,
             source_partitions,
             skipped_partitions,
             plan.missing_anchor_row_partitions,
@@ -342,6 +372,7 @@ pub(crate) fn phrase_variant_stress(args: PhraseVariantStressArgs) -> Result<()>
         &matches_by_pattern,
         resource_stats,
         samples,
+        &chunk,
         source_partitions,
         skipped_partitions,
         0,
@@ -357,6 +388,41 @@ pub(crate) fn phrase_variant_stress(args: PhraseVariantStressArgs) -> Result<()>
         report.summary.raw_matches
     );
     Ok(())
+}
+
+fn phrase_stress_target_chunk(
+    total: usize,
+    args: &PhraseVariantStressArgs,
+) -> Result<PhraseStressTargetChunk> {
+    let Some(size) = args.chunk_size_targets else {
+        return Ok(PhraseStressTargetChunk {
+            pre_chunk_targets: total,
+            chunk_index: None,
+            chunk_count: None,
+            chunk_size_targets: None,
+            start: 0,
+            end: total,
+        });
+    };
+    let chunk_count = (total + size - 1) / size;
+    let start = args.chunk_index * size;
+    if start >= total {
+        bail!(
+            "--chunk-index {} is outside {} chunk(s) for {} selected target(s)",
+            args.chunk_index,
+            chunk_count,
+            total
+        );
+    }
+    let end = (start + size).min(total);
+    Ok(PhraseStressTargetChunk {
+        pre_chunk_targets: total,
+        chunk_index: Some(args.chunk_index),
+        chunk_count: Some(chunk_count),
+        chunk_size_targets: Some(size),
+        start,
+        end,
+    })
 }
 
 fn phrase_stress_scan_resources(
@@ -955,13 +1021,24 @@ fn build_phrase_variant_stress_report(
     targets: &[StressTarget],
     patterns: &[StressPattern],
     matches_by_pattern: &[usize],
-    resource_stats: Vec<PhraseStressResourceStats>,
-    samples: Vec<PhraseStressSample>,
+    mut resource_stats: Vec<PhraseStressResourceStats>,
+    mut samples: Vec<PhraseStressSample>,
+    chunk: &PhraseStressTargetChunk,
     source_partitions: usize,
     skipped_partitions: usize,
     missing_anchor_row_partitions: usize,
     duration_ms: u128,
 ) -> Result<PhraseVariantStressReport> {
+    resource_stats.sort_by(|a, b| a.resource_id.cmp(&b.resource_id));
+    samples.sort_by(|a, b| {
+        a.target_id
+            .cmp(&b.target_id)
+            .then_with(|| a.kind.cmp(&b.kind))
+            .then_with(|| a.pattern.cmp(&b.pattern))
+            .then_with(|| a.resource_id.cmp(&b.resource_id))
+            .then_with(|| a.doc_id.cmp(&b.doc_id))
+            .then_with(|| a.sentence.cmp(&b.sentence))
+    });
     let mut target_patterns = vec![Vec::<PhraseVariantStressPattern>::new(); targets.len()];
     let mut target_matches = vec![0usize; targets.len()];
     let mut by_kind = HashMap::<String, (usize, usize)>::new();
@@ -1026,6 +1103,19 @@ fn build_phrase_variant_stress_report(
         .iter()
         .filter(|stats| stats.used_anchor_rows)
         .count();
+    let fallback_anchor_row_partitions = if args.plan_only {
+        0
+    } else {
+        resource_stats
+            .iter()
+            .filter(|stats| !stats.used_anchor_rows)
+            .count()
+    };
+    let missing_anchor_row_partitions = if args.plan_only {
+        missing_anchor_row_partitions
+    } else {
+        fallback_anchor_row_partitions
+    };
     let candidates_seen = resource_stats
         .iter()
         .map(|stats| stats.source_candidates_seen)
@@ -1068,6 +1158,12 @@ fn build_phrase_variant_stress_report(
                 .get("totalTargets")
                 .and_then(serde_json::Value::as_u64)
                 .map(|value| value as usize),
+            pre_chunk_targets: chunk.pre_chunk_targets,
+            chunk_index: chunk.chunk_index,
+            chunk_count: chunk.chunk_count,
+            chunk_size_targets: chunk.chunk_size_targets,
+            chunk_start: chunk.start,
+            chunk_end: chunk.end,
             selected_targets: targets.len(),
             reported_targets: report_targets.len(),
             stress_patterns: patterns.len(),
@@ -1085,6 +1181,7 @@ fn build_phrase_variant_stress_report(
             scanned_partitions,
             existing_anchor_row_partitions,
             missing_anchor_row_partitions,
+            fallback_anchor_row_partitions,
             candidates_seen,
             anchor_candidates_seen,
             empty_candidates,
@@ -1124,6 +1221,28 @@ fn phrase_variant_stress_markdown(report: &PhraseVariantStressReport) -> String 
         "## Summary".to_owned(),
         String::new(),
         format!("- Plan only: {}", report.summary.plan_only),
+        format!(
+            "- Pre-chunk selected targets: {}",
+            report.summary.pre_chunk_targets
+        ),
+        format!(
+            "- Target chunk: {}",
+            match (
+                report.summary.chunk_index,
+                report.summary.chunk_count,
+                report.summary.chunk_size_targets
+            ) {
+                (Some(index), Some(count), Some(size)) => format!(
+                    "{} of {} at {} target(s), rows [{}..{})",
+                    index + 1,
+                    count,
+                    size,
+                    report.summary.chunk_start,
+                    report.summary.chunk_end
+                ),
+                _ => "all selected targets".to_owned(),
+            }
+        ),
         format!("- Selected targets: {}", report.summary.selected_targets),
         format!(
             "- Target rows in report: {}",
@@ -1154,6 +1273,10 @@ fn phrase_variant_stress_markdown(report: &PhraseVariantStressReport) -> String 
         format!(
             "- Missing anchor-row partitions: {}",
             report.summary.missing_anchor_row_partitions
+        ),
+        format!(
+            "- Fallback full-cache partitions: {}",
+            report.summary.fallback_anchor_row_partitions
         ),
         format!(
             "- Source candidates covered: {}",
@@ -1252,4 +1375,57 @@ fn phrase_variant_stress_markdown(report: &PhraseVariantStressReport) -> String 
     }
     lines.push(String::new());
     lines.join("\n")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{phrase_stress_target_chunk, PhraseVariantStressArgs};
+    use std::path::PathBuf;
+
+    fn args(chunk_size_targets: Option<usize>, chunk_index: usize) -> PhraseVariantStressArgs {
+        PhraseVariantStressArgs {
+            audit: PathBuf::from("audit.json"),
+            candidate_cache_dir: PathBuf::from("cache"),
+            out_json: PathBuf::from("out.json"),
+            out_md: PathBuf::from("out.md"),
+            limit_targets: None,
+            all_targets: true,
+            sample_limit: 3,
+            jobs: 1,
+            forms: String::new(),
+            target_ids: String::new(),
+            build_anchor_rows: false,
+            plan_only: false,
+            chunk_index,
+            chunk_size_targets,
+        }
+    }
+
+    #[test]
+    fn target_chunk_defaults_to_all_targets() {
+        let chunk = phrase_stress_target_chunk(10, &args(None, 0)).expect("chunk");
+
+        assert_eq!(chunk.start, 0);
+        assert_eq!(chunk.end, 10);
+        assert_eq!(chunk.chunk_index, None);
+        assert_eq!(chunk.chunk_count, None);
+    }
+
+    #[test]
+    fn target_chunk_slices_by_index_and_size() {
+        let chunk = phrase_stress_target_chunk(10, &args(Some(4), 2)).expect("chunk");
+
+        assert_eq!(chunk.start, 8);
+        assert_eq!(chunk.end, 10);
+        assert_eq!(chunk.chunk_index, Some(2));
+        assert_eq!(chunk.chunk_count, Some(3));
+        assert_eq!(chunk.chunk_size_targets, Some(4));
+    }
+
+    #[test]
+    fn target_chunk_rejects_out_of_range_index() {
+        let err = phrase_stress_target_chunk(10, &args(Some(4), 3)).expect_err("error");
+
+        assert!(err.to_string().contains("outside 3 chunk"));
+    }
 }

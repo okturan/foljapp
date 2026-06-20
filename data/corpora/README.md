@@ -214,6 +214,29 @@ npm run report:corpus-phrase-variants:all
 The full script writes `.cache/corpus-phrase-variant-stress.all.json` and `.md`.
 Direct `--forms` or `--target-ids` runs are not implicitly capped; add
 `--limit-targets` only when a filtered run should be truncated.
+Do not use the all-target build-cache command as the default full-scale path:
+anchor-row sidecars are keyed by the full selected anchor set, so one monolithic
+all-target build can create a large sidecar family that smaller follow-up runs
+cannot reuse.
+
+Use target chunks for full-scale phrase-variant work:
+
+```bash
+npm run report:corpus-phrase-variants:all:chunk:plan -- --chunk-index=0
+npm run report:corpus-phrase-variants:all:chunk:build-cache -- \
+  --chunk-index=0 \
+  --out-json=.cache/corpus-phrase-variant-stress.chunk-000.json \
+  --out-md=.cache/corpus-phrase-variant-stress.chunk-000.md
+npm run report:corpus-phrase-variants:all:chunk -- \
+  --chunk-index=0 \
+  --out-json=.cache/corpus-phrase-variant-stress.chunk-000.json \
+  --out-md=.cache/corpus-phrase-variant-stress.chunk-000.md
+```
+
+The convenience chunk script defaults to 2,000 ranked targets and the base
+command's default output paths. Pass unique `--out-json` and `--out-md` paths
+when retaining multiple chunks from the same plan. A chunked full result is only
+full when every chunk is produced from the same audit and target cache snapshot.
 
 Plan a run without scanning candidate rows or building sidecars:
 
@@ -237,7 +260,7 @@ Build missing anchor-row sidecars explicitly when a cold/full pass is intended:
 
 ```bash
 npm run report:corpus-phrase-variants:build-cache
-npm run report:corpus-phrase-variants:all:build-cache
+npm run report:corpus-phrase-variants:all:chunk:build-cache -- --chunk-index=0
 ```
 
 For example, the `mos të ledhatojë` stress check covered 1,024,539,453 source

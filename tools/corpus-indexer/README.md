@@ -43,6 +43,9 @@ npm run report:corpus-phrase-variants:build-cache
 npm run report:corpus-phrase-variants:all
 npm run report:corpus-phrase-variants:all:plan
 npm run report:corpus-phrase-variants:all:build-cache
+npm run report:corpus-phrase-variants:all:chunk
+npm run report:corpus-phrase-variants:all:chunk:plan
+npm run report:corpus-phrase-variants:all:chunk:build-cache
 npm run trace:corpus-targets
 npm run build:corpus-search-index
 npm run search:corpus -- --query="të punoj"
@@ -78,7 +81,9 @@ CARGO_TARGET_DIR=.cache/cargo-target cargo run --release \
   sidecar creation is intended. Explicit `--forms` and `--target-ids` runs are
   not capped unless `--limit-targets` is also passed. Pass `--plan-only` to
   inventory selection and anchor-row cache readiness without scanning candidate
-  rows.
+  rows. Use `--chunk-size-targets` with `--chunk-index` for full-scale runs;
+  this slices the already-ranked target list before pattern generation, so each
+  chunk gets a smaller anchor set and reusable query-specific sidecars.
 - `bench`: compare Aho-Corasick scanning, Tantivy, and SQLite FTS5 over retained
   examples.
 - `build-search-index`: build the Tantivy index from retained SQLite examples.
@@ -144,3 +149,35 @@ finished in 105,043 ms.
 With exact target-hit inventories, the same trace skipped 1,907 of 1,907
 partitions, scanned 0 candidates, found no raw or retained match, and reported a
 5 ms trace duration.
+
+Full phrase-variant stress over every eligible raw-zero multiword target should
+run in chunks rather than as one all-target `--build-anchor-rows` job. Anchor-row
+sidecars are keyed by the full selected anchor set; one monolithic all-target run
+creates a large sidecar family that smaller follow-up runs cannot reuse. The
+default local chunk script uses 2,000 ranked targets per chunk:
+
+```sh
+npm run report:corpus-phrase-variants:all:chunk:plan -- \
+  --chunk-index=0 \
+  --out-json=.cache/corpus-phrase-variant-stress.chunk-000.plan.json \
+  --out-md=.cache/corpus-phrase-variant-stress.chunk-000.plan.md
+npm run report:corpus-phrase-variants:all:chunk:build-cache -- \
+  --chunk-index=0 \
+  --out-json=.cache/corpus-phrase-variant-stress.chunk-000.json \
+  --out-md=.cache/corpus-phrase-variant-stress.chunk-000.md
+npm run report:corpus-phrase-variants:all:chunk -- \
+  --chunk-index=0 \
+  --out-json=.cache/corpus-phrase-variant-stress.chunk-000.json \
+  --out-md=.cache/corpus-phrase-variant-stress.chunk-000.md
+```
+
+Pass explicit `--out-json` and `--out-md` paths when keeping more than one chunk
+report from the same run series.
+
+Measured chunk-0 baseline on the full split cache: the plan selected 2,000 of
+38,169 eligible targets, generated 59,460 stress patterns over 2,387 anchors,
+skipped 1,686 partitions by token inventory, and needed 221 anchor-row sidecars.
+The cold `--build-anchor-rows` run materialized those 221 sidecars, covered
+1,106,185,613 source candidates behind them, checked 1,553 anchor rows, found 0
+raw variant hits, and took 284.3s. The immediate warm rerun used the sidecars,
+checked the same 1,553 anchor rows, found the same 0 hits, and took 17.9s.
