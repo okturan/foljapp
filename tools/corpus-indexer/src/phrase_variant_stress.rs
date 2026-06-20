@@ -28,8 +28,14 @@ pub(crate) struct PhraseVariantStressArgs {
     out_json: PathBuf,
     #[arg(long, default_value = ".cache/corpus-phrase-variant-stress.md")]
     out_md: PathBuf,
-    #[arg(long, default_value_t = 200)]
-    limit_targets: usize,
+    #[arg(
+        long,
+        conflicts_with = "all_targets",
+        help = "Limit ranked unfiltered reports; defaults to 200 unless --all-targets or explicit forms/ids are used"
+    )]
+    limit_targets: Option<usize>,
+    #[arg(long)]
+    all_targets: bool,
     #[arg(long, default_value_t = 3)]
     sample_limit: usize,
     #[arg(long, default_value_t = 12)]
@@ -196,7 +202,7 @@ struct PhraseVariantStressResource {
 }
 
 pub(crate) fn phrase_variant_stress(args: PhraseVariantStressArgs) -> Result<()> {
-    if args.limit_targets == 0 {
+    if args.limit_targets == Some(0) {
         bail!("--limit-targets must be greater than zero");
     }
     let started = Instant::now();
@@ -596,7 +602,14 @@ fn select_phrase_stress_targets(
             .then_with(|| a.target_key.cmp(&b.target_key))
             .then_with(|| a.id.cmp(&b.id))
     });
-    candidates.truncate(args.limit_targets);
+    let explicit = !split_csv(&args.target_ids).is_empty() || !split_csv(&args.forms).is_empty();
+    if !args.all_targets {
+        match args.limit_targets {
+            Some(limit) => candidates.truncate(limit),
+            None if !explicit => candidates.truncate(200),
+            None => {}
+        }
+    }
     candidates
 }
 

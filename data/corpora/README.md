@@ -197,11 +197,23 @@ lemma. It also includes a raw-zero UniParser-accepted dossier that separates
 morphologically accepted but unattested forms from likely generation bugs. It
 does not rescan corpora.
 
-Stress-test broader phrase variants for selected raw-zero multiword misses:
+Stress-test broader phrase variants for the highest-priority raw-zero
+multiword misses:
 
 ```bash
 npm run report:corpus-phrase-variants
 ```
+
+The default report is a ranked 200-target iteration slice. Run the full eligible
+raw-zero multiword set explicitly:
+
+```bash
+npm run report:corpus-phrase-variants:all
+```
+
+The full script writes `.cache/corpus-phrase-variant-stress.all.json` and `.md`.
+Direct `--forms` or `--target-ids` runs are not implicitly capped; add
+`--limit-targets` only when a filtered run should be truncated.
 
 This uses the Rust split-cache path. It skips partitions through `.tokens.zst`
 inventories, then reuses query-specific `.anchor-rows-*.jsonl.zst` sidecars when
@@ -215,6 +227,7 @@ Build missing anchor-row sidecars explicitly when a cold/full pass is intended:
 
 ```bash
 npm run report:corpus-phrase-variants:build-cache
+npm run report:corpus-phrase-variants:all:build-cache
 ```
 
 For example, the `mos të ledhatojë` stress check covered 1,024,539,453 source

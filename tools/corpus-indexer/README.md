@@ -39,6 +39,8 @@ npm run scan:local-corpus:cached
 npm run report:corpus-raw-coverage
 npm run report:corpus-phrase-variants
 npm run report:corpus-phrase-variants:build-cache
+npm run report:corpus-phrase-variants:all
+npm run report:corpus-phrase-variants:all:build-cache
 npm run trace:corpus-targets
 npm run build:corpus-search-index
 npm run search:corpus -- --query="të punoj"
@@ -68,8 +70,11 @@ CARGO_TARGET_DIR=.cache/cargo-target cargo run --release \
 - `phrase-variant-stress`: test selected raw-zero multiword misses against
   clitic/order/contraction stress patterns using split-cache token inventories
   to skip partitions, then existing query-specific `.anchor-rows-*.jsonl.zst`
-  sidecars to verify only rows containing selected lexical anchors. Pass
-  `--build-anchor-rows` when cold sidecar creation is intended.
+  sidecars to verify only rows containing selected lexical anchors. The default
+  run keeps a ranked 200-target iteration slice; pass `--all-targets` for the
+  full eligible raw-zero multiword set and `--build-anchor-rows` when cold
+  sidecar creation is intended. Explicit `--forms` and `--target-ids` runs are
+  not capped unless `--limit-targets` is also passed.
 - `bench`: compare Aho-Corasick scanning, Tantivy, and SQLite FTS5 over retained
   examples.
 - `build-search-index`: build the Tantivy index from retained SQLite examples.
