@@ -7,7 +7,10 @@ mod text;
 
 use aho_corasick::AhoCorasick;
 use anyhow::{bail, Context, Result};
-use candidate_cache::{build_resource_cache, open_candidate_stream, CacheBuildStats};
+use candidate_cache::{
+    build_resource_cache, cached_resource_may_contain_any_token, open_candidate_stream,
+    CacheBuildStats,
+};
 use clap::{Args, Parser, Subcommand};
 use db::ExampleDb;
 use quality::{keep_sentence, quality_flags};
@@ -328,6 +331,7 @@ struct TraceReport {
     require_candidate_cache: bool,
     raw_scan_performed: bool,
     resource_partitions: usize,
+    skipped_resource_partitions: usize,
     max_per_target: usize,
     sample_limit: usize,
     candidates_seen: usize,
@@ -561,12 +565,19 @@ fn trace_targets(args: TraceTargetsArgs) -> Result<()> {
     let target_matcher = Arc::new(TargetMatcher::new_with_anchor_prefilter(
         selected_targets.clone(),
     )?);
+    let original_resource_partitions = resources.len();
+    let skipped_resource_partitions = skip_trace_resources_by_inventory(
+        &mut resources,
+        args.candidate_cache_dir.as_deref(),
+        target_matcher.anchor_tokens(),
+    )?;
     let (tx, rx) = mpsc::channel();
     let started = Instant::now();
 
     println!(
-        "Trace target scan: {} source partition(s), {} selected target row(s)",
+        "Trace target scan: {} source partition(s), {} skipped by inventory, {} selected target row(s)",
         resources.len(),
+        skipped_resource_partitions,
         selected_targets.len()
     );
 
@@ -702,7 +713,8 @@ fn trace_targets(args: TraceTargetsArgs) -> Result<()> {
             .map(|path| path.display().to_string()),
         require_candidate_cache: args.require_candidate_cache,
         raw_scan_performed: true,
-        resource_partitions: resources.len(),
+        resource_partitions: original_resource_partitions,
+        skipped_resource_partitions,
         max_per_target: args.max_per_target,
         sample_limit: args.sample_limit,
         candidates_seen,
@@ -716,6 +728,7 @@ fn trace_targets(args: TraceTargetsArgs) -> Result<()> {
             "Emitted matches are worker output before the global SQLite writer cap.",
             "Retained occurrences are read from the supplied SQLite DB and may come from an earlier scan.",
             "When --candidate-cache-dir is supplied, the trace reads cached normalized candidates where fresh shards exist and preserves raw-resource fallback unless --require-candidate-cache is set.",
+            "Fresh split-cache token inventories may skip source partitions that contain none of the selected target anchor tokens.",
         ],
         targets: target_outputs,
     };
@@ -762,6 +775,7 @@ fn retained_only_trace(args: TraceTargetsArgs, selected_targets: Vec<Target>) ->
         require_candidate_cache: args.require_candidate_cache,
         raw_scan_performed: false,
         resource_partitions: 0,
+        skipped_resource_partitions: 0,
         max_per_target: args.max_per_target,
         sample_limit: args.sample_limit,
         candidates_seen: 0,
@@ -842,6 +856,27 @@ fn select_trace_targets(targets: &[Target], args: &TraceTargetsArgs) -> Result<V
     }
 
     Ok(selected)
+}
+
+fn skip_trace_resources_by_inventory(
+    resources: &mut Vec<ResourceSpec>,
+    candidate_cache_dir: Option<&Path>,
+    target_tokens: Option<&HashSet<String>>,
+) -> Result<usize> {
+    let (Some(cache_dir), Some(target_tokens)) = (candidate_cache_dir, target_tokens) else {
+        return Ok(0);
+    };
+    let original = std::mem::take(resources);
+    let mut kept = Vec::with_capacity(original.len());
+    let mut skipped = 0usize;
+    for resource in original {
+        match cached_resource_may_contain_any_token(&resource, cache_dir, target_tokens)? {
+            Some(false) => skipped += 1,
+            Some(true) | None => kept.push(resource),
+        }
+    }
+    *resources = kept;
+    Ok(skipped)
 }
 
 fn split_csv(value: &str) -> Vec<String> {
@@ -1200,8 +1235,18 @@ fn trace_markdown(report: &TraceReport) -> String {
             }
         ),
         format!(
-            "- Resource partitions scanned: {}",
+            "- Resource partitions selected: {}",
             report.resource_partitions
+        ),
+        format!(
+            "- Resource partitions skipped by cache inventory: {}",
+            report.skipped_resource_partitions
+        ),
+        format!(
+            "- Resource partitions scanned: {}",
+            report
+                .resource_partitions
+                .saturating_sub(report.skipped_resource_partitions)
         ),
         format!("- Candidates scanned: {}", report.candidates_seen),
         format!("- Empty normalized candidates: {}", report.empty_candidates),

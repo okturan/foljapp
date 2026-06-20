@@ -111,6 +111,12 @@ deserialization for most candidates. It is not expected to produce a large gain
 on hit-heavy match scans, and it can be larger on disk than the old full-row
 cache.
 
+Fresh split-cache builds also write compressed token inventories. `trace-targets`
+uses those inventories to skip whole source partitions when none of the selected
+target anchor tokens occurs in that partition. Older split caches without
+`.tokens.zst` sidecars and v1 full-row caches still scan normally; rebuild a
+selected source with `--refresh` to add inventories.
+
 ```bash
 npm run build:corpus-candidate-cache
 npm run scan:local-corpus:cached

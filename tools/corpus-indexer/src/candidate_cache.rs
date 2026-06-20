@@ -2,6 +2,7 @@ use crate::sources::{open_resource, Candidate, CandidateStream, ResourceSpec};
 use crate::text::normalized_text;
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use std::ffi::OsString;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, Lines, Write};
@@ -103,17 +104,23 @@ pub fn build_resource_cache(
     fs::create_dir_all(cache_dir)?;
     let norm_path = norm_path(resource, cache_dir);
     let rows_path = rows_path(resource, cache_dir);
+    let token_path = token_path(resource, cache_dir);
     let meta_path = meta_path(resource, cache_dir);
     let tmp_norm_path = tmp_path(&norm_path);
     let tmp_rows_path = tmp_path(&rows_path);
+    let tmp_token_path = tmp_path(&token_path);
     let tmp_meta_path = tmp_path(&meta_path);
 
     let norm_file = File::create(&tmp_norm_path)
         .with_context(|| format!("create {}", tmp_norm_path.display()))?;
     let rows_file = File::create(&tmp_rows_path)
         .with_context(|| format!("create {}", tmp_rows_path.display()))?;
+    let token_file = File::create(&tmp_token_path)
+        .with_context(|| format!("create {}", tmp_token_path.display()))?;
     let mut norm_writer = zstd::stream::write::Encoder::new(norm_file, 3)?;
     let mut rows_writer = zstd::stream::write::Encoder::new(rows_file, 3)?;
+    let mut token_writer = zstd::stream::write::Encoder::new(token_file, 3)?;
+    let mut tokens = HashSet::<String>::new();
     let mut candidates_seen = 0usize;
     let mut empty_candidates = 0usize;
     let stream = open_resource(resource).with_context(|| format!("open source {}", resource.id))?;
@@ -124,6 +131,9 @@ pub fn build_resource_cache(
         let normalized = normalized_text(&candidate.sentence);
         if normalized.is_empty() {
             empty_candidates += 1;
+        }
+        for token in normalized.split_whitespace() {
+            tokens.insert(token.to_owned());
         }
         let row = CacheMetadataRow {
             doc_id: candidate.doc_id,
@@ -142,6 +152,13 @@ pub fn build_resource_cache(
 
     norm_writer.finish()?;
     rows_writer.finish()?;
+    let mut sorted_tokens = tokens.into_iter().collect::<Vec<_>>();
+    sorted_tokens.sort();
+    for token in sorted_tokens {
+        token_writer.write_all(token.as_bytes())?;
+        token_writer.write_all(b"\n")?;
+    }
+    token_writer.finish()?;
 
     let fingerprint = fingerprint(resource)?;
     let meta = CacheMeta {
@@ -157,6 +174,7 @@ pub fn build_resource_cache(
     fs::write(&tmp_meta_path, serde_json::to_vec_pretty(&meta)?)?;
     fs::rename(tmp_norm_path, norm_path)?;
     fs::rename(tmp_rows_path, rows_path)?;
+    fs::rename(tmp_token_path, token_path)?;
     fs::rename(tmp_meta_path, meta_path)?;
 
     Ok(CacheBuildStats {
@@ -164,6 +182,31 @@ pub fn build_resource_cache(
         candidates_seen,
         empty_candidates,
     })
+}
+
+pub fn cached_resource_may_contain_any_token(
+    resource: &ResourceSpec,
+    cache_dir: &Path,
+    target_tokens: &HashSet<String>,
+) -> Result<Option<bool>> {
+    if target_tokens.is_empty() {
+        return Ok(Some(false));
+    }
+    if fresh_v2_meta(resource, cache_dir)?.is_none() {
+        return Ok(None);
+    }
+    let token_path = token_path(resource, cache_dir);
+    if !token_path.exists() {
+        return Ok(None);
+    }
+    let file = File::open(&token_path).with_context(|| format!("open {}", token_path.display()))?;
+    let lines = BufReader::new(zstd::stream::read::Decoder::new(file)?).lines();
+    for line in lines {
+        if target_tokens.contains(&line?) {
+            return Ok(Some(true));
+        }
+    }
+    Ok(Some(false))
 }
 
 fn open_cached_resource(
@@ -387,6 +430,10 @@ fn rows_path(resource: &ResourceSpec, cache_dir: &Path) -> PathBuf {
     cache_dir.join(format!("{}.rows.jsonl.zst", safe_resource_id(&resource.id)))
 }
 
+fn token_path(resource: &ResourceSpec, cache_dir: &Path) -> PathBuf {
+    cache_dir.join(format!("{}.tokens.zst", safe_resource_id(&resource.id)))
+}
+
 fn meta_path(resource: &ResourceSpec, cache_dir: &Path) -> PathBuf {
     cache_dir.join(format!("{}.json", safe_resource_id(&resource.id)))
 }
@@ -443,8 +490,11 @@ struct Fingerprint {
 #[cfg(test)]
 mod tests {
     use super::{
-        safe_resource_id, CacheMetadataRow, CacheV2CandidateSource, CachedCandidateSource,
+        build_resource_cache, cached_resource_may_contain_any_token, safe_resource_id,
+        CacheMetadataRow, CacheV2CandidateSource, CachedCandidateSource,
     };
+    use crate::sources::{ResourceSpec, SourceKind};
+    use std::collections::HashSet;
     use std::fs::{self, File};
     use std::io::{BufRead, BufReader, Write};
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -530,6 +580,55 @@ mod tests {
         assert_eq!(
             source.current_candidate().expect("third candidate").doc_id,
             "doc-3"
+        );
+
+        fs::remove_dir_all(dir).expect("remove temp dir");
+    }
+
+    #[test]
+    fn split_cache_token_inventory_supports_exact_negative_checks() {
+        let dir = std::env::temp_dir().join(format!(
+            "foljapp-cache-token-test-{}",
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("time")
+                .as_nanos()
+        ));
+        let source_path = dir.join("source.txt");
+        let cache_dir = dir.join("cache");
+        fs::create_dir_all(&dir).expect("create temp dir");
+        fs::write(&source_path, "Punoj këtu.\nOmega.\n").expect("write source");
+        let resource = ResourceSpec {
+            id: "test-source".to_owned(),
+            title: "Test Source".to_owned(),
+            resource_kind: "test".to_owned(),
+            source_url: None,
+            local_path_text: source_path.to_string_lossy().into_owned(),
+            local_path: source_path,
+            format: Some("txt".to_owned()),
+            license: None,
+            kind: SourceKind::SeeUniversityTxtLines,
+        };
+
+        build_resource_cache(&resource, &cache_dir, true).expect("build cache");
+
+        assert_eq!(
+            cached_resource_may_contain_any_token(
+                &resource,
+                &cache_dir,
+                &HashSet::from(["punoj".to_owned()])
+            )
+            .expect("read token inventory"),
+            Some(true)
+        );
+        assert_eq!(
+            cached_resource_may_contain_any_token(
+                &resource,
+                &cache_dir,
+                &HashSet::from(["mungon".to_owned()])
+            )
+            .expect("read token inventory"),
+            Some(false)
         );
 
         fs::remove_dir_all(dir).expect("remove temp dir");

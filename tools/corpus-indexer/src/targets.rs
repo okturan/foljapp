@@ -179,6 +179,10 @@ impl TargetMatcher {
         matches
     }
 
+    pub fn anchor_tokens(&self) -> Option<&HashSet<String>> {
+        self.anchor_tokens.as_ref()
+    }
+
     fn has_anchor_token(&self, normalized: &str) -> bool {
         let Some(anchor_tokens) = &self.anchor_tokens else {
             return true;

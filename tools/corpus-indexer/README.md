@@ -74,3 +74,8 @@ Cached scans prefer split cache shards when present. If only older full-row
 cache shards are fresh, the scanner falls back to them. Rebuild with
 `npm run build:corpus-candidate-cache -- --refresh` to get the split format for
 the selected sources.
+
+Fresh split-cache builds also include `.tokens.zst` inventories. `trace-targets`
+uses them to skip source partitions that cannot contain any selected target
+anchor token. Missing inventories are not an error; the trace falls back to
+scanning that partition.
