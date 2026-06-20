@@ -443,6 +443,8 @@ struct PhraseVariantStressArgs {
     forms: String,
     #[arg(long, default_value = "")]
     target_ids: String,
+    #[arg(long)]
+    build_anchor_rows: bool,
 }
 
 #[derive(Debug, Deserialize)]
@@ -1238,6 +1240,7 @@ fn phrase_variant_stress(args: PhraseVariantStressArgs) -> Result<()> {
         let worker_cache_dir = args.candidate_cache_dir.clone();
         let worker_tx = tx.clone();
         let sample_limit = args.sample_limit;
+        let build_anchor_rows = args.build_anchor_rows;
         handles.push(thread::spawn(move || loop {
             let resource = {
                 let mut guard = worker_work.lock().expect("work mutex");
@@ -1251,6 +1254,7 @@ fn phrase_variant_stress(args: PhraseVariantStressArgs) -> Result<()> {
                 Arc::clone(&worker_matcher),
                 worker_cache_dir.clone(),
                 sample_limit,
+                build_anchor_rows,
                 worker_tx.clone(),
             );
         }));
@@ -1360,12 +1364,18 @@ fn phrase_stress_resource(
     matcher: Arc<PhraseStressMatcher>,
     candidate_cache_dir: PathBuf,
     sample_limit: usize,
+    build_anchor_rows: bool,
     tx: mpsc::Sender<PhraseStressEvent>,
 ) {
     let resource_id = resource.id.clone();
-    if let Err(err) =
-        phrase_stress_resource_inner(resource, matcher, candidate_cache_dir, sample_limit, &tx)
-    {
+    if let Err(err) = phrase_stress_resource_inner(
+        resource,
+        matcher,
+        candidate_cache_dir,
+        sample_limit,
+        build_anchor_rows,
+        &tx,
+    ) {
         let _ = tx.send(PhraseStressEvent::Error(format!("{resource_id}: {err:#}")));
     }
 }
@@ -1375,6 +1385,7 @@ fn phrase_stress_resource_inner(
     matcher: Arc<PhraseStressMatcher>,
     candidate_cache_dir: PathBuf,
     sample_limit: usize,
+    build_anchor_rows: bool,
     tx: &mpsc::Sender<PhraseStressEvent>,
 ) -> Result<()> {
     let started = Instant::now();
@@ -1383,10 +1394,67 @@ fn phrase_stress_resource_inner(
     let mut matches_by_pattern = vec![0usize; matcher.pattern_rows.len()];
     let mut sample_counts = vec![0usize; matcher.pattern_rows.len()];
     let mut samples = Vec::new();
-    let Some(mut stream) =
-        open_or_build_anchor_row_stream(&resource, &candidate_cache_dir, &matcher.anchor_tokens)?
+    let Some(mut stream) = open_or_build_anchor_row_stream(
+        &resource,
+        &candidate_cache_dir,
+        &matcher.anchor_tokens,
+        build_anchor_rows,
+    )?
     else {
-        bail!("missing or stale candidate cache for {}", resource.id);
+        let mut stream = open_candidate_stream(&resource, Some(&candidate_cache_dir), true)
+            .with_context(|| format!("open candidates for {}", resource.id))?;
+        let mut source_candidates_seen = 0usize;
+        while let Some(item) = stream.next_normalized() {
+            let cached = item.with_context(|| format!("read source {}", resource.id))?;
+            let normalized = cached.normalized;
+            source_candidates_seen += 1;
+            if normalized.is_empty() {
+                empty_candidates += 1;
+                continue;
+            }
+            if !matcher.has_anchor_token(&normalized) {
+                continue;
+            }
+            candidates_seen += 1;
+            let matched_patterns = matcher.matches_normalized(&normalized);
+            if matched_patterns.is_empty() {
+                continue;
+            }
+            let mut candidate = None;
+            for pattern_index in matched_patterns {
+                matches_by_pattern[pattern_index] += 1;
+                if sample_counts[pattern_index] >= sample_limit {
+                    continue;
+                }
+                if candidate.is_none() {
+                    candidate = Some(stream.current_candidate()?);
+                }
+                let row = &matcher.pattern_rows[pattern_index];
+                let found = candidate.as_ref().expect("candidate");
+                samples.push(PhraseStressSample {
+                    target_id: row.target_id.clone(),
+                    kind: row.kind.clone(),
+                    pattern: row.pattern.clone(),
+                    resource_id: found.resource_id.clone(),
+                    doc_id: found.doc_id.clone(),
+                    title: found.title.clone(),
+                    url: found.url.clone(),
+                    sentence: found.sentence.clone(),
+                });
+                sample_counts[pattern_index] += 1;
+            }
+        }
+        tx.send(PhraseStressEvent::Done(PhraseStressResourceStats {
+            resource_id: resource.id,
+            source_candidates_seen,
+            candidates_seen,
+            empty_candidates,
+            duration_ms: started.elapsed().as_millis(),
+            matches_by_pattern,
+            samples,
+        }))
+        .context("send fallback phrase stress resource stats")?;
+        return Ok(());
     };
     let source_candidates_seen = stream.source_candidates_seen();
 

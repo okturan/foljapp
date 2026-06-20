@@ -346,6 +346,7 @@ pub fn open_or_build_anchor_row_stream(
     resource: &ResourceSpec,
     cache_dir: &Path,
     anchors: &HashSet<String>,
+    build_missing: bool,
 ) -> Result<Option<AnchorRowStream>> {
     if anchors.is_empty() {
         return Ok(None);
@@ -355,6 +356,9 @@ pub fn open_or_build_anchor_row_stream(
     }
     let anchor_hash = anchor_set_hash(anchors);
     if !anchor_rows_fresh(resource, cache_dir, &anchor_hash)? {
+        if !build_missing {
+            return Ok(None);
+        }
         build_anchor_rows(resource, cache_dir, anchors, &anchor_hash)?;
     }
     open_anchor_row_stream(resource, cache_dir, &anchor_hash)
@@ -1017,11 +1021,20 @@ mod tests {
             .expect("read token hits"),
             Some(HashSet::from(["punoj".to_owned(), "omega".to_owned()]))
         );
+        assert!(open_or_build_anchor_row_stream(
+            &resource,
+            &cache_dir,
+            &HashSet::from(["punoj".to_owned()]),
+            false,
+        )
+        .expect("open-only anchor rows")
+        .is_none());
 
         let anchor_rows = open_or_build_anchor_row_stream(
             &resource,
             &cache_dir,
             &HashSet::from(["punoj".to_owned()]),
+            true,
         )
         .expect("open anchor rows")
         .expect("anchor stream")

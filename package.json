@@ -27,6 +27,7 @@
     "report:corpus-raw-coverage": "CARGO_TARGET_DIR=.cache/cargo-target cargo run --release --manifest-path tools/corpus-indexer/Cargo.toml -- report-raw-coverage --candidate-cache-dir=.cache/corpus-candidate-shards/split-20260620",
     "report:corpus-coverage": "tsx scripts/report-corpus-coverage.ts",
     "report:corpus-phrase-variants": "CARGO_TARGET_DIR=.cache/cargo-target cargo run --release --manifest-path tools/corpus-indexer/Cargo.toml -- phrase-variant-stress --candidate-cache-dir=.cache/corpus-candidate-shards/split-20260620",
+    "report:corpus-phrase-variants:build-cache": "npm run report:corpus-phrase-variants -- --build-anchor-rows",
     "audit:external-morphology": "node --experimental-strip-types scripts/audit-external-morphology.ts",
     "check:middle-passive-review": "node --experimental-strip-types scripts/check-middle-passive-review.ts",
     "build:uniparser-analysis-requests": "node --experimental-strip-types scripts/build-uniparser-analysis-requests.ts",

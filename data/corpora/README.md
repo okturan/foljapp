@@ -204,14 +204,21 @@ npm run report:corpus-phrase-variants
 ```
 
 This uses the Rust split-cache path. It skips partitions through `.tokens.zst`
-inventories, then builds/reuses query-specific `.anchor-rows-*.jsonl.zst`
-sidecars so repeated checks scan only rows containing selected lexical anchors.
-Generated clitic/order/contraction patterns are verified against those anchor
-rows. These are exploratory variant hits, not canonical target attestations.
+inventories, then reuses query-specific `.anchor-rows-*.jsonl.zst` sidecars when
+they already exist. Partitions that need a missing anchor-row sidecar fall back
+to streaming the existing `.norm.zst` split cache, so ordinary reports stay
+write-free without dropping coverage. Generated clitic/order/contraction
+patterns are verified against checked anchor rows. These are exploratory variant
+hits, not canonical target attestations.
 
-Cold runs may still read large `.norm.zst` shards once to build the sidecars.
+Build missing anchor-row sidecars explicitly when a cold/full pass is intended:
+
+```bash
+npm run report:corpus-phrase-variants:build-cache
+```
+
 For example, the `mos të ledhatojë` stress check covered 1,024,539,453 source
-rows and materialized 1,990 anchor rows; the warm run then completed in 17.2s
+rows and materialized 1,990 anchor rows; the warm run then completed in 17-19s
 while preserving the same 26 raw variant hits.
 
 For the strongest local review, join the full UniParser analyzer pass before
