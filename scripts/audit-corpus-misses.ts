@@ -1629,6 +1629,12 @@ function sourceCacheEvidenceCell(
   return parts.join('; ') || 'none';
 }
 
+function sourceCacheEvidenceScore(
+  evidence: SourceCacheMiddlePassiveEvidence,
+): number {
+  return evidence.husic.middlePassiveFormCount > 0 ? 1 : 0;
+}
+
 function main(): void {
   const targetsPath = valueAfter('--targets=') ?? DEFAULT_TARGETS;
   const coveragePath = valueAfter('--coverage=') ?? DEFAULT_COVERAGE;
@@ -2188,6 +2194,22 @@ function main(): void {
     coverage,
     middlePassiveLemmaReviewQueue,
   );
+  const middlePassiveSourceCacheReviewShortlist =
+    middlePassiveLemmaReviewQueue
+      .filter(
+        (row) =>
+          !row.coveredByReviewFile &&
+          row.sourceCacheMiddlePassiveEvidence.hasEvidence,
+      )
+      .sort(
+        (a, b) =>
+          sourceCacheEvidenceScore(b.sourceCacheMiddlePassiveEvidence) -
+            sourceCacheEvidenceScore(a.sourceCacheMiddlePassiveEvidence) ||
+          b.targetCount - a.targetCount ||
+          a.action.localeCompare(b.action) ||
+          a.lemma.localeCompare(b.lemma),
+      )
+      .slice(0, 40);
   const report = {
     generatedAt: new Date().toISOString(),
     targetsPath,
@@ -2280,6 +2302,7 @@ function main(): void {
     middlePassiveReviewActions,
     middlePassiveReviewLemmas,
     middlePassiveReviewCoverage,
+    middlePassiveSourceCacheReviewShortlist,
     middlePassiveLemmaReviewQueue,
     evidenceLabels: topEntries(labelCounts, 40),
     dbEvidence,
@@ -2752,6 +2775,17 @@ function main(): void {
     '| --- | ---: |',
     ...report.middlePassiveReviewCoverage.unreviewedByMorphologyForm.map(
       (row) => `| ${mdCell(row.key)} | ${row.count} |`,
+    ),
+    '',
+    '### Middle-Passive Source-Cache Review Shortlist',
+    '',
+    'Highest-priority unreviewed action-by-lemma groups that already have local Husić or Kaikki middle-passive evidence. This is review evidence only; it does not change generation.',
+    '',
+    '| Morphology Action | Lemma | Verb ID | Targets | Source Cache Evidence | Verdict Forms | Proof | Scope | Middle-Passive Coverage | Active Coverage | Samples |',
+    '| --- | --- | --- | ---: | --- | --- | --- | --- | --- | --- | --- |',
+    ...report.middlePassiveSourceCacheReviewShortlist.map(
+      (row) =>
+        `| ${mdCell(row.action)} | ${mdCell(row.lemma)} | ${mdCell(row.verbId)} | ${row.targetCount} | ${mdCell(sourceCacheEvidenceCell(row.sourceCacheMiddlePassiveEvidence))} | ${mdCell(countCells(row.morphologyForms))} | ${mdCell(countCells(row.morphologyProofLevels))} | ${mdCell(countCells(row.morphologyScopes))} | ${row.middlePassiveCoverage} | ${row.activeCoverage} | ${mdCell(row.samples.map((sample) => `${sample.targetKey} (${sample.signature})`).join(', '))} |`,
     ),
     '',
     '### Middle-Passive Review Actions',

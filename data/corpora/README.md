@@ -143,13 +143,14 @@ aggregate investigation report:
   such as rare-valid unattested forms, middle-passive eligibility review,
   scanner-variant absences, near-empty grammatical cells, lemma outliers, and
   component-supported full-phrase gaps.
-- `Middle-Passive Review Coverage`, `Middle-Passive Review Actions`,
-  `Middle-Passive Lemma Shortlist`, and `Complete Middle-Passive Lemma Queue`
-  split the largest bucket by committed review coverage and joined morphology
-  action. The shortlist is only an entry point; the complete queue lists every
-  action-by-lemma group with active and middle-passive coverage plus direct
-  local Husić/Kaikki cache evidence when those caches expose middle-passive
-  forms or templates.
+- `Middle-Passive Review Coverage`, `Middle-Passive Source-Cache Review
+  Shortlist`, `Middle-Passive Review Actions`, `Middle-Passive Lemma
+  Shortlist`, and `Complete Middle-Passive Lemma Queue` split the largest
+  bucket by committed review coverage, direct local Husić/Kaikki cache
+  evidence, and joined morphology action. The shortlist is only an entry point;
+  the complete queue lists every action-by-lemma group with active and
+  middle-passive coverage plus direct cache evidence when those caches expose
+  middle-passive forms or templates.
 
 The dossier remains sample-only. Use it when you need specific target rows,
 joined morphology fields, and SQL lookup snippets; use the main audit for
