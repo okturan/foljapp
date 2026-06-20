@@ -19,6 +19,12 @@ pub struct NormalizedCandidate {
     pub normalized: String,
 }
 
+#[derive(Debug)]
+pub struct AnchorRow {
+    pub candidate: Candidate,
+    pub normalized: String,
+}
+
 pub trait CachedCandidateSource {
     fn next_normalized(&mut self) -> Option<Result<NormalizedCandidate>>;
     fn current_candidate(&mut self) -> Result<Candidate>;
@@ -66,7 +72,61 @@ struct CacheMetadataRow {
     sentence: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+struct AnchorRowsMeta {
+    version: u32,
+    normalizer: String,
+    resource_id: String,
+    local_path: String,
+    byte_len: u64,
+    modified_unix_nanos: String,
+    anchor_hash: String,
+    anchors_count: usize,
+    source_candidates_seen: usize,
+    anchor_rows: usize,
+}
+
 pub type CachedCandidateStream = Box<dyn CachedCandidateSource + Send>;
+
+pub struct AnchorRowStream {
+    lines: Lines<BufReader<zstd::stream::read::Decoder<'static, BufReader<File>>>>,
+    resource_id: String,
+    source_candidates_seen: usize,
+}
+
+impl AnchorRowStream {
+    pub fn source_candidates_seen(&self) -> usize {
+        self.source_candidates_seen
+    }
+}
+
+impl Iterator for AnchorRowStream {
+    type Item = Result<AnchorRow>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let line = match self.lines.next()? {
+            Ok(line) => line,
+            Err(err) => return Some(Err(err.into())),
+        };
+        let row = match serde_json::from_str::<CacheRow>(&line) {
+            Ok(row) => row,
+            Err(err) => return Some(Err(err.into())),
+        };
+        Some(Ok(AnchorRow {
+            candidate: Candidate {
+                resource_id: self.resource_id.clone(),
+                doc_id: row.doc_id,
+                title: row.title,
+                url: row.url,
+                domain: row.domain,
+                genre: row.genre,
+                quality: row.quality,
+                sentence: row.sentence,
+            },
+            normalized: row.normalized,
+        }))
+    }
+}
 
 pub fn open_candidate_stream(
     resource: &ResourceSpec,
@@ -252,6 +312,54 @@ pub fn cached_resource_may_contain_any_token(
     Ok(Some(false))
 }
 
+pub fn cached_resource_token_hits(
+    resource: &ResourceSpec,
+    cache_dir: &Path,
+    target_tokens: &HashSet<String>,
+) -> Result<Option<HashSet<String>>> {
+    if target_tokens.is_empty() {
+        return Ok(Some(HashSet::new()));
+    }
+    if fresh_v2_meta(resource, cache_dir)?.is_none() {
+        return Ok(None);
+    }
+    let token_path = token_path(resource, cache_dir);
+    if !token_path.exists() {
+        return Ok(None);
+    }
+    let file = File::open(&token_path).with_context(|| format!("open {}", token_path.display()))?;
+    let lines = BufReader::new(zstd::stream::read::Decoder::new(file)?).lines();
+    let mut found = HashSet::new();
+    for line in lines {
+        let token = line?;
+        if target_tokens.contains(&token) {
+            found.insert(token);
+            if found.len() == target_tokens.len() {
+                break;
+            }
+        }
+    }
+    Ok(Some(found))
+}
+
+pub fn open_or_build_anchor_row_stream(
+    resource: &ResourceSpec,
+    cache_dir: &Path,
+    anchors: &HashSet<String>,
+) -> Result<Option<AnchorRowStream>> {
+    if anchors.is_empty() {
+        return Ok(None);
+    }
+    if fresh_v2_meta(resource, cache_dir)?.is_none() {
+        return Ok(None);
+    }
+    let anchor_hash = anchor_set_hash(anchors);
+    if !anchor_rows_fresh(resource, cache_dir, &anchor_hash)? {
+        build_anchor_rows(resource, cache_dir, anchors, &anchor_hash)?;
+    }
+    open_anchor_row_stream(resource, cache_dir, &anchor_hash)
+}
+
 fn ensure_target_hits(
     resource: &ResourceSpec,
     cache_dir: &Path,
@@ -270,6 +378,133 @@ fn ensure_target_hits(
     build_target_hits_from_norm(&norm_path, &tmp_target_hits_path, matcher)?;
     fs::rename(tmp_target_hits_path, target_hits_path)?;
     Ok(())
+}
+
+fn build_anchor_rows(
+    resource: &ResourceSpec,
+    cache_dir: &Path,
+    anchors: &HashSet<String>,
+    anchor_hash: &str,
+) -> Result<()> {
+    let data_path = anchor_rows_path(resource, cache_dir, anchor_hash);
+    let meta_path = anchor_rows_meta_path(resource, cache_dir, anchor_hash);
+    let tmp_data_path = tmp_path(&data_path);
+    let tmp_meta_path = tmp_path(&meta_path);
+    let file = File::create(&tmp_data_path)
+        .with_context(|| format!("create {}", tmp_data_path.display()))?;
+    let mut writer = zstd::stream::write::Encoder::new(file, 3)?;
+    let mut stream = open_candidate_stream(resource, Some(cache_dir), true)
+        .with_context(|| format!("open cached candidates for {}", resource.id))?;
+    let mut source_candidates_seen = 0usize;
+    let mut anchor_rows = 0usize;
+
+    while let Some(item) = stream.next_normalized() {
+        let normalized = item?.normalized;
+        source_candidates_seen += 1;
+        if !normalized
+            .split_whitespace()
+            .any(|token| anchors.contains(token))
+        {
+            continue;
+        }
+        let candidate = stream.current_candidate()?;
+        let row = CacheRow {
+            doc_id: candidate.doc_id,
+            title: candidate.title,
+            url: candidate.url,
+            domain: candidate.domain,
+            genre: candidate.genre,
+            quality: candidate.quality,
+            sentence: candidate.sentence,
+            normalized,
+        };
+        serde_json::to_writer(&mut writer, &row)?;
+        writer.write_all(b"\n")?;
+        anchor_rows += 1;
+    }
+    writer.finish()?;
+
+    let fingerprint = fingerprint(resource)?;
+    let meta = AnchorRowsMeta {
+        version: CACHE_VERSION_V2,
+        normalizer: NORMALIZER_VERSION.to_owned(),
+        resource_id: resource.id.clone(),
+        local_path: resource.local_path_text.clone(),
+        byte_len: fingerprint.byte_len,
+        modified_unix_nanos: fingerprint.modified_unix_nanos,
+        anchor_hash: anchor_hash.to_owned(),
+        anchors_count: anchors.len(),
+        source_candidates_seen,
+        anchor_rows,
+    };
+    fs::write(&tmp_meta_path, serde_json::to_vec_pretty(&meta)?)?;
+    fs::rename(tmp_data_path, data_path)?;
+    fs::rename(tmp_meta_path, meta_path)?;
+    Ok(())
+}
+
+fn open_anchor_row_stream(
+    resource: &ResourceSpec,
+    cache_dir: &Path,
+    anchor_hash: &str,
+) -> Result<Option<AnchorRowStream>> {
+    let Some(meta) = read_fresh_anchor_rows_meta(resource, cache_dir, anchor_hash)? else {
+        return Ok(None);
+    };
+    let data_path = anchor_rows_path(resource, cache_dir, anchor_hash);
+    let file = File::open(&data_path).with_context(|| format!("open {}", data_path.display()))?;
+    Ok(Some(AnchorRowStream {
+        lines: BufReader::new(zstd::stream::read::Decoder::new(file)?).lines(),
+        resource_id: resource.id.clone(),
+        source_candidates_seen: meta.source_candidates_seen,
+    }))
+}
+
+fn anchor_rows_fresh(resource: &ResourceSpec, cache_dir: &Path, anchor_hash: &str) -> Result<bool> {
+    Ok(read_fresh_anchor_rows_meta(resource, cache_dir, anchor_hash)?.is_some())
+}
+
+fn read_fresh_anchor_rows_meta(
+    resource: &ResourceSpec,
+    cache_dir: &Path,
+    anchor_hash: &str,
+) -> Result<Option<AnchorRowsMeta>> {
+    let data_path = anchor_rows_path(resource, cache_dir, anchor_hash);
+    let meta_path = anchor_rows_meta_path(resource, cache_dir, anchor_hash);
+    if !data_path.exists() || !meta_path.exists() {
+        return Ok(None);
+    }
+    let meta: AnchorRowsMeta = serde_json::from_slice(
+        &fs::read(&meta_path).with_context(|| format!("read {}", meta_path.display()))?,
+    )?;
+    let fingerprint = fingerprint(resource)?;
+    if meta.version == CACHE_VERSION_V2
+        && meta.normalizer == NORMALIZER_VERSION
+        && meta.resource_id == resource.id
+        && meta.local_path == resource.local_path_text
+        && meta.byte_len == fingerprint.byte_len
+        && meta.modified_unix_nanos == fingerprint.modified_unix_nanos
+        && meta.anchor_hash == anchor_hash
+    {
+        Ok(Some(meta))
+    } else {
+        Ok(None)
+    }
+}
+
+fn anchor_set_hash(anchors: &HashSet<String>) -> String {
+    let mut hash = 0xcbf29ce484222325u64;
+    let mut sorted = anchors.iter().collect::<Vec<_>>();
+    sorted.sort();
+    for anchor in sorted {
+        for byte in anchor.as_bytes() {
+            hash ^= u64::from(*byte);
+            hash = hash.wrapping_mul(0x100000001b3);
+        }
+        hash ^= 0xff;
+        hash = hash.wrapping_mul(0x100000001b3);
+    }
+    format!("{hash:016x}")
 }
 
 fn build_target_hits_from_norm(
@@ -558,6 +793,22 @@ pub fn target_hits_path(resource: &ResourceSpec, cache_dir: &Path) -> PathBuf {
     ))
 }
 
+fn anchor_rows_path(resource: &ResourceSpec, cache_dir: &Path, anchor_hash: &str) -> PathBuf {
+    cache_dir.join(format!(
+        "{}.anchor-rows-{}.jsonl.zst",
+        safe_resource_id(&resource.id),
+        anchor_hash
+    ))
+}
+
+fn anchor_rows_meta_path(resource: &ResourceSpec, cache_dir: &Path, anchor_hash: &str) -> PathBuf {
+    cache_dir.join(format!(
+        "{}.anchor-rows-{}.json",
+        safe_resource_id(&resource.id),
+        anchor_hash
+    ))
+}
+
 fn meta_path(resource: &ResourceSpec, cache_dir: &Path) -> PathBuf {
     cache_dir.join(format!("{}.json", safe_resource_id(&resource.id)))
 }
@@ -615,8 +866,9 @@ struct Fingerprint {
 mod tests {
     use super::{
         build_resource_cache, cached_resource_may_contain_any_target_id,
-        cached_resource_may_contain_any_token, safe_resource_id, target_hits_path,
-        CacheMetadataRow, CacheV2CandidateSource, CachedCandidateSource,
+        cached_resource_may_contain_any_token, cached_resource_token_hits,
+        open_or_build_anchor_row_stream, safe_resource_id, target_hits_path, CacheMetadataRow,
+        CacheV2CandidateSource, CachedCandidateSource,
     };
     use crate::sources::{ResourceSpec, SourceKind};
     use crate::targets::{Target, TargetMatcher};
@@ -756,6 +1008,28 @@ mod tests {
             .expect("read token inventory"),
             Some(false)
         );
+        assert_eq!(
+            cached_resource_token_hits(
+                &resource,
+                &cache_dir,
+                &HashSet::from(["punoj".to_owned(), "omega".to_owned(), "mungon".to_owned()])
+            )
+            .expect("read token hits"),
+            Some(HashSet::from(["punoj".to_owned(), "omega".to_owned()]))
+        );
+
+        let anchor_rows = open_or_build_anchor_row_stream(
+            &resource,
+            &cache_dir,
+            &HashSet::from(["punoj".to_owned()]),
+        )
+        .expect("open anchor rows")
+        .expect("anchor stream")
+        .collect::<Result<Vec<_>, _>>()
+        .expect("collect anchor rows");
+        assert_eq!(anchor_rows.len(), 1);
+        assert_eq!(anchor_rows[0].normalized, "punoj këtu");
+        assert_eq!(anchor_rows[0].candidate.sentence, "Punoj këtu.");
 
         fs::remove_dir_all(dir).expect("remove temp dir");
     }

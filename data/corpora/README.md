@@ -197,6 +197,23 @@ lemma. It also includes a raw-zero UniParser-accepted dossier that separates
 morphologically accepted but unattested forms from likely generation bugs. It
 does not rescan corpora.
 
+Stress-test broader phrase variants for selected raw-zero multiword misses:
+
+```bash
+npm run report:corpus-phrase-variants
+```
+
+This uses the Rust split-cache path. It skips partitions through `.tokens.zst`
+inventories, then builds/reuses query-specific `.anchor-rows-*.jsonl.zst`
+sidecars so repeated checks scan only rows containing selected lexical anchors.
+Generated clitic/order/contraction patterns are verified against those anchor
+rows. These are exploratory variant hits, not canonical target attestations.
+
+Cold runs may still read large `.norm.zst` shards once to build the sidecars.
+For example, the `mos të ledhatojë` stress check covered 1,024,539,453 source
+rows and materialized 1,990 anchor rows; the warm run then completed in 17.2s
+while preserving the same 26 raw variant hits.
+
 For the strongest local review, join the full UniParser analyzer pass before
 writing the missing-form audit:
 
