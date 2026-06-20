@@ -14,15 +14,17 @@ smaller.
   `npm run build:corpus-targets`.
 - `data/corpora/resources.json`: corpus resource ledger.
 - `.cache/datasets/**`: downloaded raw corpora.
-- `.cache/corpus-candidate-shards/v1`: optional parsed candidate cache. The
-  current full local cache is still v1 full-row JSONL; the current writer can
-  also materialize split normalized/metadata/token shards.
+- `.cache/corpus-candidate-shards/v1`: optional legacy parsed candidate cache
+  with v1 full-row JSONL shards.
+- `.cache/corpus-candidate-shards/split-20260620`: current full split parsed
+  candidate cache with normalized, metadata, and token-inventory shards.
 
 ## Outputs
 
 - `.cache/corpus-local-full.sqlite`: retained sentence examples and occurrence
   metadata.
-- `.cache/corpus-candidate-shards/v1`: parsed candidate cache for reruns.
+- `.cache/corpus-candidate-shards/split-20260620`: parsed split candidate cache
+  for reruns and missing-form traces.
 - `.cache/corpus-target-provenance.{json,md}`: raw trace evidence for selected
   missing targets.
 - `.cache/corpus-search-tantivy`: phrase-search index over retained examples.
@@ -71,11 +73,11 @@ after reduction, for interactive phrase search over retained examples; it is not
 the replacement for first-pass classification.
 
 Cached scans prefer split cache shards when present. If only older full-row
-cache shards are fresh, the scanner falls back to them. The current full
-`.cache/corpus-candidate-shards/v1` cache has 1,907 v1 full-row shards and no
-`.norm.zst`, `.rows.jsonl.zst`, or `.tokens.zst` sidecars yet. Build the first
-full split cache in a separate directory so the old v1 cache stays usable while
-the heavier materialization runs:
+cache shards are fresh, the scanner falls back to them. The legacy
+`.cache/corpus-candidate-shards/v1` cache has 1,907 v1 full-row shards. The
+current full split cache lives at `.cache/corpus-candidate-shards/split-20260620`
+and has 1,907 each of `.norm.zst`, `.rows.jsonl.zst`, and `.tokens.zst` files.
+It was built in a separate directory so the old v1 cache stayed usable:
 
 ```sh
 CARGO_TARGET_DIR=.cache/cargo-target cargo run --release \
@@ -84,12 +86,28 @@ CARGO_TARGET_DIR=.cache/cargo-target cargo run --release \
   --cache-dir=.cache/corpus-candidate-shards/split-20260620
 ```
 
-After it finishes, expect 1,907 each of `.norm.zst`, `.rows.jsonl.zst`, and
-`.tokens.zst` files before switching `--candidate-cache-dir` to that directory.
-An in-place `--refresh` under `v1` writes split shards beside the old v1 shards;
-it does not delete the older files.
+Build result: 1,317,991,933 candidates from 1,907 partitions, 0 empty
+normalized, 1,343.0 seconds, 89G on disk. An in-place `--refresh` under `v1`
+writes split shards beside the old v1 shards; it does not delete the older
+files.
 
 Fresh split-cache builds also include `.tokens.zst` inventories. `trace-targets`
 uses them to skip source partitions that cannot contain any selected target
 anchor token. Missing inventories are not an error; the trace falls back to
 scanning that partition.
+
+Sanity trace with the full split cache:
+
+```sh
+CARGO_TARGET_DIR=.cache/cargo-target cargo run --release \
+  --manifest-path tools/corpus-indexer/Cargo.toml -- trace-targets \
+  --forms='mos të ledhatojë' --sources=all --jobs=12 \
+  --candidate-cache-dir=.cache/corpus-candidate-shards/split-20260620 \
+  --require-candidate-cache \
+  --out-json=.cache/corpus-target-provenance.sanity-split-20260620.json \
+  --out-md=.cache/corpus-target-provenance.sanity-split-20260620.md
+```
+
+That trace skipped 1,722 of 1,907 partitions by token inventory, scanned the
+remaining 185 partitions and 1,024,539,453 candidates, found no raw match for
+`mos të ledhatojë`, and finished in 105,043 ms.

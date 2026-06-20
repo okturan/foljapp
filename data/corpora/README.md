@@ -29,14 +29,15 @@ Current raw dataset cache total: about 70G.
 
 Derived local artifacts snapshot (2026-06-20):
 
-| Artifact                 | Local cache                         | Size | Purpose                                                        |
-| ------------------------ | ----------------------------------- | ---: | -------------------------------------------------------------- |
-| Candidate sentence cache | `.cache/corpus-candidate-shards/v1` |  65G | Current full-row v1 candidate shards for fast rescans |
-| Retained examples DB     | `.cache/corpus-local-full.sqlite`   | 192M | Compact app-facing examples and occurrence rows                |
-| Tantivy search index     | `.cache/corpus-search-tantivy`      |  36M | Interactive local phrase lookup over retained examples         |
+| Artifact               | Local cache                                     | Size | Purpose                                                  |
+| ---------------------- | ----------------------------------------------- | ---: | -------------------------------------------------------- |
+| Legacy candidate cache | `.cache/corpus-candidate-shards/v1`             |  65G | Full-row v1 candidate shards retained as fallback        |
+| Split candidate cache  | `.cache/corpus-candidate-shards/split-20260620` |  89G | Current normalized/metadata/token shards for fast traces |
+| Retained examples DB   | `.cache/corpus-local-full.sqlite`               | 192M | Compact app-facing examples and occurrence rows          |
+| Tantivy search index   | `.cache/corpus-search-tantivy`                  |  36M | Interactive local phrase lookup over retained examples   |
 
-Current raw-plus-derived local corpus footprint is about 136G, excluding build
-artifacts such as `.cache/cargo-target`.
+Current `.cache` footprint is about 232G, including raw datasets, candidate
+caches, retained DBs, search indexes, benchmarks, and build artifacts.
 
 ## Candidate resources not downloaded
 
@@ -96,19 +97,20 @@ npm run build:corpus-targets
 npm run scan:local-corpus
 ```
 
-For repeated full-corpus work, first materialize the target-independent
-candidate cache. The current full local `.cache/corpus-candidate-shards/v1`
-cache is still the older full-row format: 1,907 `.jsonl.zst` shards plus 1,907
-metadata files, with no full-cache `.norm.zst`, `.rows.jsonl.zst`, or
-`.tokens.zst` sidecars yet. Target matches, quality decisions, scores, and
-occurrences are still computed fresh by the scanner.
+For repeated full-corpus work, use the target-independent candidate cache.
+Target matches, quality decisions, scores, and occurrences are still computed
+fresh by the scanner. The legacy `.cache/corpus-candidate-shards/v1` cache is
+the older full-row format: 1,907 `.jsonl.zst` shards plus 1,907 metadata files.
+The current full split cache is
+`.cache/corpus-candidate-shards/split-20260620`: 1,907 `.norm.zst`, 1,907
+`.rows.jsonl.zst`, and 1,907 `.tokens.zst` shards, built from 1,317,991,933
+candidates in 1,343.0 seconds.
 
-Current cache builds can also store normalized text separately from full
-sentence metadata, so cached scans can run the matcher over compact normalized
-shards and load full metadata only after a raw match. Existing v1 full-row
-shards remain readable. Build the first full split cache into a separate
-directory instead of refreshing `v1` in place, because the writer does not
-delete old v1 shards:
+Current cache builds store normalized text separately from full sentence
+metadata, so cached scans can run the matcher over compact normalized shards
+and load full metadata only after a raw match. Existing v1 full-row shards
+remain readable. The split cache was built into a separate directory instead of
+refreshing `v1` in place, because the writer does not delete old v1 shards:
 
 ```bash
 CARGO_TARGET_DIR=.cache/cargo-target cargo run --release \
@@ -117,11 +119,16 @@ CARGO_TARGET_DIR=.cache/cargo-target cargo run --release \
   --cache-dir=.cache/corpus-candidate-shards/split-20260620
 ```
 
-Before switching cached scan or trace commands to that directory, verify 1,907
-each of `.norm.zst`, `.rows.jsonl.zst`, and `.tokens.zst` files. In-place
+The post-build verification found 1,907 each of `.norm.zst`,
+`.rows.jsonl.zst`, and `.tokens.zst` files and zero temp files. In-place
 `npm run build:corpus-candidate-cache -- --refresh` is valid, but it writes the
 split files beside the old v1 files and can temporarily push the cache directory
 toward the old plus new cache sizes.
+
+Sanity trace with `--candidate-cache-dir=.cache/corpus-candidate-shards/split-20260620`
+and `--require-candidate-cache` skipped 1,722 of 1,907 partitions by token
+inventory for `mos të ledhatojë`, scanned the remaining 185 partitions and
+1,024,539,453 candidates, found no raw match, and finished in 105,043 ms.
 
 The split format is mainly a missing-form forensics optimization. It speeds up
 raw-zero and low-hit traces because the scanner can avoid metadata
@@ -188,16 +195,14 @@ aggregate investigation report:
   such as rare-valid unattested forms, middle-passive eligibility review,
   scanner-variant absences, near-empty grammatical cells, lemma outliers, and
   component-supported full-phrase gaps.
-- `Middle-Passive Review Coverage`, `Middle-Passive Source-Cache Review
-  Shortlist`, `Middle-Passive Review Actions`, `Middle-Passive Lemma
-  Shortlist`, and `Complete Middle-Passive Lemma Queue` split the largest
-  bucket by committed review coverage, direct local Husić/Kaikki cache
-  evidence, and joined morphology action. The shortlist is only an entry point;
-  the complete queue lists every action-by-lemma group with active and
-  middle-passive coverage plus direct cache evidence when those caches expose
-  middle-passive forms or templates. `Direct Cache Support` separates exact
-  generated-surface support from head-token-only support, so a cached form like
-  `punuar` is not overclaimed as support for a full generated phrase.
+- The middle-passive sections split the largest bucket by committed review
+  coverage, direct local Husić/Kaikki cache evidence, and joined morphology
+  action. The shortlist is only an entry point; the complete queue lists every
+  action-by-lemma group with active and middle-passive coverage plus direct
+  cache evidence when those caches expose middle-passive forms or templates.
+  `Direct Cache Support` separates exact generated-surface support from
+  head-token-only support, so a cached form like `punuar` is not overclaimed as
+  support for a full generated phrase.
 
 The dossier remains sample-only. Use it when you need specific target rows,
 joined morphology fields, and SQL lookup snippets; use the main audit for
