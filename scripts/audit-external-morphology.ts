@@ -134,6 +134,7 @@ interface AnalyzerEvidence {
   accepted: boolean;
   componentSupported: boolean;
   lemmaAliasLemmas: string[];
+  compatibleDialectOrRegister: string[];
   analyzedRows: number;
   compatibleRows: number;
   componentRows: number;
@@ -644,6 +645,7 @@ function analyzerEvidence(
       accepted: false,
       componentSupported: false,
       lemmaAliasLemmas: [],
+      compatibleDialectOrRegister: [],
       analyzedRows: 0,
       compatibleRows: 0,
       componentRows: 0,
@@ -671,6 +673,9 @@ function analyzerEvidence(
     accepted: compatibleRows > 0,
     componentSupported: componentRows > 0,
     lemmaAliasLemmas: [],
+    compatibleDialectOrRegister: dialectOrRegisterTags(
+      all.filter((match) => match.compatible).flatMap((match) => match.tags),
+    ),
     analyzedRows: all.length,
     compatibleRows,
     componentRows,
@@ -685,6 +690,7 @@ function emptyAnalyzerEvidence(): AnalyzerEvidence {
     accepted: false,
     componentSupported: false,
     lemmaAliasLemmas: [],
+    compatibleDialectOrRegister: [],
     analyzedRows: 0,
     compatibleRows: 0,
     componentRows: 0,
@@ -716,6 +722,10 @@ function analyzerLemmaAliases(
   return analyzerVerbLemmas(analyzer).filter((lemma) =>
     localAliases.has(noDiacritics(lemma)),
   );
+}
+
+function dialectOrRegisterTags(tags: string[]): string[] {
+  return unique(tags.filter((tag) => tag === 'Gheg' || tag === 'nonst'));
 }
 
 function expectedFromOptions(target: TargetRecord): Record<string, unknown> {
@@ -793,6 +803,11 @@ function classifyVoice(
     );
   if (analyzer.accepted) {
     reasons.push('uniparser_analyzer_accepts_head_token');
+    if (analyzer.compatibleDialectOrRegister.length > 0) {
+      reasons.push(
+        `uniparser_analyzer_register:${analyzer.compatibleDialectOrRegister.join(',')}`,
+      );
+    }
   } else if (analyzer.componentSupported) {
     reasons.push('uniparser_analyzer_supports_head_component');
   } else if (analyzerAliasLemmas.length > 0) {
@@ -804,7 +819,7 @@ function classifyVoice(
   } else if (analyzer.status === 'no_token_analysis') {
     reasons.push('uniparser_analyzer_no_head_token_analysis');
   }
-  if (lexeme.dialectOrRegister.length > 0) {
+  if (!analyzer.accepted && lexeme.dialectOrRegister.length > 0) {
     reasons.push(`dialect_or_register:${lexeme.dialectOrRegister.join(',')}`);
   }
 
@@ -1146,6 +1161,7 @@ function main(): void {
             accepted: analyzer.accepted,
             componentSupported: analyzer.componentSupported,
             lemmaAliasLemmas: analyzer.lemmaAliasLemmas,
+            compatibleDialectOrRegister: analyzer.compatibleDialectOrRegister,
             analyzedRows: analyzer.analyzedRows,
             compatibleRows: analyzer.compatibleRows,
             componentRows: analyzer.componentRows,
