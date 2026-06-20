@@ -45,12 +45,15 @@ const DEFAULT_MORPHOLOGY = join(
   '.cache',
   'external-morphology-audit.json',
 );
-const DEFAULT_MIDDLE_PASSIVE_REVIEW = join(
-  REPO_ROOT,
-  'data',
-  'corpora',
-  'middle-passive-eligibility-review.json',
-);
+const DEFAULT_MIDDLE_PASSIVE_REVIEWS = [
+  join(REPO_ROOT, 'data', 'corpora', 'middle-passive-eligibility-review.json'),
+  join(
+    REPO_ROOT,
+    'data',
+    'corpora',
+    'middle-passive-source-cache-review.json',
+  ),
+];
 
 interface TargetRecord {
   id: string;
@@ -148,7 +151,10 @@ interface MiddlePassiveEligibilityReview {
 interface MiddlePassiveReviewEvidence {
   status: string;
   path: string;
-  sourceArtifacts: MiddlePassiveEligibilityReview['sourceArtifacts'] | null;
+  sources: Array<{
+    path: string;
+    sourceArtifacts: MiddlePassiveEligibilityReview['sourceArtifacts'] | null;
+  }>;
   rows: Array<{
     verbId: string;
     action: string;
@@ -624,28 +630,37 @@ function readMorphologyEvidence(
 }
 
 function readMiddlePassiveReviewEvidence(
-  path: string,
+  paths: string[],
 ): MiddlePassiveReviewEvidence {
-  if (!existsSync(path)) {
-    return {
-      status: 'missing',
+  const sources: MiddlePassiveReviewEvidence['sources'] = [];
+  const rows: MiddlePassiveReviewEvidence['rows'] = [];
+  for (const path of paths) {
+    if (!existsSync(path)) {
+      sources.push({ path, sourceArtifacts: null });
+      continue;
+    }
+    const review = readJson<MiddlePassiveEligibilityReview>(path);
+    sources.push({
       path,
-      sourceArtifacts: null,
-      rows: [],
-    };
+      sourceArtifacts: review.sourceArtifacts ?? null,
+    });
+    rows.push(
+      ...(review.rows ?? [])
+        .filter((row) => row.verbId && row.action)
+        .map((row) => ({
+          verbId: row.verbId,
+          action: row.action,
+          decision: row.decision ?? 'unknown',
+        })),
+    );
   }
-  const review = readJson<MiddlePassiveEligibilityReview>(path);
+  const loaded = sources.filter((source) => source.sourceArtifacts).length;
   return {
-    status: review.status ?? 'loaded',
-    path,
-    sourceArtifacts: review.sourceArtifacts ?? null,
-    rows: (review.rows ?? [])
-      .filter((row) => row.verbId && row.action)
-      .map((row) => ({
-        verbId: row.verbId,
-        action: row.action,
-        decision: row.decision ?? 'unknown',
-      })),
+    status:
+      loaded === paths.length ? 'loaded' : loaded > 0 ? 'partial' : 'missing',
+    path: paths.join(', '),
+    sources,
+    rows,
   };
 }
 
@@ -706,10 +721,12 @@ function summarizeMiddlePassiveReviewCoverage(
   return {
     status: review.status,
     path: review.path,
-    reviewFileMatchesCurrentInputs:
-      review.sourceArtifacts?.targetGeneratedAt === targetFile.generatedAt &&
-      review.sourceArtifacts?.coverageGeneratedAt === coverage.generatedAt &&
-      review.sourceArtifacts?.corpusVersion === targetFile.corpusVersion,
+    reviewFileMatchesCurrentInputs: review.sources.every(
+      (source) =>
+        source.sourceArtifacts?.targetGeneratedAt === targetFile.generatedAt &&
+        source.sourceArtifacts?.coverageGeneratedAt === coverage.generatedAt &&
+        source.sourceArtifacts?.corpusVersion === targetFile.corpusVersion,
+    ),
     totalQueueGroups: queue.length,
     coveredQueueGroups: queue.filter((row) => row.coveredByReviewFile).length,
     reviewRows: review.rows.length,
@@ -1756,7 +1773,7 @@ function main(): void {
     targetsById,
   );
   const middlePassiveReviewEvidence = readMiddlePassiveReviewEvidence(
-    DEFAULT_MIDDLE_PASSIVE_REVIEW,
+    DEFAULT_MIDDLE_PASSIVE_REVIEWS,
   );
   const middlePassiveReviewedKeys = new Set(
     middlePassiveReviewEvidence.rows.map(middlePassiveReviewKey),
@@ -2544,7 +2561,7 @@ function main(): void {
 
   takeDossierMisses(
     unexplained,
-    'unexplained exact absence',
+    'unbucketed miss after heuristics',
     24,
     (miss) => miss.verbId,
     2,
@@ -2721,7 +2738,7 @@ function main(): void {
     `- Verbs flagged noMiddlePassive: ${report.summary.noMiddlePassiveFlaggedVerbs}`,
     `- Verbs with explicit middle-passive overrides: ${report.summary.verbsWithMiddlePassiveOverrides}`,
     `- External morphology audit: ${report.summary.morphologyStatus}; joined target verdicts: ${report.summary.morphologyMatchedMissTargets}`,
-    `- Unexplained exact absences after heuristics: ${report.summary.unexplainedMisses}`,
+    `- Unbucketed misses after heuristics: ${report.summary.unexplainedMisses}`,
     '',
     '## Methodology & Caveats',
     '',
@@ -2895,16 +2912,16 @@ function main(): void {
     '',
     '### Middle-Passive Review Coverage',
     '',
-    'This compares the committed review file with the complete generated middle-passive review queue in this audit run.',
+    'This compares committed review files with the complete generated middle-passive review queue in this audit run.',
     '',
-    `- Review file: ${report.middlePassiveReviewCoverage.path}`,
+    `- Review files: ${report.middlePassiveReviewCoverage.path}`,
     `- Status: ${report.middlePassiveReviewCoverage.status}`,
     `- Matches current target/coverage inputs: ${report.middlePassiveReviewCoverage.reviewFileMatchesCurrentInputs ? 'yes' : 'no'}`,
     '',
     '| Metric | Count |',
     '| --- | ---: |',
     `| Queue groups | ${report.middlePassiveReviewCoverage.totalQueueGroups} |`,
-    `| Queue groups covered by review file | ${report.middlePassiveReviewCoverage.coveredQueueGroups} |`,
+    `| Queue groups covered by review files | ${report.middlePassiveReviewCoverage.coveredQueueGroups} |`,
     `| Review file rows | ${report.middlePassiveReviewCoverage.reviewRows} |`,
     `| Review file verb IDs | ${report.middlePassiveReviewCoverage.reviewVerbIds} |`,
     `| Middle-passive target misses in queue | ${report.middlePassiveReviewCoverage.totalMiddlePassiveMisses} |`,
@@ -3114,7 +3131,7 @@ function main(): void {
       .slice(0, 20)
       .map((row) => `| ${row.key} | ${row.count} |`),
     '',
-    '## Unexplained Exact-Absence Sample',
+    '## Unbucketed Miss Sample',
     '',
     '| Target | Lemma | Signature |',
     '| --- | --- | --- |',

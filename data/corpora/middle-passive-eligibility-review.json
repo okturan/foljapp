@@ -10,6 +10,7 @@
     "rerun": "npm run audit:corpus-misses:full"
   },
   "scope": "The cleanest middle-passive review bucket: generated middle-passive misses whose UniParser lexeme is vi-only, with no vt/med tag, and whose analyzer rows do not validate the requested middle-passive cell.",
+  "requiredCompleteAction": "review_vi_tagged_nonactive_candidate",
   "allowedDecisions": [
     "keep",
     "noMiddlePassive",

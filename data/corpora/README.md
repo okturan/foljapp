@@ -166,6 +166,12 @@ Resolved decisions must include `decisionEvidence`; unresolved rows stay
 `needs_source`. Do not change generation from this file alone; use it as the
 review queue for source-backed voice-eligibility decisions.
 
+Exact source-cache-backed middle-passive decisions are tracked separately in
+[`middle-passive-source-cache-review.json`](./middle-passive-source-cache-review.json).
+Rows in that file mean Husić/Kaikki source-cache paradigm support, not corpus
+usage attestation. They keep source-backed forms out of the unresolved
+overgeneration queue without claiming the forms are common.
+
 After rerunning the full local audit, validate that tracked review queue against
 the current ignored `.cache` artifacts:
 
