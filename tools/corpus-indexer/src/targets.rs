@@ -3,7 +3,7 @@ use aho_corasick::AhoCorasick;
 use anyhow::Result;
 use serde::Deserialize;
 use serde_json::Value;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 use std::fs;
 use std::path::Path;
 
@@ -90,12 +90,21 @@ fn targets_from_json(raw: &str) -> Result<Vec<Target>> {
 
 pub struct TargetMatcher {
     automaton: AhoCorasick,
+    anchor_tokens: Option<HashSet<String>>,
     patterns: Vec<String>,
     targets_by_pattern: Vec<Vec<PatternTarget>>,
 }
 
 impl TargetMatcher {
     pub fn new(targets: Vec<Target>) -> Result<Self> {
+        Self::from_targets(targets, false)
+    }
+
+    pub fn new_with_anchor_prefilter(targets: Vec<Target>) -> Result<Self> {
+        Self::from_targets(targets, true)
+    }
+
+    fn from_targets(targets: Vec<Target>, use_anchor_prefilter: bool) -> Result<Self> {
         let mut by_pattern = BTreeMap::<String, Vec<PatternTarget>>::new();
         for target in targets {
             if target.tokens.is_empty() {
@@ -119,8 +128,16 @@ impl TargetMatcher {
             targets_by_pattern.push(targets);
         }
 
+        let anchor_tokens = use_anchor_prefilter.then(|| {
+            patterns
+                .iter()
+                .filter_map(|pattern| anchor_for_pattern(pattern))
+                .collect()
+        });
+
         Ok(Self {
             automaton: AhoCorasick::new(&patterns)?,
+            anchor_tokens,
             patterns,
             targets_by_pattern,
         })
@@ -128,6 +145,9 @@ impl TargetMatcher {
 
     pub fn matches_normalized(&self, normalized: &str) -> Vec<TargetMatch<'_>> {
         let mut matches = Vec::new();
+        if !self.has_anchor_token(normalized) {
+            return matches;
+        }
         let bytes = normalized.as_bytes();
 
         for matched in self.automaton.find_overlapping_iter(normalized) {
@@ -158,6 +178,22 @@ impl TargetMatcher {
 
         matches
     }
+
+    fn has_anchor_token(&self, normalized: &str) -> bool {
+        let Some(anchor_tokens) = &self.anchor_tokens else {
+            return true;
+        };
+        normalized
+            .split_whitespace()
+            .any(|token| anchor_tokens.contains(token))
+    }
+}
+
+fn anchor_for_pattern(pattern: &str) -> Option<String> {
+    pattern
+        .split_whitespace()
+        .max_by_key(|token| token.chars().count())
+        .map(ToOwned::to_owned)
 }
 
 fn patterns_for_target(target: &Target) -> Vec<TargetPattern> {

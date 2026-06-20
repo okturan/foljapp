@@ -54,6 +54,8 @@ artifacts such as `.cache/cargo-target`.
 MaCoCu is the strongest source for public examples because it carries provenance and quality metadata. OPUS is useful when the UI needs a parallel sentence, but rare forms in OPUS skew toward mined/noisy corpora. CC100 and mC4 expand recall for forms like `punuakam`, but both include obvious web junk, so they should never feed the UI without filtering, sentence segmentation, and dedupe. SEEUniversity also finds rare forms, but some hits are grammar/reference prose rather than natural usage.
 
 The machine-readable inventory is in `resources.json`.
+Candidate-cache performance notes are in
+[`cache-benchmark.md`](./cache-benchmark.md).
 
 ## Local corpus examples
 
@@ -102,6 +104,12 @@ only after a raw match. Target matches, quality decisions, scores, and
 occurrences are still computed fresh by the scanner. Existing v1 full-row
 shards remain readable; use `npm run build:corpus-candidate-cache -- --refresh`
 to rewrite a source partition into the split format.
+
+The split format is mainly a missing-form forensics optimization. It speeds up
+raw-zero and low-hit traces because the scanner can avoid metadata
+deserialization for most candidates. It is not expected to produce a large gain
+on hit-heavy match scans, and it can be larger on disk than the old full-row
+cache.
 
 ```bash
 npm run build:corpus-candidate-cache

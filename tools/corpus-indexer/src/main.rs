@@ -558,7 +558,9 @@ fn trace_targets(args: TraceTargetsArgs) -> Result<()> {
         .iter()
         .map(|target| target.id.clone())
         .collect::<HashSet<_>>();
-    let target_matcher = Arc::new(TargetMatcher::new(selected_targets.clone())?);
+    let target_matcher = Arc::new(TargetMatcher::new_with_anchor_prefilter(
+        selected_targets.clone(),
+    )?);
     let (tx, rx) = mpsc::channel();
     let started = Instant::now();
 

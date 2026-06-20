@@ -64,7 +64,7 @@ pub fn quality_flags(sentence: &str, normalized: &str, quality: Option<&str>) ->
     }
     if REFERENCE_PROSE_HINTS
         .iter()
-        .any(|hint| lower.contains(hint))
+        .any(|hint| contains_phrase_hint(&lower, hint))
     {
         flags.push("reference_prose".to_string());
     }
@@ -119,6 +119,21 @@ fn repeated_future_marker(lower: &str) -> bool {
     })
 }
 
+fn contains_phrase_hint(lower: &str, hint: &str) -> bool {
+    lower.match_indices(hint).any(|(start, _)| {
+        let end = start + hint.len();
+        let left_ok = lower[..start]
+            .chars()
+            .next_back()
+            .is_none_or(|ch| !ch.is_alphabetic());
+        let right_ok = lower[end..]
+            .chars()
+            .next()
+            .is_none_or(|ch| !ch.is_alphabetic());
+        left_ok && right_ok
+    })
+}
+
 fn dense_inflection_list(sentence: &str, lower: &str) -> bool {
     lower.contains("e kështu me radhë")
         && sentence.matches(',').count() >= 3
@@ -144,6 +159,25 @@ mod tests {
     #[test]
     fn rejects_grammar_reference_prose() {
         let sentence = "Në sistemin morfologjik, dialekti i veriut ka formën e paskajores së tipit me punue, kurse toskërishtja në vend të saj, përdor lidhoren të punoj.";
+        let normalized = tokens_for(sentence).join(" ");
+        let flags = quality_flags(sentence, &normalized, Some("good"));
+
+        assert!(flags.iter().any(|flag| flag == "reference_prose"));
+        assert!(!keep_sentence(&flags));
+    }
+
+    #[test]
+    fn reference_prose_hints_respect_word_boundaries() {
+        let sentence = "Ti ke caktuar dy trajnerë për ekipin.";
+        let normalized = tokens_for(sentence).join(" ");
+        let flags = quality_flags(sentence, &normalized, Some("good"));
+
+        assert!(!flags.iter().any(|flag| flag == "reference_prose"));
+    }
+
+    #[test]
+    fn reference_prose_still_rejects_bounded_hints() {
+        let sentence = "Emri shfaq formën e caktuar në këtë tabelë gramatikore.";
         let normalized = tokens_for(sentence).join(" ");
         let flags = quality_flags(sentence, &normalized, Some("good"));
 
