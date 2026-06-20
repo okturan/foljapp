@@ -1,26 +1,23 @@
 use crate::text::tokens_for;
 
-const ADULT_OR_SPAM_TERMS: &[&str] = &[
+const ADULT_OR_SPAM_WORDS: &[&str] = &[
     "anal",
     "blowjob",
     "boobs",
     "cumshot",
     "deepthroat",
     "dildo",
-    "fetish",
     "hardcore",
     "lezbike",
-    "lesbian",
     "lesbo",
-    "masturb",
-    "orgazm",
     "pidhi",
-    "porn",
     "porno",
-    "rrip-në",
-    "seksi",
     "strapon",
 ];
+
+const ADULT_OR_SPAM_STEMS: &[&str] = &["fetish", "lesbian", "masturb", "orgazm", "porn"];
+
+const ADULT_OR_SPAM_PHRASES: &[&str] = &["rrip-në"];
 
 const REFERENCE_PROSE_HINTS: &[&str] = &[
     "conjugation",
@@ -52,7 +49,7 @@ pub fn quality_flags(sentence: &str, normalized: &str, quality: Option<&str>) ->
             flags.push("low_quality".to_string());
         }
     }
-    if ADULT_OR_SPAM_TERMS.iter().any(|term| lower.contains(term)) {
+    if adult_or_spam(&lower) {
         flags.push("adult_or_spam".to_string());
     }
     if sentence.contains('<')
@@ -119,6 +116,22 @@ fn repeated_future_marker(lower: &str) -> bool {
     })
 }
 
+fn adult_or_spam(lower: &str) -> bool {
+    let tokens = tokens_for(lower);
+    ADULT_OR_SPAM_WORDS
+        .iter()
+        .any(|term| tokens.iter().any(|token| token == term))
+        || tokens.iter().any(|token| is_adult_sex_token(token))
+        || ADULT_OR_SPAM_STEMS.iter().any(|stem| lower.contains(stem))
+        || ADULT_OR_SPAM_PHRASES
+            .iter()
+            .any(|phrase| contains_phrase_hint(lower, phrase))
+}
+
+fn is_adult_sex_token(token: &str) -> bool {
+    matches!(token, "seks" | "seksi" | "seksin" | "seksit") || token.starts_with("seksual")
+}
+
 fn contains_phrase_hint(lower: &str, hint: &str) -> bool {
     lower.match_indices(hint).any(|(start, _)| {
         let end = start + hint.len();
@@ -182,6 +195,35 @@ mod tests {
         let flags = quality_flags(sentence, &normalized, Some("good"));
 
         assert!(flags.iter().any(|flag| flag == "reference_prose"));
+        assert!(!keep_sentence(&flags));
+    }
+
+    #[test]
+    fn adult_spam_words_do_not_match_inside_normal_words() {
+        let sentence = "Analiza e tekstit përmend një seksion dhe batuta seksiste.";
+        let normalized = tokens_for(sentence).join(" ");
+        let flags = quality_flags(sentence, &normalized, Some("good"));
+
+        assert!(!flags.iter().any(|flag| flag == "adult_or_spam"));
+    }
+
+    #[test]
+    fn adult_spam_still_rejects_explicit_terms_and_stems() {
+        let sentence = "Ky dokument përmban pornografi dhe spam.";
+        let normalized = tokens_for(sentence).join(" ");
+        let flags = quality_flags(sentence, &normalized, Some("good"));
+
+        assert!(flags.iter().any(|flag| flag == "adult_or_spam"));
+        assert!(!keep_sentence(&flags));
+    }
+
+    #[test]
+    fn adult_spam_still_rejects_albanian_sexual_terms() {
+        let sentence = "Teksti përmban materiale seksuale dhe diskutime për seksin.";
+        let normalized = tokens_for(sentence).join(" ");
+        let flags = quality_flags(sentence, &normalized, Some("good"));
+
+        assert!(flags.iter().any(|flag| flag == "adult_or_spam"));
         assert!(!keep_sentence(&flags));
     }
 }
