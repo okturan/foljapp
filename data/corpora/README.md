@@ -189,6 +189,7 @@ Trace raw scanner-stage provenance for selected target IDs or forms:
 
 ```bash
 npm run trace:corpus-targets -- --forms='mos të ledhatojë,punuakam' --sources=all --jobs=12
+npm run trace:corpus-targets -- --target-ids-file=.cache/sherlock-trace-target-ids.txt --sources=all --jobs=12
 ```
 
 This writes `.cache/corpus-target-provenance.json` and

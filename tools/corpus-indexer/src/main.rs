@@ -107,8 +107,12 @@ struct TraceTargetsArgs {
     targets: PathBuf,
     #[arg(long, default_value = "")]
     target_ids: String,
+    #[arg(long)]
+    target_ids_file: Option<PathBuf>,
     #[arg(long, default_value = "")]
     forms: String,
+    #[arg(long)]
+    forms_file: Option<PathBuf>,
     #[arg(long, default_value = ".cache/corpus-local-full.sqlite")]
     source_db: PathBuf,
     #[arg(long, default_value = ".cache/corpus-target-provenance.json")]
@@ -530,7 +534,7 @@ fn trace_targets(args: TraceTargetsArgs) -> Result<()> {
         .with_context(|| format!("load targets from {}", args.targets.display()))?;
     let selected_targets = select_trace_targets(&all_targets, &args)?;
     if selected_targets.is_empty() {
-        bail!("no targets matched --target-ids or --forms");
+        bail!("no targets matched requested target IDs or forms");
     }
 
     if args.retained_only {
@@ -786,15 +790,21 @@ fn write_trace_report(report: &TraceReport, out_json: &Path, out_md: &Path) -> R
 }
 
 fn select_trace_targets(targets: &[Target], args: &TraceTargetsArgs) -> Result<Vec<Target>> {
-    let requested_id_values = split_csv(&args.target_ids);
-    let requested_form_values = split_csv(&args.forms);
+    let mut requested_id_values = split_csv(&args.target_ids);
+    if let Some(path) = &args.target_ids_file {
+        requested_id_values.extend(read_selection_file(path)?);
+    }
+    let mut requested_form_values = split_csv(&args.forms);
+    if let Some(path) = &args.forms_file {
+        requested_form_values.extend(read_selection_file(path)?);
+    }
     let requested_ids = requested_id_values.iter().cloned().collect::<HashSet<_>>();
     let requested_forms = requested_form_values
         .iter()
         .map(|form| normalized_text(&form))
         .collect::<HashSet<_>>();
     if requested_ids.is_empty() && requested_forms.is_empty() {
-        bail!("provide --target-ids or --forms");
+        bail!("provide --target-ids, --target-ids-file, --forms, or --forms-file");
     }
 
     let selected = targets
@@ -839,6 +849,20 @@ fn split_csv(value: &str) -> Vec<String> {
         .filter(|part| !part.is_empty())
         .map(ToOwned::to_owned)
         .collect()
+}
+
+fn read_selection_file(path: &Path) -> Result<Vec<String>> {
+    let values = fs::read_to_string(path)
+        .with_context(|| format!("read selection file {}", path.display()))?
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty() && !line.starts_with('#'))
+        .map(ToOwned::to_owned)
+        .collect::<Vec<_>>();
+    if values.is_empty() {
+        bail!("selection file has no usable values: {}", path.display());
+    }
+    Ok(values)
 }
 
 fn trace_resource(
