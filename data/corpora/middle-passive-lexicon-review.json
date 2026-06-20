@@ -4,8 +4,8 @@
   "sourceArtifacts": {
     "corpusMissingAudit": ".cache/corpus-missing-audit.json",
     "externalMorphologyAudit": ".cache/external-morphology-audit.json",
-    "targetGeneratedAt": "2026-06-19T13:58:35.608Z",
-    "coverageGeneratedAt": "2026-06-20T04:03:12.275Z",
+    "targetGeneratedAt": "2026-06-20T04:14:28.598Z",
+    "coverageGeneratedAt": "2026-06-20T04:14:35.218Z",
     "corpusVersion": "0.1.5",
     "rerun": "npm run audit:corpus-misses:full"
   },
@@ -23,12 +23,12 @@
     "needs_source": "Do not change generation yet; current local evidence is insufficient for a generation decision."
   },
   "summary": {
-    "groups": 16,
-    "actionTargetMisses": 1869,
+    "groups": 15,
+    "actionTargetMisses": 1520,
     "decisionCounts": {
       "keep": 7,
       "noMiddlePassive": 0,
-      "middlePassiveThirdPersonOnly": 4,
+      "middlePassiveThirdPersonOnly": 3,
       "needs_source": 5
     }
   },
@@ -80,7 +80,7 @@
       "lemma": "firmoj",
       "action": "review_component_supported_phrase",
       "decision": "middlePassiveThirdPersonOnly",
-      "actionTargetMisses": 223,
+      "actionTargetMisses": 64,
       "decisionEvidence": [
         {
           "source": ".cache/corpus-local-full.sqlite",
@@ -93,7 +93,7 @@
       "lemma": "firmoj",
       "action": "review_as_analyzer_accepted",
       "decision": "middlePassiveThirdPersonOnly",
-      "actionTargetMisses": 16,
+      "actionTargetMisses": 1,
       "decisionEvidence": [
         {
           "source": ".cache/corpus-local-full.sqlite",
@@ -169,24 +169,11 @@
       "lemma": "fabrikoj",
       "action": "review_component_supported_phrase",
       "decision": "middlePassiveThirdPersonOnly",
-      "actionTargetMisses": 208,
+      "actionTargetMisses": 49,
       "decisionEvidence": [
         {
           "source": ".cache/corpus-local-full.sqlite",
           "basis": "Retained middle-passive evidence is overwhelmingly third person: strong examples include fabrikohet, fabrikohen, u fabrikua, and është fabrikuar; the only non-third surface is a duplicated corrupted diacriticless phrase, not reliable personal passive evidence."
-        }
-      ]
-    },
-    {
-      "verbId": "fabrikoj",
-      "lemma": "fabrikoj",
-      "action": "review_as_analyzer_accepted",
-      "decision": "middlePassiveThirdPersonOnly",
-      "actionTargetMisses": 16,
-      "decisionEvidence": [
-        {
-          "source": ".cache/corpus-local-full.sqlite",
-          "basis": "Analyzer acceptance is outweighed by retained corpus distribution: credible middle-passive evidence is third-person passive, while non-third retained evidence is corrupted or duplicated."
         }
       ]
     },

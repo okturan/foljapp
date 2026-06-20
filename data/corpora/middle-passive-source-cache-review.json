@@ -4,8 +4,8 @@
   "sourceArtifacts": {
     "corpusMissingAudit": ".cache/corpus-missing-audit.json",
     "externalMorphologyAudit": ".cache/external-morphology-audit.json",
-    "targetGeneratedAt": "2026-06-19T13:58:35.608Z",
-    "coverageGeneratedAt": "2026-06-20T04:03:12.275Z",
+    "targetGeneratedAt": "2026-06-20T04:14:28.598Z",
+    "coverageGeneratedAt": "2026-06-20T04:14:35.218Z",
     "corpusVersion": "0.1.5",
     "rerun": "npm run audit:corpus-misses:full"
   },
