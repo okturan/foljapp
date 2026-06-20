@@ -273,6 +273,19 @@ interface SourceCacheMiddlePassiveEvidence {
   kaikki: SourceCacheEvidenceSource;
 }
 
+interface SourceCacheDirectSupportSample {
+  targetKey: string;
+  headToken: string | null;
+  matchedForm: string;
+}
+
+interface SourceCacheDirectSupport {
+  exactTargetCount: number;
+  headTokenCount: number;
+  exactTargetSamples: SourceCacheDirectSupportSample[];
+  headTokenSamples: SourceCacheDirectSupportSample[];
+}
+
 interface MiddlePassiveReviewCoverage {
   status: string;
   path: string;
@@ -290,6 +303,10 @@ interface MiddlePassiveReviewCoverage {
   sourceCacheEvidenceTargetMisses: number;
   unreviewedSourceCacheEvidenceGroups: number;
   unreviewedSourceCacheEvidenceTargetMisses: number;
+  sourceCacheExactTargetSupportMisses: number;
+  sourceCacheHeadTokenSupportMisses: number;
+  unreviewedSourceCacheExactTargetSupportMisses: number;
+  unreviewedSourceCacheHeadTokenSupportMisses: number;
   sourceCacheEvidenceBySource: CountRow[];
   decisionCounts: CountRow[];
   unreviewedByAction: CountRow[];
@@ -651,6 +668,7 @@ function summarizeMiddlePassiveReviewCoverage(
     morphologyForms: CountRow[];
     coveredByReviewFile: boolean;
     sourceCacheMiddlePassiveEvidence: SourceCacheMiddlePassiveEvidence;
+    sourceCacheDirectSupport: SourceCacheDirectSupport;
   }>,
 ): MiddlePassiveReviewCoverage {
   const reviewedVerbIds = new Set(review.rows.map((row) => row.verbId));
@@ -715,6 +733,22 @@ function summarizeMiddlePassiveReviewCoverage(
     unreviewedSourceCacheEvidenceTargetMisses: unreviewedRows
       .filter((row) => row.sourceCacheMiddlePassiveEvidence.hasEvidence)
       .reduce((total, row) => total + row.targetCount, 0),
+    sourceCacheExactTargetSupportMisses: queue.reduce(
+      (total, row) => total + row.sourceCacheDirectSupport.exactTargetCount,
+      0,
+    ),
+    sourceCacheHeadTokenSupportMisses: queue.reduce(
+      (total, row) => total + row.sourceCacheDirectSupport.headTokenCount,
+      0,
+    ),
+    unreviewedSourceCacheExactTargetSupportMisses: unreviewedRows.reduce(
+      (total, row) => total + row.sourceCacheDirectSupport.exactTargetCount,
+      0,
+    ),
+    unreviewedSourceCacheHeadTokenSupportMisses: unreviewedRows.reduce(
+      (total, row) => total + row.sourceCacheDirectSupport.headTokenCount,
+      0,
+    ),
     sourceCacheEvidenceBySource: topEntries(
       sourceCacheEvidenceBySource,
       sourceCacheEvidenceBySource.size,
@@ -1267,11 +1301,9 @@ function emptySourceCacheEvidence(path: string | null): SourceCacheEvidenceSourc
   };
 }
 
-function readHusicMiddlePassiveEvidence(
-  path: string | null,
-): SourceCacheEvidenceSource {
-  if (!path) return emptySourceCacheEvidence(null);
-  const forms = uniqueStrings(
+function readHusicMiddlePassiveForms(path: string | null): string[] {
+  if (!path) return [];
+  return uniqueStrings(
     readJsonLines(path)
       .filter((row) => {
         if (!row || typeof row !== 'object') return false;
@@ -1280,6 +1312,13 @@ function readHusicMiddlePassiveEvidence(
       })
       .map((row) => (row as { form?: unknown }).form),
   );
+}
+
+function readHusicMiddlePassiveEvidence(
+  path: string | null,
+): SourceCacheEvidenceSource {
+  if (!path) return emptySourceCacheEvidence(null);
+  const forms = readHusicMiddlePassiveForms(path);
   return {
     path,
     middlePassiveFormCount: forms.length,
@@ -1288,10 +1327,10 @@ function readHusicMiddlePassiveEvidence(
   };
 }
 
-function readKaikkiMiddlePassiveEvidence(
+function readKaikkiMiddlePassiveFormsAndTemplates(
   path: string | null,
-): SourceCacheEvidenceSource {
-  if (!path) return emptySourceCacheEvidence(null);
+): { forms: string[]; templates: string[] } {
+  if (!path) return { forms: [], templates: [] };
   const templateNames: string[] = [];
   const forms: string[] = [];
   for (const row of readJsonLines(path)) {
@@ -1337,13 +1376,33 @@ function readKaikkiMiddlePassiveEvidence(
       }
     }
   }
-  const uniqueForms = uniqueStrings(forms);
+  return { forms: uniqueStrings(forms), templates: uniqueStrings(templateNames) };
+}
+
+function readKaikkiMiddlePassiveEvidence(
+  path: string | null,
+): SourceCacheEvidenceSource {
+  if (!path) return emptySourceCacheEvidence(null);
+  const { forms, templates } = readKaikkiMiddlePassiveFormsAndTemplates(path);
   return {
     path,
-    middlePassiveFormCount: uniqueForms.length,
-    middlePassiveForms: uniqueForms.slice(0, 10),
-    middlePassiveTemplates: uniqueStrings(templateNames),
+    middlePassiveFormCount: forms.length,
+    middlePassiveForms: forms.slice(0, 10),
+    middlePassiveTemplates: templates,
   };
+}
+
+function readSourceCacheMiddlePassiveForms(
+  verbId: string,
+  lemma: string,
+): string[] {
+  const husicForms = readHusicMiddlePassiveForms(
+    sourceCachePath('husic', verbId, lemma),
+  );
+  const kaikki = readKaikkiMiddlePassiveFormsAndTemplates(
+    sourceCachePath('kaikki', verbId, lemma),
+  );
+  return uniqueStrings([...husicForms, ...kaikki.forms]);
 }
 
 function readSourceCacheMiddlePassiveEvidence(
@@ -1635,6 +1694,39 @@ function sourceCacheEvidenceScore(
   return evidence.husic.middlePassiveFormCount > 0 ? 1 : 0;
 }
 
+function normalizeCacheSupportForm(value: string): string {
+  return (value.match(/\p{L}+/gu) ?? [])
+    .map((token) => token.normalize('NFC').toLocaleLowerCase('sq-AL').trim())
+    .filter(Boolean)
+    .join(' ');
+}
+
+function finalCacheSupportToken(value: string): string | null {
+  const tokens = normalizeCacheSupportForm(value).split(' ').filter(Boolean);
+  return tokens[tokens.length - 1] ?? null;
+}
+
+function sourceCacheDirectSupportCell(
+  support: SourceCacheDirectSupport,
+): string {
+  const parts: string[] = [];
+  if (support.exactTargetCount > 0) {
+    parts.push(
+      `exact ${support.exactTargetCount}: ${support.exactTargetSamples
+        .map((sample) => sample.targetKey)
+        .join(', ')}`,
+    );
+  }
+  if (support.headTokenCount > 0) {
+    parts.push(
+      `head ${support.headTokenCount}: ${support.headTokenSamples
+        .map((sample) => `${sample.headToken ?? ''}->${sample.matchedForm}`)
+        .join(', ')}`,
+    );
+  }
+  return parts.join('; ') || 'none';
+}
+
 function main(): void {
   const targetsPath = valueAfter('--targets=') ?? DEFAULT_TARGETS;
   const coveragePath = valueAfter('--coverage=') ?? DEFAULT_COVERAGE;
@@ -1673,6 +1765,13 @@ function main(): void {
     string,
     SourceCacheMiddlePassiveEvidence
   >();
+  const sourceCacheFormMapByVerb = new Map<
+    string,
+    {
+      exact: Map<string, string>;
+      finalToken: Map<string, string>;
+    }
+  >();
   const sourceCacheEvidenceFor = (verbId: string, lemma: string) => {
     const key = `${verbId}\t${lemma}`;
     const existing = sourceCacheEvidenceByVerb.get(key);
@@ -1680,6 +1779,24 @@ function main(): void {
     const evidence = readSourceCacheMiddlePassiveEvidence(verbId, lemma);
     sourceCacheEvidenceByVerb.set(key, evidence);
     return evidence;
+  };
+  const sourceCacheFormMapFor = (verbId: string, lemma: string) => {
+    const key = `${verbId}\t${lemma}`;
+    const existing = sourceCacheFormMapByVerb.get(key);
+    if (existing) return existing;
+    const formMap = {
+      exact: new Map<string, string>(),
+      finalToken: new Map<string, string>(),
+    };
+    for (const form of readSourceCacheMiddlePassiveForms(verbId, lemma)) {
+      formMap.exact.set(normalizeCacheSupportForm(form), form);
+      const finalToken = finalCacheSupportToken(form);
+      if (finalToken && !formMap.finalToken.has(finalToken)) {
+        formMap.finalToken.set(finalToken, form);
+      }
+    }
+    sourceCacheFormMapByVerb.set(key, formMap);
+    return formMap;
   };
   const missingIds = new Set(coverage.misses.map((miss) => miss.id));
   const verbsById = new Map(verbs.map((verb) => [verb.id, verb]));
@@ -1809,10 +1926,13 @@ function main(): void {
       translationEn: target.translationEn,
       signature: target.signature,
       cellKey: cellKey(target),
+      tokenCount: target.tokens.length,
       bucket: miss.bucket,
       primary,
       labels,
       morphologyAction: morphology?.action ?? null,
+      morphologyHeadToken:
+        morphology?.headToken ?? target.tokens[target.tokens.length - 1] ?? null,
       morphologyForm: morphology?.form ?? null,
       morphologyVoiceEligibility: morphology?.voiceEligibility ?? null,
       morphologyProofLevel: morphology?.proofLevel ?? null,
@@ -2090,8 +2210,56 @@ function main(): void {
             morphologyProofLevelCounts: new Map<string, number>(),
             morphologyScopeCounts: new Map<string, number>(),
             morphologyReasonCounts: new Map<string, number>(),
+            sourceCacheDirectSupport: {
+              exactTargetCount: 0,
+              headTokenCount: 0,
+              exactTargetSamples: [] as SourceCacheDirectSupportSample[],
+              headTokenSamples: [] as SourceCacheDirectSupportSample[],
+            },
           };
           group.targetCount += 1;
+          const sourceCacheForms = sourceCacheFormMapFor(
+            miss.verbId,
+            miss.lemma,
+          );
+          const exactMatch = sourceCacheForms.exact.get(
+            normalizeCacheSupportForm(miss.targetKey),
+          );
+          if (exactMatch) {
+            group.sourceCacheDirectSupport.exactTargetCount += 1;
+            if (
+              group.sourceCacheDirectSupport.exactTargetSamples.length < 3 &&
+              !group.sourceCacheDirectSupport.exactTargetSamples.some(
+                (sample) => sample.targetKey === miss.targetKey,
+              )
+            ) {
+              group.sourceCacheDirectSupport.exactTargetSamples.push({
+                targetKey: miss.targetKey,
+                headToken: miss.morphologyHeadToken,
+                matchedForm: exactMatch,
+              });
+            }
+          }
+          if (!exactMatch && miss.tokenCount > 1 && miss.morphologyHeadToken) {
+            const headMatch = sourceCacheForms.finalToken.get(
+              normalizeCacheSupportForm(miss.morphologyHeadToken),
+            );
+            if (headMatch) {
+              group.sourceCacheDirectSupport.headTokenCount += 1;
+              if (
+                group.sourceCacheDirectSupport.headTokenSamples.length < 3 &&
+                !group.sourceCacheDirectSupport.headTokenSamples.some(
+                  (sample) => sample.targetKey === miss.targetKey,
+                )
+              ) {
+                group.sourceCacheDirectSupport.headTokenSamples.push({
+                  targetKey: miss.targetKey,
+                  headToken: miss.morphologyHeadToken,
+                  matchedForm: headMatch,
+                });
+              }
+            }
+          }
           if (miss.morphologyForm)
             add(group.morphologyFormCounts, miss.morphologyForm);
           if (miss.morphologyVoiceEligibility) {
@@ -2133,6 +2301,7 @@ function main(): void {
             morphologyProofLevelCounts: Map<string, number>;
             morphologyScopeCounts: Map<string, number>;
             morphologyReasonCounts: Map<string, number>;
+            sourceCacheDirectSupport: SourceCacheDirectSupport;
           }
         >(),
       )
@@ -2161,6 +2330,7 @@ function main(): void {
           row.verbId,
           row.lemma,
         ),
+        sourceCacheDirectSupport: row.sourceCacheDirectSupport,
         morphologyForms: topEntries(morphologyFormCounts, 4),
         morphologyVoiceEligibility: topEntries(
           morphologyVoiceEligibilityCounts,
@@ -2746,6 +2916,10 @@ function main(): void {
     `| Target misses with source-cache middle-passive evidence | ${report.middlePassiveReviewCoverage.sourceCacheEvidenceTargetMisses} |`,
     `| Unreviewed queue groups with source-cache evidence | ${report.middlePassiveReviewCoverage.unreviewedSourceCacheEvidenceGroups} |`,
     `| Unreviewed target misses with source-cache evidence | ${report.middlePassiveReviewCoverage.unreviewedSourceCacheEvidenceTargetMisses} |`,
+    `| Source-cache exact generated-surface support | ${report.middlePassiveReviewCoverage.sourceCacheExactTargetSupportMisses} |`,
+    `| Source-cache head-token support | ${report.middlePassiveReviewCoverage.sourceCacheHeadTokenSupportMisses} |`,
+    `| Unreviewed exact generated-surface support | ${report.middlePassiveReviewCoverage.unreviewedSourceCacheExactTargetSupportMisses} |`,
+    `| Unreviewed head-token support | ${report.middlePassiveReviewCoverage.unreviewedSourceCacheHeadTokenSupportMisses} |`,
     '',
     '| Decision | Review Rows |',
     '| --- | ---: |',
@@ -2781,11 +2955,11 @@ function main(): void {
     '',
     'Highest-priority unreviewed action-by-lemma groups that already have local Husić or Kaikki middle-passive evidence. This is review evidence only; it does not change generation.',
     '',
-    '| Morphology Action | Lemma | Verb ID | Targets | Source Cache Evidence | Verdict Forms | Proof | Scope | Middle-Passive Coverage | Active Coverage | Samples |',
-    '| --- | --- | --- | ---: | --- | --- | --- | --- | --- | --- | --- |',
+    '| Morphology Action | Lemma | Verb ID | Targets | Source Cache Evidence | Direct Cache Support | Verdict Forms | Proof | Scope | Middle-Passive Coverage | Active Coverage | Samples |',
+    '| --- | --- | --- | ---: | --- | --- | --- | --- | --- | --- | --- | --- |',
     ...report.middlePassiveSourceCacheReviewShortlist.map(
       (row) =>
-        `| ${mdCell(row.action)} | ${mdCell(row.lemma)} | ${mdCell(row.verbId)} | ${row.targetCount} | ${mdCell(sourceCacheEvidenceCell(row.sourceCacheMiddlePassiveEvidence))} | ${mdCell(countCells(row.morphologyForms))} | ${mdCell(countCells(row.morphologyProofLevels))} | ${mdCell(countCells(row.morphologyScopes))} | ${row.middlePassiveCoverage} | ${row.activeCoverage} | ${mdCell(row.samples.map((sample) => `${sample.targetKey} (${sample.signature})`).join(', '))} |`,
+        `| ${mdCell(row.action)} | ${mdCell(row.lemma)} | ${mdCell(row.verbId)} | ${row.targetCount} | ${mdCell(sourceCacheEvidenceCell(row.sourceCacheMiddlePassiveEvidence))} | ${mdCell(sourceCacheDirectSupportCell(row.sourceCacheDirectSupport))} | ${mdCell(countCells(row.morphologyForms))} | ${mdCell(countCells(row.morphologyProofLevels))} | ${mdCell(countCells(row.morphologyScopes))} | ${row.middlePassiveCoverage} | ${row.activeCoverage} | ${mdCell(row.samples.map((sample) => `${sample.targetKey} (${sample.signature})`).join(', '))} |`,
     ),
     '',
     '### Middle-Passive Review Actions',
@@ -2816,11 +2990,11 @@ function main(): void {
     '',
     'Every action-by-lemma group in the middle-passive review bucket. A lemma may appear more than once when different generated cells have different morphology actions.',
     '',
-    '| Morphology Action | Lemma | Verb ID | Review File | Targets | Source Cache Evidence | Verdict Forms | Proof | Scope | Top Reasons | Middle-Passive Coverage | Active Coverage | Source Level | Flags/Overrides | Samples |',
-    '| --- | --- | --- | --- | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
+    '| Morphology Action | Lemma | Verb ID | Review File | Targets | Source Cache Evidence | Direct Cache Support | Verdict Forms | Proof | Scope | Top Reasons | Middle-Passive Coverage | Active Coverage | Source Level | Flags/Overrides | Samples |',
+    '| --- | --- | --- | --- | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
     ...report.middlePassiveLemmaReviewQueue.map(
       (row) =>
-        `| ${mdCell(row.action)} | ${mdCell(row.lemma)} | ${mdCell(row.verbId)} | ${row.coveredByReviewFile ? 'covered' : 'unreviewed'} | ${row.targetCount} | ${mdCell(sourceCacheEvidenceCell(row.sourceCacheMiddlePassiveEvidence))} | ${mdCell(countCells(row.morphologyForms))} | ${mdCell(countCells(row.morphologyProofLevels))} | ${mdCell(countCells(row.morphologyScopes))} | ${mdCell(countCells(row.morphologyReasons))} | ${row.middlePassiveCoverage} | ${row.activeCoverage} | ${row.sourceLevel} | ${row.hasNoMiddlePassiveFlag ? 'noMiddlePassive' : 'none'} / ${row.middlePassiveOverrideCount} MP overrides | ${mdCell(row.samples.map((sample) => `${sample.targetKey} (${sample.signature})`).join(', '))} |`,
+        `| ${mdCell(row.action)} | ${mdCell(row.lemma)} | ${mdCell(row.verbId)} | ${row.coveredByReviewFile ? 'covered' : 'unreviewed'} | ${row.targetCount} | ${mdCell(sourceCacheEvidenceCell(row.sourceCacheMiddlePassiveEvidence))} | ${mdCell(sourceCacheDirectSupportCell(row.sourceCacheDirectSupport))} | ${mdCell(countCells(row.morphologyForms))} | ${mdCell(countCells(row.morphologyProofLevels))} | ${mdCell(countCells(row.morphologyScopes))} | ${mdCell(countCells(row.morphologyReasons))} | ${row.middlePassiveCoverage} | ${row.activeCoverage} | ${row.sourceLevel} | ${row.hasNoMiddlePassiveFlag ? 'noMiddlePassive' : 'none'} / ${row.middlePassiveOverrideCount} MP overrides | ${mdCell(row.samples.map((sample) => `${sample.targetKey} (${sample.signature})`).join(', '))} |`,
     ),
     '',
     '## Corpus Source Levels',

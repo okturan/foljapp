@@ -150,7 +150,9 @@ aggregate investigation report:
   evidence, and joined morphology action. The shortlist is only an entry point;
   the complete queue lists every action-by-lemma group with active and
   middle-passive coverage plus direct cache evidence when those caches expose
-  middle-passive forms or templates.
+  middle-passive forms or templates. `Direct Cache Support` separates exact
+  generated-surface support from head-token-only support, so a cached form like
+  `punuar` is not overclaimed as support for a full generated phrase.
 
 The dossier remains sample-only. Use it when you need specific target rows,
 joined morphology fields, and SQL lookup snippets; use the main audit for
