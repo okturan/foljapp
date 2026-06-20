@@ -783,6 +783,7 @@ function classifyVoice(
   const sources = sourceKeys(verb);
   const localSourceLevel = sourceLevel(sources);
   const localProof = sources.length > 0 ? 'local-source' : 'none';
+  const isMiddlePassive = target.options.voice === 'middle-passive';
   const mpMissRate =
     row.middlePassiveTotal === 0
       ? 0
@@ -791,10 +792,12 @@ function classifyVoice(
   if (target.tokens.length > 1)
     reasons.push('multiword_target_head_token_only');
   if (localSourceLevel === 'lexicon-only') reasons.push('lexicon_only');
-  if (middlePassiveOverrideKeys(verb).length === 0) {
+  if (isMiddlePassive && middlePassiveOverrideKeys(verb).length === 0) {
     reasons.push('no_middle_passive_overrides');
   }
-  if (mpMissRate >= 0.75) reasons.push('high_middle_passive_miss_pressure');
+  if (isMiddlePassive && mpMissRate >= 0.75) {
+    reasons.push('high_middle_passive_miss_pressure');
+  }
   if (!lexeme.found)
     reasons.push(
       lexeme.matchKind === 'not_provided'
@@ -823,7 +826,7 @@ function classifyVoice(
     reasons.push(`dialect_or_register:${lexeme.dialectOrRegister.join(',')}`);
   }
 
-  if (target.options.voice !== 'middle-passive') {
+  if (!isMiddlePassive) {
     return {
       form: analyzer.accepted
         ? 'analyzer_accepted'
