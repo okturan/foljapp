@@ -22,7 +22,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
 const OUT_DIR = join(REPO_ROOT, 'apps', 'web', 'public', 'examples');
 const FROZEN_TIME = '2026-07-07T00:00:00.000Z';
-const MAX_PER_TARGET = 2;
+// 3 matches the scan-time retention cap (--max-per-target=3), so the assets
+// carry everything the retained DB has for each target.
+const MAX_PER_TARGET = 3;
 
 interface Row {
   verb_id: string;
