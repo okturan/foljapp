@@ -55,9 +55,18 @@ supported mood/tense combination since `verify-engine-voice-coverage`
 > observed totals below are identical before and after (verified:
 > 19,639 / 230 / 12,579 both runs).
 
-> **Current baseline (engine 0.1.1, 203-verb corpus, re-recorded
-> 2026-07-07):** **19,639 matches / 230 mismatches / 12,579 missing.**
-> The 230 mismatches decompose exactly, all verified verb-by-verb:
+> **Current baseline (engine 0.1.1, corpus 0.1.7, re-recorded 2026-07-07
+> after `impersonal-middle-passive-flags`):** **19,619 matches / 168
+> mismatches / 12,661 missing**, with 870 of the matches being
+> flag-suppressed voice refusals (42 of those had mechanical source-cache
+> rows — the accepted editorial conflicts). Versus the previous
+> 19,639/230/12,579: qendroj's 62 mismatches resolved (+20 Husić-derived
+> matches for its now-conjugating third-person MP cells, +42
+> flag-suppressed), and 82 newly-unlocked third-person MP cells of
+> iki/gjezdis/qendroj (*iket*, *gjezdiset*, *qëndrohet* …) moved from
+> matched-as-unsupported to **missing** because they now produce real
+> forms with no ground truth. Total probed cells constant at 32,448.
+> The 168 standing mismatches decompose exactly, all verified verb-by-verb:
 >
 > - **9 cells** — the legacy documented Kaikki anomalies below (engine
 >   correct, Kaikki typo/bug), unchanged.
@@ -69,16 +78,17 @@ supported mood/tense combination since `verify-engine-voice-coverage`
 > - **99 cells, `perfundoj`** — Kaikki's table is machine-garbage
 >   (*përfundojim*, *përfundojja*: a bogus stem parse). Engine's standard
 >   *përfundon / përfundojmë / përfundonte* is correct.
-> - **62 cells, `qendroj`** — not an engine error but a data conflict: the
->   June MP review set `noMiddlePassive: true`, so the engine refuses MP
->   cells, while the Husić cache documents 132 middle-voice rows
->   (*qëndrohem*, incl. the standard impersonal *qëndrohet*). Whether the
->   flag or the cache wins belongs to the middle-passive attestation
->   review.
+> (The former third block — 62 `qendroj` cells — was resolved by
+> `impersonal-middle-passive-flags`: `iki`, `gjezdis`, and `qendroj` now
+> carry `middlePassiveThirdPersonOnly` per FGJSH *vetv.* and corpus
+> attestation, and the verifier treats editorial voice-flag refusals as
+> accepted decisions, reported via the flag-suppressed counter.)
 >
-> Regression rule until then: matches must stay ≥ 19,639 and any NEW
-> mismatch (beyond this decomposition) needs the same verb-by-verb
-> investigation before landing.
+> Regression rule: matches must stay ≥ 19,619, mismatches ≤ 168 per the
+> decomposition above, and any NEW mismatch class needs the same
+> verb-by-verb investigation before landing. Category migrations
+> (match↔missing) from newly-unlocked cells are expected and must be
+> explained in the landing change, as done here.
 
 ### Documented anomalies (engine correct, source disagrees)
 

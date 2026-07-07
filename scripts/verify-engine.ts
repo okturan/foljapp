@@ -324,8 +324,11 @@ interface CellOutcome {
   engineForm: string | null;
   kaikkiForm: string | null;
   husicForm?: string | null;
-  /** Which source produced the matching form, if status === 'match'. */
-  matchSource?: 'k' | 'h' | 'h*';
+  /** Which source produced the matching form, if status === 'match'.
+   * 'f' = flag-suppressed: the engine refused the cell due to an editorial
+   * voice flag (noMiddlePassive / middlePassiveThirdPersonOnly), which
+   * outranks mechanically-generated source-cache rows. */
+  matchSource?: 'k' | 'h' | 'h*' | 'f';
   /** True when matched against a Husić-derived record (cross-resolved from
    * the alphabetical glossary's class-pattern lookup, not directly tabulated). */
   husicDerived?: boolean;
@@ -388,6 +391,7 @@ function probeCell(
   spec: CellSpec,
   kaikki: KaikkiForm[],
   husic: HusicForm[] | null,
+  flags: VerbEntry['flags'],
 ): CellOutcome {
   const opts: ConjugateOptions = {
     mood: spec.mood,
@@ -420,9 +424,20 @@ function probeCell(
   const husicDerived = husicLookup.derived;
 
   let status: CellOutcome['status'];
-  let matchSource: 'k' | 'h' | 'h*' | undefined;
+  let matchSource: CellOutcome['matchSource'];
   if (engineError === 'unsupported') {
-    if (kaikkiForm === null && husicForm === null) status = 'match';
+    const voice = spec.voice ?? 'active';
+    const flagSuppressed =
+      voice === 'middle-passive' &&
+      (flags?.noMiddlePassive === true ||
+        (flags?.middlePassiveThirdPersonOnly === true && spec.person !== 3));
+    if (flagSuppressed) {
+      // Editorial voice flags are explicit lexical decisions
+      // (suppress-mp-for-intransitives doctrine); they outrank
+      // mechanically-generated source-cache paradigm rows.
+      status = 'match';
+      matchSource = 'f';
+    } else if (kaikkiForm === null && husicForm === null) status = 'match';
     else status = 'mismatch';
   } else if (engineError) {
     status = 'engine-error';
@@ -471,15 +486,15 @@ async function verifyVerb(
 
   for (const tense of FINITE_TENSE_KEYS) {
     for (const pn of PERSON_NUMBERS) {
-      outcomes.push(probeCell(entry.id, { ...tense, ...pn }, kaikki, husic));
+      outcomes.push(probeCell(entry.id, { ...tense, ...pn }, kaikki, husic, entry.flags));
     }
   }
 
   // Imperative — only 2sg/2pl, both voices
-  outcomes.push(probeCell(entry.id, { mood: 'imperative', tense: 'present', person: 2, number: 'singular' }, kaikki, husic));
-  outcomes.push(probeCell(entry.id, { mood: 'imperative', tense: 'present', person: 2, number: 'plural' }, kaikki, husic));
-  outcomes.push(probeCell(entry.id, { mood: 'imperative', tense: 'present', person: 2, number: 'singular', voice: 'middle-passive' }, kaikki, husic));
-  outcomes.push(probeCell(entry.id, { mood: 'imperative', tense: 'present', person: 2, number: 'plural', voice: 'middle-passive' }, kaikki, husic));
+  outcomes.push(probeCell(entry.id, { mood: 'imperative', tense: 'present', person: 2, number: 'singular' }, kaikki, husic, entry.flags));
+  outcomes.push(probeCell(entry.id, { mood: 'imperative', tense: 'present', person: 2, number: 'plural' }, kaikki, husic, entry.flags));
+  outcomes.push(probeCell(entry.id, { mood: 'imperative', tense: 'present', person: 2, number: 'singular', voice: 'middle-passive' }, kaikki, husic, entry.flags));
+  outcomes.push(probeCell(entry.id, { mood: 'imperative', tense: 'present', person: 2, number: 'plural', voice: 'middle-passive' }, kaikki, husic, entry.flags));
 
   return { verbId: entry.id, outcomes, cached: true, fetched: true };
 }
@@ -503,6 +518,8 @@ async function main() {
   let totalMatchesK = 0;
   let totalMatchesH = 0;
   let totalMatchesHDerived = 0;
+  let totalMatchesF = 0;
+  let totalFlagSuppressedWithSource = 0;
   let totalMismatches = 0;
   let totalMissing = 0;
   let totalErrors = 0;
@@ -529,6 +546,12 @@ async function main() {
         if (o.matchSource === 'k') v_matchK++;
         else if (o.matchSource === 'h') v_matchH++;
         else if (o.matchSource === 'h*') totalMatchesHDerived++;
+        else if (o.matchSource === 'f') {
+          totalMatchesF++;
+          if (o.husicForm != null || o.kaikkiForm !== null) {
+            totalFlagSuppressedWithSource++;
+          }
+        }
       }
       else if (o.status === 'mismatch') {
         v_mismatches++;
@@ -572,6 +595,12 @@ async function main() {
     console.log(`  matches:    ${totalMatches} (${totalMatchesK} via Kaikki + ${husicParts.join(' + ')})`);
   } else {
     console.log(`  matches:    ${totalMatches}`);
+  }
+  if (totalMatchesF > 0) {
+    console.log(
+      `  flag-suppressed: ${totalMatchesF} voice-flag refusals accepted as editorial decisions` +
+        ` (${totalFlagSuppressedWithSource} had mechanical source-cache rows)`,
+    );
   }
   console.log(`  mismatches: ${totalMismatches}`);
   console.log(`  missing:    ${totalMissing}  (no source has ground truth for that cell)`);

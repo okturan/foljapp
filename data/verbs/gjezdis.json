@@ -9,7 +9,9 @@
     "aorist": "gjezdis",
     "participle": "gjezdisur"
   },
-  "flags": { "noMiddlePassive": true },
+  "flags": {
+    "middlePassiveThirdPersonOnly": true
+  },
   "sources": [
     {
       "source": "kaikki",

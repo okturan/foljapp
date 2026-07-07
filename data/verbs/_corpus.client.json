@@ -2208,7 +2208,7 @@
       }
     ],
     "flags": {
-      "noMiddlePassive": true
+      "middlePassiveThirdPersonOnly": true
     },
     "dialect": "tosk"
   },
@@ -2616,7 +2616,7 @@
       }
     ],
     "flags": {
-      "noMiddlePassive": true
+      "middlePassiveThirdPersonOnly": true
     },
     "dialect": "tosk",
     "notes": "Class 2D pattern: 1sg present takes -i, 2sg/3sg present take -ën, aorist 3sg takes -u. Encoded via cellOverrides rather than introducing a new paradigm class for one verb. Intransitive — no MP voice in standard Albanian.",
@@ -4502,7 +4502,7 @@
       }
     ],
     "flags": {
-      "noMiddlePassive": true
+      "middlePassiveThirdPersonOnly": true
     },
     "dialect": "tosk"
   },
