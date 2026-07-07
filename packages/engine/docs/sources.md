@@ -45,14 +45,30 @@ supported mood/tense combination since `verify-engine-voice-coverage`
 > observed totals below are identical before and after (verified:
 > 19,639 / 230 / 12,579 both runs).
 
-> **Baseline drift, needs its own change (recorded 2026-07-07):** the live
-> run currently reports **19,639 matches / 230 mismatches / 12,579 missing**
-> across the 203-verb corpus. The June 2026 corpus work (middle-passive
-> pruning, 204 → 203 verbs) never refreshed this document, and the mismatch
-> set now spans 10 verbs — the 7 documented-anomaly verbs plus `mbroj`,
-> `perfundoj`, `qendroj`, which are undocumented. Until the delta is
-> investigated verb-by-verb and this baseline is re-recorded, treat
-> 19,639/230 as the observed state, not an accepted baseline.
+> **Current baseline (engine 0.1.1, 203-verb corpus, re-recorded
+> 2026-07-07):** **19,639 matches / 230 mismatches / 12,579 missing.**
+> The 230 mismatches decompose exactly, all verified verb-by-verb:
+>
+> - **9 cells** — the legacy documented Kaikki anomalies below (engine
+>   correct, Kaikki typo/bug), unchanged.
+> - **60 cells, `mbroj`** — Kaikki's table applies the regular
+>   `-oj → -ova/-uar` pattern, but `mbroj` takes the `-jt-` aorist:
+>   *mbrojta*, *mbrojtur* (FGJSH; the corpus entry deliberately sets
+>   `irregularAorist: true`). Engine correct; every aorist-stem-derived
+>   cell mismatches.
+> - **99 cells, `perfundoj`** — Kaikki's table is machine-garbage
+>   (*përfundojim*, *përfundojja*: a bogus stem parse). Engine's standard
+>   *përfundon / përfundojmë / përfundonte* is correct.
+> - **62 cells, `qendroj`** — not an engine error but a data conflict: the
+>   June MP review set `noMiddlePassive: true`, so the engine refuses MP
+>   cells, while the Husić cache documents 132 middle-voice rows
+>   (*qëndrohem*, incl. the standard impersonal *qëndrohet*). Whether the
+>   flag or the cache wins belongs to the middle-passive attestation
+>   review.
+>
+> Regression rule until then: matches must stay ≥ 19,639 and any NEW
+> mismatch (beyond this decomposition) needs the same verb-by-verb
+> investigation before landing.
 
 ### Documented anomalies (engine correct, source disagrees)
 
@@ -207,8 +223,11 @@ that the engine consults before paradigm dispatch. Specifically:
   `pakam`/etc. in `packages/engine/src/suppletion.ts`.
 
 `scripts/verify-engine.ts` is the canonical regression check. Any
-corpus or engine change must keep the match-rate at 19100/19109 or
-explicitly justify the regression in its OpenSpec change.
+corpus or engine change must keep matches at ≥ 19,639 on the current
+203-verb corpus (historical: 19100/19109 on the former 204-verb corpus)
+or explicitly justify the regression in its OpenSpec change; the 230
+standing mismatches are decomposed and accounted for in the baseline
+callout near the top of this document.
 
 ## Suppletive paradigm references
 
