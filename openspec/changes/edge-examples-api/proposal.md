@@ -43,6 +43,10 @@ Edge-compatible; retained-corpus examples come from the prebuilt assets.
 - **E2E** — `examples.spec.ts` expectations hold on the fallback path
   (verified both modes on 2026-07-07 before this change).
 - **Deploy** — unblocks `next-on-pages`; no other non-Edge routes remain.
+  Deploy discovery also surfaced that next-on-pages' `_routes.json` sends
+  `/examples/*` into the worker (which 404s non-Next paths), so the change
+  adds `scripts/patch-pages-routes.ts` plus `npm run build:pages` /
+  `npm run deploy:pages` encoding the full working pipeline.
 - **Audience tier** — all (this is what makes the examples ship at all).
 
 ## Non-Goals

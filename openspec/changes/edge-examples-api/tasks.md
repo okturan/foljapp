@@ -7,16 +7,21 @@
 
 ## 2. Implementation
 
-- [ ] 2.1 Rewrite `apps/web/app/api/examples/route.ts` as an Edge route:
+- [x] 2.1 `apps/web/app/api/examples/route.ts` rewritten as an Edge route:
       target derivation + parallel pairs only, `local.available: false`,
-      no `node:` imports.
-- [ ] 2.2 Verify the panel takes the asset fallback in dev (label shows
-      "prebuilt examples").
+      no `node:` imports (~180 lines of SQLite plumbing removed).
+- [x] 2.2 Panel takes the asset fallback (E2E asserts the table renders
+      from prebuilt rows).
+- [x] 2.3 `scripts/patch-pages-routes.ts` + `npm run build:pages` /
+      `npm run deploy:pages`: next-on-pages' `_routes.json` routed
+      `/examples/*` into the worker (404); the patch adds the static
+      exclude so Pages serves the assets directly.
 
 ## 3. Validation
 
-- [ ] 3.1 `npm run typecheck`, `npm run lint`, `npm test`,
-      `npm run build`.
-- [ ] 3.2 `examples.spec.ts` green (asset-fallback path).
-- [ ] 3.3 next-on-pages build succeeds; deploy to Pages; live spot check.
-- [ ] 3.4 `openspec validate edge-examples-api --strict`.
+- [x] 3.1 typecheck clean, lint clean, 484 tests pass, build compiles.
+- [x] 3.2 `examples.spec.ts` 3/3 on the asset-fallback path.
+- [x] 3.3 next-on-pages build succeeds; deployed to foljapp.pages.dev
+      (production, commit ebbbaa5): /verb/flas 200, /examples/punoj.json
+      serves JSON, tërhiq- forms live, negative-polarity playground 200.
+- [x] 3.4 `openspec validate edge-examples-api --strict` passes.
