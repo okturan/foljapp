@@ -46,12 +46,17 @@ are rebuilt on demand, and only by an explicit `--build-anchor-rows` run.
 
 Engine 0.1.1 (`fix-negation-particles`, 2026-07-07) corrected negated
 subjunctive/optative surfaces (`mos të X` → `të mos X`; `nuk <optative>` →
-`mos <optative>`), so `.cache/corpus-targets.json` was regenerated and every
-scan artifact keyed to the old negative targets — target-hit sidecars, the
-missing-forms audit, retained examples and the static playground assets for
-those cells — is stale until the next full scan. That rescan should convert
-the ~24.9k phrase-variant matches the 2026-06-20 stress report recovered for
-reordered negations into canonical exact hits.
+`mos <optative>`). The full rescan the same day refreshed every dependent
+artifact: match scan (~8 min), coverage report, UniParser-joined missing
+audit, target-hit sidecars (~4 min rebuild), raw-coverage, phrase-variant
+report, and static playground examples. Results: 55,514 / 105,847 targets
+attested (+244 vs June), retained occurrences 159,625 → 160,243 with 12,198
+on corrected `të mos …` targets; the phrase-variant report's raw matches
+dropped 83,161 → 56,680 because ~26.5k reordered-negation variant matches
+became canonical exact hits, its raw-zero selection shrank 38,169 → 29,785
+targets, and the full report now completes in ~168 s. `audit:corpus-misses:
+full` now regenerates `report:corpus-coverage` first, so the audit chain can
+no longer run against a stale coverage snapshot.
 
 ## Candidate resources not downloaded
 
