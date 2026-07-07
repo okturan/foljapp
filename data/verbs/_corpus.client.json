@@ -1890,6 +1890,10 @@
       {
         "source": "kaikki",
         "reference": "https://en.wiktionary.org/wiki/flas#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "Newmark, Hubbard & Prifti 1982 — non-active present/imperfect with mutated stem (flit-)"
       }
     ],
     "flags": {
@@ -1933,6 +1937,22 @@
       "imperative.present": {
         "2sg": "fol",
         "2pl": "flisni"
+      },
+      "indicative.present.middle-passive": {
+        "1sg": "flitem",
+        "2sg": "flitesh",
+        "3sg": "flitet",
+        "1pl": "flitemi",
+        "2pl": "fliteni",
+        "3pl": "fliten"
+      },
+      "indicative.imperfect.middle-passive": {
+        "1sg": "flitesha",
+        "2sg": "fliteshe",
+        "3sg": "flitej",
+        "1pl": "fliteshim",
+        "2pl": "fliteshit",
+        "3pl": "fliteshin"
       }
     }
   },
@@ -4998,6 +5018,10 @@
       {
         "source": "kaikki",
         "reference": "https://en.wiktionary.org/wiki/t%C3%ABrheq#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "Newmark, Hubbard & Prifti 1982 — non-active present/imperfect with mutated stem (tërhiq-)"
       }
     ],
     "flags": {
@@ -5023,6 +5047,22 @@
       "imperative.present": {
         "2sg": "tërhiq",
         "2pl": "tërhiqni"
+      },
+      "indicative.present.middle-passive": {
+        "1sg": "tërhiqem",
+        "2sg": "tërhiqesh",
+        "3sg": "tërhiqet",
+        "1pl": "tërhiqemi",
+        "2pl": "tërhiqeni",
+        "3pl": "tërhiqen"
+      },
+      "indicative.imperfect.middle-passive": {
+        "1sg": "tërhiqesha",
+        "2sg": "tërhiqeshe",
+        "3sg": "tërhiqej",
+        "1pl": "tërhiqeshim",
+        "2pl": "tërhiqeshit",
+        "3pl": "tërhiqeshin"
       }
     }
   },

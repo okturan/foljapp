@@ -27,7 +27,7 @@ const VERBS_DIR = join(REPO_ROOT, 'data', 'verbs');
  * breaking). The same value is written to `data/verbs/version.json`
  * and consumed by both the server-side and client-side corpus loaders.
  */
-const CORPUS_VERSION = '0.1.5';
+const CORPUS_VERSION = '0.1.6';
 
 interface BuildOptions {
   frozenTime: boolean;

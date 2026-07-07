@@ -44,6 +44,18 @@ The chunk-era `.anchor-rows-*` sidecar family (33,261 files, ~54G, built by
 all-target run never matches) was deleted on 2026-07-07. Anchor-row sidecars
 are rebuilt on demand, and only by an explicit `--build-anchor-rows` run.
 
+Middle-passive review conclusion (2026-07-07): of the 28,193
+`needs_middle_passive_attestation` misses, 99% are compound MP shapes
+(admirative/optative/negated/perfect combinations) — formally valid,
+textbook-only, correctly labeled, no pruning warranted beyond the June
+flags. Only 324 plain-indicative MP cells miss, spread 6–12 each across 87
+rare verbs (genuine rarity), except one fixable defect: `flas`/`tërheq`
+middle-passive stems, corrected in corpus 0.1.6
+(`fix-flas-terheq-mp-stems`: *flitet*/*tërhiqet* via cellOverrides). Open
+follow-up: `qendroj` is flagged `noMiddlePassive` while its Husić cache
+documents 132 middle rows (incl. impersonal *qëndrohet*) — resolving it
+needs an impersonal-only MP concept in the engine.
+
 Engine 0.1.1 (`fix-negation-particles`, 2026-07-07) corrected negated
 subjunctive/optative surfaces (`mos të X` → `të mos X`; `nuk <optative>` →
 `mos <optative>`). The full rescan the same day refreshed every dependent

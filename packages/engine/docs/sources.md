@@ -37,6 +37,16 @@ supported mood/tense combination since `verify-engine-voice-coverage`
 |            | Kaikki has the typo). See the next    |        |
 |            | section.                              |        |
 
+> **Corpus 0.1.6 (2026-07-07, `fix-flas-terheq-mp-stems`):** `flas` and
+> `tërheq` gain sourced middle-passive present/imperfect cellOverrides with
+> the mutated stems **flit-** / **tërhiq-** (*flitet*, *flitej*,
+> *tërhiqet*, *tërhiqej* — Newmark et al. 1982; FGJSH), closing the
+> non-goal deferred by `suppress-mp-for-intransitives`. The engine
+> previously applied MP endings to the active stems (\**flaset*,
+> \**tërheqet*). MP aorists (*u fol*, *u tërhoq*) were already correct.
+> Kaikki carries no ground truth for these cells, so the totals below are
+> unchanged (verified before/after: 19,639 / 230).
+
 > **Engine 0.1.1 (2026-07-07, `fix-negation-particles`):** negation now
 > follows standard Albanian — optative negates with `mos` (was `nuk`:
 > \**nuk qofsha* → *mos qofsha*) and the subjunctive negator follows `të`
