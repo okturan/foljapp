@@ -11,7 +11,7 @@ test('punoj verb page renders header, table, and citations', async ({ page }) =>
   await expect(page.locator('#conditional-present-1sg')).toContainText('do');
   await expect(page.getByText('punuakam', { exact: true })).toBeVisible();
   await expect(page.getByText('Sources')).toBeVisible();
-  await expect(page.getByText(/engine: 0\.1\.0 · corpus: 0\.1\.\d+/)).toBeVisible();
+  await expect(page.getByText(/engine: 0\.1\.\d+ · corpus: 0\.1\.\d+/)).toBeVisible();
 });
 
 test('jam verb page renders suppletive forms', async ({ page }) => {
