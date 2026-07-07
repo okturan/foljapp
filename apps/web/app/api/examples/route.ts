@@ -1,7 +1,3 @@
-import { execFileSync } from 'node:child_process';
-import { existsSync, statSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-
 import {
   generatedSearchTarget,
   normalizeSearchKey,
@@ -13,60 +9,14 @@ import {
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-import { lookupParallelExamples } from '@/lib/parallel-examples';
+import { parallelExamplesAsApi } from '@/lib/static-examples';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-
-interface ApiExample {
-  id: string;
-  sourceType: 'local' | 'parallel';
-  resourceId: string;
-  corpus: string;
-  title: string | null;
-  url: string | null;
-  domain: string | null;
-  genre: string | null;
-  quality: string | null;
-  sentence: string;
-  translation: string | null;
-  matchKind: string;
-  score: number;
-  flags: string[];
-  cellLabel: string | null;
-  ancQuery: string | null;
-}
-
-function findRepoRoot(): string {
-  let dir = process.cwd();
-  for (let i = 0; i < 5; i++) {
-    if (
-      existsSync(join(dir, 'package.json')) &&
-      existsSync(join(dir, 'data', 'corpora', 'resources.json'))
-    ) {
-      return dir;
-    }
-    const parent = dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
-  return join(process.cwd(), '..', '..');
-}
-
-function localDbPath(): string {
-  return (
-    process.env.FOLJAPP_LOCAL_EXAMPLES_DB ??
-    join(findRepoRoot(), '.cache', 'corpus-local-full.sqlite')
-  );
-}
-
-function sqliteBin(): string {
-  return process.env.FOLJAPP_SQLITE3_BIN ?? '/usr/bin/sqlite3';
-}
-
-function sqlString(value: string): string {
-  return `'${value.replace(/'/g, "''")}'`;
-}
+// Edge-only so Cloudflare Pages can serve the route. Retained-corpus
+// examples come from the prebuilt /examples/<verbId>.json assets, which
+// the Examples panel loads client-side whenever this route reports the
+// local database unavailable (always, since the SQLite shell-out was
+// removed with the edge-examples-api change).
+export const runtime = 'edge';
 
 function parseOptions(url: URL): ConjugateOptions | null {
   const mood = url.searchParams.get('mood') as Mood | null;
@@ -104,140 +54,6 @@ function parseOptions(url: URL): ConjugateOptions | null {
   };
 }
 
-function runSqliteJson<T>(dbPath: string, sql: string): T[] {
-  const output = execFileSync(sqliteBin(), ['-json', dbPath, sql], {
-    encoding: 'utf8',
-    maxBuffer: 1024 * 1024 * 8,
-  }).trim();
-  if (!output) return [];
-  return JSON.parse(output) as T[];
-}
-
-function localExamples(
-  dbPath: string,
-  targetKey: string,
-  signature: string | null,
-  limit: number,
-): ApiExample[] {
-  const baseSelect = `
-    SELECT
-      'local-' || o.id AS id,
-      'local' AS sourceType,
-      r.id AS resourceId,
-      r.title AS corpus,
-      s.title AS title,
-      s.url AS url,
-      s.domain AS domain,
-      s.genre AS genre,
-      s.quality AS quality,
-      s.sentence AS sentence,
-      NULL AS translation,
-      o.match_kind AS matchKind,
-      o.score AS score,
-      s.flags_json AS flagsJson,
-      t.cell_label AS cellLabel,
-      t.anc_query AS ancQuery
-    FROM occurrences o
-    JOIN targets t ON t.id = o.target_id
-    JOIN sentences s ON s.id = o.sentence_id
-    JOIN resources r ON r.id = s.resource_id
-  `;
-
-  const exactWhere = signature
-    ? `o.target_key = ${sqlString(targetKey)} AND o.signature = ${sqlString(signature)}`
-    : `o.target_key = ${sqlString(targetKey)}`;
-  // Must stay in sync with PUBLIC_EXAMPLE_WHERE in
-  // scripts/build-static-examples.ts (the static asset generator).
-  const publicExampleWhere = `
-    s.flags_json NOT LIKE '%reference_prose%' AND
-    s.flags_json NOT LIKE '%inflection_list%' AND
-    s.flags_json NOT LIKE '%adult_or_spam%' AND
-    s.sentence NOT LIKE '%morfologjik%' AND
-    s.sentence NOT LIKE '%paskajor%' AND
-    s.sentence NOT LIKE '%lidhor%' AND
-    s.sentence NOT LIKE '%format e së ardhmes%' AND
-    NOT (
-      s.sentence LIKE '%e kështu me radhë%' AND
-      (length(s.sentence) - length(replace(s.sentence, ',', ''))) >= 3 AND
-      (length(s.sentence) - length(replace(s.sentence, ';', ''))) >= 1
-    )
-  `;
-  const exactSql = `
-    ${baseSelect}
-    WHERE ${exactWhere} AND ${publicExampleWhere}
-    ORDER BY o.score DESC, length(s.sentence) ASC, s.id ASC
-    LIMIT ${limit}
-  `;
-  const exactRows = runSqliteJson<Record<string, unknown>>(dbPath, exactSql);
-  const rows =
-    exactRows.length > 0 || !signature
-      ? exactRows
-      : runSqliteJson<Record<string, unknown>>(
-          dbPath,
-          `
-          ${baseSelect}
-          WHERE o.target_key = ${sqlString(targetKey)}
-            AND ${publicExampleWhere}
-          ORDER BY o.score DESC, length(s.sentence) ASC, s.id ASC
-          LIMIT ${limit}
-        `,
-        );
-
-  return rows.map(apiExampleFromSqliteRow);
-}
-
-function apiExampleFromSqliteRow(row: Record<string, unknown>): ApiExample {
-  let flags: string[] = [];
-  if (typeof row.flagsJson === 'string') {
-    try {
-      flags = JSON.parse(row.flagsJson) as string[];
-    } catch {
-      flags = [];
-    }
-  }
-
-  return {
-    id: String(row.id),
-    sourceType: row.sourceType as 'local',
-    resourceId: String(row.resourceId),
-    corpus: String(row.corpus),
-    title: typeof row.title === 'string' ? row.title : null,
-    url: typeof row.url === 'string' ? row.url : null,
-    domain: typeof row.domain === 'string' ? row.domain : null,
-    genre: typeof row.genre === 'string' ? row.genre : null,
-    quality: typeof row.quality === 'string' ? row.quality : null,
-    sentence: String(row.sentence),
-    translation: null,
-    matchKind: String(row.matchKind),
-    score: Number(row.score),
-    flags,
-    cellLabel: typeof row.cellLabel === 'string' ? row.cellLabel : null,
-    ancQuery: typeof row.ancQuery === 'string' ? row.ancQuery : null,
-  };
-}
-
-function parallelFallbackExamples(form: string, limit: number): ApiExample[] {
-  const lookup = lookupParallelExamples(form);
-  return lookup.examples.slice(0, limit).map((example, index) => ({
-    id: `parallel-${example.corpus}-${example.sentenceNumber}-${index}`,
-    sourceType: 'parallel',
-    resourceId: 'opus-en-sq-moses-latest',
-    corpus: example.corpus,
-    title: null,
-    url: example.opusUrl,
-    domain: 'opus.nlpl.eu',
-    genre: null,
-    quality: null,
-    sentence: example.sq,
-    translation: example.en,
-    matchKind: 'parallel_sentence',
-    score: 55,
-    flags: [],
-    cellLabel: null,
-    ancQuery: null,
-  }));
-}
-
 export function GET(request: NextRequest) {
   const url = new URL(request.url);
   const surface =
@@ -248,24 +64,6 @@ export function GET(request: NextRequest) {
   const generatedTarget =
     surface && options ? generatedSearchTarget(surface, options) : null;
   const lookupKey = generatedTarget?.targetKey ?? targetKey;
-  const signature = generatedTarget?.signature ?? null;
-  const dbPath = localDbPath();
-  const dbAvailable = existsSync(dbPath);
-  const examples: ApiExample[] = [];
-  let localError: string | null = null;
-
-  if (dbAvailable && lookupKey) {
-    try {
-      examples.push(...localExamples(dbPath, lookupKey, signature, limit));
-    } catch (err) {
-      localError = (err as Error).message;
-    }
-  }
-
-  const remaining = Math.max(limit - examples.length, 0);
-  if (remaining > 0) {
-    examples.push(...parallelFallbackExamples(surface, remaining));
-  }
 
   return NextResponse.json({
     lookupForm: lookupKey || null,
@@ -278,11 +76,11 @@ export function GET(request: NextRequest) {
         }
       : null,
     local: {
-      available: dbAvailable,
-      path: '.cache/corpus-local-full.sqlite',
-      bytes: dbAvailable ? statSync(dbPath).size : 0,
-      error: localError,
+      available: false,
+      path: '',
+      bytes: 0,
+      error: null,
     },
-    examples,
+    examples: surface ? parallelExamplesAsApi(surface, limit) : [],
   });
 }
