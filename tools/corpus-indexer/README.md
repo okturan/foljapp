@@ -158,13 +158,41 @@ use the single-pass all-target report:
 npm run report:corpus-phrase-variants:all
 ```
 
-Measured on the full split cache, the single-pass all-target run selected
-38,169 targets, generated 1,072,356 stress patterns, scanned
-1,317,987,563 candidates, found 83,161 raw variant matches, and took 393.4s.
-The older 20-chunk aggregate found the same 83,161 matches, but its summed chunk
-duration was 7,590.7s because it rescanned the corpus for every chunk. Chunking
-is still useful for interrupted/debug runs, but it is not the fast path. The
-chunk script uses 2,000 ranked targets per chunk:
+Measured on the full split cache (Apple M5, 10 cores, 12 jobs), the
+single-pass all-target run selects 38,169 targets, generates 1,072,356 stress
+patterns over 9,115 anchors, scans 1,317,987,563 candidates, and finds 83,161
+raw variant matches. The b6b001e binary recorded 294.0s wall for this
+workload; after longest-first partition scheduling, parallel setup, sparse
+per-partition counters, and the masked anchor prefilter, the same workload
+measured 212.9s (quiet machine; 267.8s in a warmer session), the plan-only
+setup pass dropped from 17.0s to 5.1s, summed per-partition scan time
+dropped from 2,343.7s to 2,227.1s core-seconds, and chunk-018 peak RSS
+dropped from 391MB to 305MB.
+
+Wall times here have a large noise floor: the 89G cache exceeds RAM and
+sustained all-core load thermally degrades the machine (identical workloads
+have measured 294.0s vs 393.4s sixteen minutes apart, and 267.8s vs 522.5s
+within one session). Never trust a single-run delta; interleave
+baseline/candidate runs and compare medians and user-CPU. The noise-robust
+scheduling metric is the parallel-efficiency ratio
+`sum(resource_stats[].duration_ms) / summary.duration_ms` inside the report
+itself: directory-ordered scheduling sits near 8.0x, longest-first
+scheduling at 10.5–10.8x against the 12-thread ceiling, regardless of
+thermal state.
+
+Verify any matcher or scheduler change with the parity diff before trusting
+its numbers:
+
+```sh
+npm run report:corpus-phrase-variants:diff -- \
+  .cache/corpus-phrase-variant-stress.all.baseline-b6b001e.json \
+  .cache/corpus-phrase-variant-stress.all.json
+```
+
+The older 20-chunk aggregate found the same 83,161 matches, but its summed
+chunk duration was 7,590.7s because it rescanned the corpus for every chunk.
+Chunking is still useful for interrupted/debug runs, but it is not the fast
+path. The chunk script uses 2,000 ranked targets per chunk:
 
 ```sh
 npm run report:corpus-phrase-variants:all:chunk:plan -- \
@@ -199,3 +227,50 @@ The cold `--build-anchor-rows` run materialized those 221 sidecars, covered
 1,106,185,613 source candidates behind them, checked 1,553 anchor rows, found 0
 raw variant hits, and took 284.3s. The immediate warm rerun used the sidecars,
 checked the same 1,553 anchor rows, found the same 0 hits, and took 17.9s.
+
+## Architecture decisions: refuted phrase-variant optimizations
+
+These were implemented or prototyped, measured, and rejected. Do not
+re-attempt them without new evidence; every one produced identical output
+(parity-verified), so the numbers below are pure performance. Benchmark
+chunks: chunk-018 (154 common anchors, 29,479 patterns, prefilter fallback
+path) and chunk-019 (37 anchors, 2,564 patterns, ≤64-anchor automaton path);
+chunk-018 baseline 268.6s, chunk-019 baseline 249.2s.
+
+- **Dropping the anchor prefilter** (run the pattern automaton on every row):
+  chunk-018 331.0s vs 268.6s — 23% slower. The tokenize+hash prefilter is
+  cheaper than walking the pattern automaton over non-anchor rows
+  (`chunk-018.no-double-anchor` artifact). The full-scale single-pass variant
+  measured 393.4s vs 294.0s (`all.single-pass` artifact).
+- **Anchor + co-token guard** before the pattern automaton: chunk-018 276.6s
+  — a wash; clitic co-tokens (e, i, më, u, …) are ubiquitous so the second
+  token filters almost nothing (`chunk-018.cotoken`).
+- **Bigram resource filters** (skip partitions lacking any pattern bigram):
+  chunk-019 247.5s vs 249.2s (wash) as a resource filter, 273.4s (regression)
+  as a per-row filter, and the sidecar family costs ~29G
+  (`chunk-019.bigram-filter`, `chunk-019.row-anchor-bigram`).
+- **Forcing contiguous-NFA automaton kinds**: non-monotonic across scales —
+  253.6s on chunk-018 (win) but 336.1s on chunk-019 (big loss)
+  (`chunk-01?.contiguous-nfa`). Let aho-corasick pick.
+- **Per-anchor bucketed matcher** (group the ~1M unique patterns by anchor,
+  run only the small automata whose anchor token appears in the row): wins
+  where anchors are rare (chunk-019: 154.8s vs 213.2s) but loses where they
+  are common — chunk-018 user-CPU 1604–1634s vs 1375–1525s, and the full
+  9,115-anchor run lost decisively: 477.3s wall / 2,660s user-CPU / 1.68GB
+  RSS vs 267.8s / 1,792s / 1.07GB. Rows containing several anchors trigger
+  several full-row bucket scans where one big automaton amortizes a single
+  walk, and ~9k small automata add ~600MB. Reverted in the
+  `phrase-variant-stress-throughput` change after full parity verification.
+- **Phrase-occurrence postings index** (SQLite/Tantivy) and **superset-keyed
+  warm sidecar reworks**: analyzed, not built. Both trade a build comparable
+  to the 1,343s cache build plus tens of GB for speedups that corpus growth
+  or any audit change invalidates. Revisit only if the stress report becomes
+  a routine gate run repeatedly against one frozen corpus+audit snapshot.
+
+What DID work (same change, all parity-verified): longest-first (LPT)
+partition scheduling keyed on cached `candidates_seen`
+(parallel-efficiency 8.0x → 10.5–10.8x), parallelizing the two setup passes
+over token inventories (plan-only 17.0s → 5.1s), sparse per-partition match
+counters (chunk-018 RSS 391MB → 305MB), and a first-byte/length-masked
+`FxHashSet` anchor prefilter over `split(' ')` tokens (exact under the
+`normalized_text_v1` single-space invariant).

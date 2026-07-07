@@ -536,6 +536,7 @@ dependencies = [
  "parquet",
  "quick-xml",
  "rusqlite",
+ "rustc-hash",
  "serde",
  "serde_json",
  "tantivy",

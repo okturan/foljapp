@@ -1,6 +1,6 @@
 use crate::candidate_cache::{
-    cached_resource_may_contain_any_token, cached_resource_token_hits, open_candidate_stream,
-    open_or_build_anchor_row_stream,
+    cached_candidates_seen, cached_resource_may_contain_any_token, cached_resource_token_hits,
+    open_candidate_stream, open_or_build_anchor_row_stream,
 };
 use crate::sources::ResourceSpec;
 use crate::text::normalized_text;
@@ -10,10 +10,12 @@ use crate::{
 use aho_corasick::AhoCorasick;
 use anyhow::{bail, Context, Result};
 use clap::Args;
+use rustc_hash::FxHashSet;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 use std::time::Instant;
@@ -55,6 +57,7 @@ pub(crate) struct PhraseVariantStressArgs {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct MissingAuditFile {
     generated_at: Option<String>,
     summary: HashMap<String, serde_json::Value>,
@@ -107,7 +110,11 @@ struct PhraseStressMatcher {
     anchor_automaton: Option<AhoCorasick>,
     pattern_indexes_by_automaton: Vec<Vec<usize>>,
     pattern_rows: Vec<StressPattern>,
+    // std set for the candidate_cache APIs (sidecar keying, scan filter);
+    // Fx set + first-byte/length masks for the per-row hot path.
     anchor_tokens: HashSet<String>,
+    anchor_lookup: FxHashSet<String>,
+    anchor_len_masks: [u64; 256],
 }
 
 #[derive(Debug)]
@@ -118,7 +125,7 @@ struct PhraseStressResourceStats {
     candidates_seen: usize,
     empty_candidates: usize,
     duration_ms: u128,
-    matches_by_pattern: Vec<usize>,
+    matches_by_pattern: HashMap<usize, usize>,
     samples: Vec<PhraseStressSample>,
 }
 
@@ -259,8 +266,12 @@ pub(crate) fn phrase_variant_stress(args: PhraseVariantStressArgs) -> Result<()>
         .iter()
         .filter_map(stress_target_anchor)
         .collect::<HashSet<_>>();
-    let anchor_counts =
-        anchor_partition_counts(&resources, &args.candidate_cache_dir, &candidate_anchors)?;
+    let anchor_counts = anchor_partition_counts(
+        &resources,
+        &args.candidate_cache_dir,
+        &candidate_anchors,
+        args.jobs,
+    )?;
     let selected = select_phrase_stress_targets(candidates, &args, &anchor_counts);
     if selected.is_empty() {
         bail!("no raw-zero multiword targets selected for phrase-variant stress");
@@ -273,8 +284,12 @@ pub(crate) fn phrase_variant_stress(args: PhraseVariantStressArgs) -> Result<()>
     }
     let matcher = Arc::new(PhraseStressMatcher::new(pattern_rows)?);
     let source_partitions = resources.len();
-    let (scan_resources, skipped_partitions) =
-        phrase_stress_scan_resources(resources, &args.candidate_cache_dir, &matcher.anchor_tokens)?;
+    let (scan_resources, skipped_partitions) = phrase_stress_scan_resources(
+        resources,
+        &args.candidate_cache_dir,
+        &matcher.anchor_tokens,
+        args.jobs,
+    )?;
     if args.plan_only {
         let plan = phrase_stress_plan_resource_stats(
             &scan_resources,
@@ -346,11 +361,11 @@ pub(crate) fn phrase_variant_stress(args: PhraseVariantStressArgs) -> Result<()>
     let mut samples = Vec::new();
     while let Ok(event) = rx.recv() {
         match event {
-            PhraseStressEvent::Done(stats) => {
-                for (index, count) in stats.matches_by_pattern.iter().copied().enumerate() {
-                    matches_by_pattern[index] += count;
+            PhraseStressEvent::Done(mut stats) => {
+                for (index, count) in &stats.matches_by_pattern {
+                    matches_by_pattern[*index] += count;
                 }
-                samples.extend(stats.samples.clone());
+                samples.append(&mut stats.samples);
                 resource_stats.push(stats);
             }
             PhraseStressEvent::Error(err) => errors.push(err),
@@ -426,26 +441,75 @@ fn phrase_stress_target_chunk(
     })
 }
 
+fn parallel_map_resources<T, F>(resources: &[ResourceSpec], jobs: usize, f: F) -> Result<Vec<T>>
+where
+    T: Send,
+    F: Fn(&ResourceSpec) -> Result<T> + Sync,
+{
+    let jobs = jobs.clamp(1, resources.len().max(1));
+    let next = AtomicUsize::new(0);
+    let slots = Mutex::new(Vec::from_iter(
+        std::iter::repeat_with(|| None).take(resources.len()),
+    ));
+    thread::scope(|scope| {
+        for _ in 0..jobs {
+            scope.spawn(|| loop {
+                let index = next.fetch_add(1, Ordering::Relaxed);
+                let Some(resource) = resources.get(index) else {
+                    break;
+                };
+                let result = f(resource);
+                slots.lock().expect("slots mutex")[index] = Some(result);
+            });
+        }
+    });
+    slots
+        .into_inner()
+        .expect("slots mutex")
+        .into_iter()
+        .map(|slot| slot.expect("slot filled"))
+        .collect()
+}
+
 fn phrase_stress_scan_resources(
     resources: Vec<ResourceSpec>,
     candidate_cache_dir: &Path,
     anchor_tokens: &HashSet<String>,
+    jobs: usize,
 ) -> Result<(Vec<ResourceSpec>, usize)> {
-    let mut skipped_partitions = 0usize;
-    let mut scan_resources = Vec::new();
-    for resource in resources {
-        match cached_resource_may_contain_any_token(&resource, candidate_cache_dir, anchor_tokens)?
-        {
-            Some(false) => skipped_partitions += 1,
-            Some(true) => scan_resources.push(resource),
+    let checks = parallel_map_resources(&resources, jobs, |resource| {
+        match cached_resource_may_contain_any_token(resource, candidate_cache_dir, anchor_tokens)? {
+            Some(false) => Ok(None),
+            Some(true) => Ok(Some(
+                cached_candidates_seen(resource, candidate_cache_dir)?.unwrap_or(0),
+            )),
             None => bail!(
                 "missing or stale split cache/token inventory for {} in {}",
                 resource.id,
                 candidate_cache_dir.display()
             ),
         }
+    })?;
+    let mut skipped_partitions = 0usize;
+    let mut scan_resources = Vec::new();
+    for (resource, check) in resources.into_iter().zip(checks) {
+        match check {
+            None => skipped_partitions += 1,
+            Some(candidates_seen) => scan_resources.push((resource, candidates_seen)),
+        }
     }
-    Ok((scan_resources, skipped_partitions))
+    // Longest partitions first so no worker gets stranded behind a giant
+    // partition at the tail of the run. Order cannot change report content:
+    // matches are additive, sample caps are per-partition, and the report
+    // sorts resource_stats and samples before writing.
+    scan_resources.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.id.cmp(&b.0.id)));
+    Ok((
+        scan_resources
+            .into_iter()
+            .map(|(resource, _)| resource)
+            .collect(),
+        skipped_partitions,
+    ))
 }
 
 fn phrase_stress_plan_resource_stats(
@@ -465,7 +529,7 @@ fn phrase_stress_plan_resource_stats(
                 candidates_seen: stream.anchor_rows(),
                 empty_candidates: 0,
                 duration_ms: 0,
-                matches_by_pattern: Vec::new(),
+                matches_by_pattern: HashMap::new(),
                 samples: Vec::new(),
             }),
             None => missing_anchor_row_partitions += 1,
@@ -501,20 +565,22 @@ impl PhraseStressMatcher {
         } else {
             None
         };
+        let mut anchor_len_masks = [0u64; 256];
+        for anchor in &anchor_tokens {
+            let bytes = anchor.as_bytes();
+            if let Some(&first) = bytes.first() {
+                anchor_len_masks[first as usize] |= 1u64 << bytes.len().min(63);
+            }
+        }
         Ok(Self {
             automaton: AhoCorasick::new(&patterns)?,
             anchor_automaton,
             pattern_indexes_by_automaton,
             pattern_rows,
+            anchor_lookup: anchor_tokens.iter().cloned().collect(),
             anchor_tokens,
+            anchor_len_masks,
         })
-    }
-
-    fn matches_normalized(&self, normalized: &str) -> Vec<usize> {
-        if !self.has_anchor_token(normalized) {
-            return Vec::new();
-        }
-        self.matches_normalized_after_anchor(normalized)
     }
 
     fn matches_normalized_after_anchor(&self, normalized: &str) -> Vec<usize> {
@@ -533,9 +599,21 @@ impl PhraseStressMatcher {
 
     fn has_anchor_token(&self, normalized: &str) -> bool {
         let Some(anchor_automaton) = &self.anchor_automaton else {
-            return normalized
-                .split_whitespace()
-                .any(|token| self.anchor_tokens.contains(token));
+            // normalized_text_v1 rows are lowercase tokens joined by single
+            // ASCII spaces with no edge whitespace (cache freshness is keyed
+            // on NORMALIZER_VERSION), so split(' ') is exact here. The
+            // first-byte/length mask skips the hash for tokens that cannot
+            // be anchors.
+            return normalized.split(' ').any(|token| {
+                let bytes = token.as_bytes();
+                let Some(&first) = bytes.first() else {
+                    return false;
+                };
+                if self.anchor_len_masks[first as usize] & (1u64 << bytes.len().min(63)) == 0 {
+                    return false;
+                }
+                self.anchor_lookup.contains(token)
+            });
         };
         let bytes = normalized.as_bytes();
         anchor_automaton
@@ -578,8 +656,10 @@ fn phrase_stress_resource_inner(
     let started = Instant::now();
     let mut candidates_seen = 0usize;
     let mut empty_candidates = 0usize;
-    let mut matches_by_pattern = vec![0usize; matcher.pattern_rows.len()];
-    let mut sample_counts = vec![0usize; matcher.pattern_rows.len()];
+    // Sparse: a full run has ~83k matches across 1M+ patterns, so dense
+    // per-partition vectors would zero ~17MB per partition for nothing.
+    let mut matches_by_pattern = HashMap::<usize, usize>::new();
+    let mut sample_counts = HashMap::<usize, usize>::new();
     let mut samples = Vec::new();
     let Some(mut stream) = open_or_build_anchor_row_stream(
         &resource,
@@ -609,8 +689,9 @@ fn phrase_stress_resource_inner(
             }
             let mut candidate = None;
             for pattern_index in matched_patterns {
-                matches_by_pattern[pattern_index] += 1;
-                if sample_counts[pattern_index] >= sample_limit {
+                *matches_by_pattern.entry(pattern_index).or_insert(0) += 1;
+                let sample_count = sample_counts.entry(pattern_index).or_insert(0);
+                if *sample_count >= sample_limit {
                     continue;
                 }
                 if candidate.is_none() {
@@ -628,7 +709,7 @@ fn phrase_stress_resource_inner(
                     url: found.url.clone(),
                     sentence: found.sentence.clone(),
                 });
-                sample_counts[pattern_index] += 1;
+                *sample_count += 1;
             }
         }
         tx.send(PhraseStressEvent::Done(PhraseStressResourceStats {
@@ -654,13 +735,16 @@ fn phrase_stress_resource_inner(
             empty_candidates += 1;
             continue;
         }
-        let matched_patterns = matcher.matches_normalized(&normalized);
+        // Sidecar rows are anchor-bearing by construction (build_anchor_rows
+        // only writes rows that pass the anchor check), so skip re-checking.
+        let matched_patterns = matcher.matches_normalized_after_anchor(&normalized);
         if matched_patterns.is_empty() {
             continue;
         }
         for pattern_index in matched_patterns {
-            matches_by_pattern[pattern_index] += 1;
-            if sample_counts[pattern_index] >= sample_limit {
+            *matches_by_pattern.entry(pattern_index).or_insert(0) += 1;
+            let sample_count = sample_counts.entry(pattern_index).or_insert(0);
+            if *sample_count >= sample_limit {
                 continue;
             }
             let row = &matcher.pattern_rows[pattern_index];
@@ -675,7 +759,7 @@ fn phrase_stress_resource_inner(
                 url: found.url.clone(),
                 sentence: found.sentence.clone(),
             });
-            sample_counts[pattern_index] += 1;
+            *sample_count += 1;
         }
     }
 
@@ -809,6 +893,7 @@ fn anchor_partition_counts(
     resources: &[ResourceSpec],
     cache_dir: &Path,
     anchors: &HashSet<String>,
+    jobs: usize,
 ) -> Result<HashMap<String, usize>> {
     let mut counts = anchors
         .iter()
@@ -817,14 +902,16 @@ fn anchor_partition_counts(
     if anchors.is_empty() {
         return Ok(counts);
     }
-    for resource in resources {
-        let Some(found) = cached_resource_token_hits(resource, cache_dir, anchors)? else {
-            bail!(
+    let hits = parallel_map_resources(resources, jobs, |resource| {
+        cached_resource_token_hits(resource, cache_dir, anchors)?.ok_or_else(|| {
+            anyhow::anyhow!(
                 "missing or stale split cache/token inventory for {} in {}",
                 resource.id,
                 cache_dir.display()
-            );
-        };
+            )
+        })
+    })?;
+    for found in hits {
         for token in found {
             if let Some(count) = counts.get_mut(&token) {
                 *count += 1;
@@ -1400,7 +1487,11 @@ fn phrase_variant_stress_markdown(report: &PhraseVariantStressReport) -> String 
 
 #[cfg(test)]
 mod tests {
-    use super::{phrase_stress_target_chunk, PhraseVariantStressArgs};
+    use super::{
+        build_phrase_stress_patterns, phrase_stress_target_chunk, PhraseStressMatcher,
+        PhraseVariantStressArgs, StressPattern, StressTarget,
+    };
+    use std::collections::{BTreeMap, HashSet};
     use std::path::PathBuf;
 
     fn args(chunk_size_targets: Option<usize>, chunk_index: usize) -> PhraseVariantStressArgs {
@@ -1448,5 +1539,199 @@ mod tests {
         let err = phrase_stress_target_chunk(10, &args(Some(4), 3)).expect_err("error");
 
         assert!(err.to_string().contains("outside 3 chunk"));
+    }
+
+    fn target(id: &str, tokens: &[&str]) -> StressTarget {
+        StressTarget {
+            id: id.to_owned(),
+            target_key: tokens.join("_"),
+            verb_id: id.to_owned(),
+            lemma: id.to_owned(),
+            signature: String::new(),
+            primary: String::new(),
+            morphology_form: None,
+            morphology_scope: None,
+            morphology_proof_level: None,
+            tokens: tokens.iter().map(|token| (*token).to_owned()).collect(),
+            anchor: tokens.last().expect("tokens").to_string(),
+            anchor_partitions: 0,
+        }
+    }
+
+    fn kind_counts(rows: &[StressPattern]) -> BTreeMap<String, usize> {
+        let mut counts = BTreeMap::new();
+        for row in rows {
+            *counts.entry(row.kind.clone()).or_insert(0) += 1;
+        }
+        counts
+    }
+
+    #[test]
+    fn nuk_target_generates_clitic_and_s_variants() {
+        let rows = build_phrase_stress_patterns(&[target("jam", &["nuk", "jam"])]);
+
+        let counts = kind_counts(&rows);
+        // "nuk më jam" folds to "nuk me jam", colliding with the base "me"
+        // clitic pattern, so folds add nothing here.
+        assert_eq!(
+            counts,
+            BTreeMap::from([
+                ("clitic_before_head".to_owned(), 9),
+                ("s_clitic_before_head".to_owned(), 9),
+            ])
+        );
+        assert!(rows.iter().any(|row| row.pattern == "nuk u jam"));
+        assert!(rows.iter().any(|row| row.pattern == "s e jam"));
+        assert!(rows.iter().all(|row| row.anchor == "jam"));
+    }
+
+    #[test]
+    fn mos_te_target_generates_reorder_and_contraction_variants() {
+        let rows = build_phrase_stress_patterns(&[target("djeg", &["mos", "të", "digjet"])]);
+
+        let counts = kind_counts(&rows);
+        // "digjet" has no diacritics, but the particle "të" folds, so the
+        // kinds whose patterns keep "të" still gain folded variants (the
+        // "më" fold collides with the "me" base twin, leaving 8 of 9).
+        assert_eq!(
+            counts,
+            BTreeMap::from([
+                ("clitic_before_head".to_owned(), 9),
+                ("clitic_before_head_diacritic_fold".to_owned(), 8),
+                ("te_mos_clitic".to_owned(), 9),
+                ("te_mos_clitic_diacritic_fold".to_owned(), 8),
+                ("mos_clitic_no_te".to_owned(), 9),
+                ("short_t_particle".to_owned(), 1),
+                ("t_contracted_clitic".to_owned(), 5),
+            ])
+        );
+        assert!(rows.iter().any(|row| row.pattern == "të mos u digjet"));
+        assert!(rows.iter().any(|row| row.pattern == "mos t digjet"));
+        assert!(rows.iter().any(|row| row.pattern == "mos ta digjet"));
+        assert!(rows.iter().all(|row| row.anchor == "digjet"));
+    }
+
+    #[test]
+    fn diacritic_folds_dedupe_against_base_patterns() {
+        let rows = build_phrase_stress_patterns(&[target("lexoj", &["mos", "të", "lexojë"])]);
+
+        let counts = kind_counts(&rows);
+        // Every base pattern contains "lexojë" so every kind folds; within
+        // each 9-clitic kind the "më" fold collides with the "me" base twin,
+        // leaving 8.
+        assert_eq!(
+            counts,
+            BTreeMap::from([
+                ("clitic_before_head".to_owned(), 9),
+                ("clitic_before_head_diacritic_fold".to_owned(), 8),
+                ("te_mos_clitic".to_owned(), 9),
+                ("te_mos_clitic_diacritic_fold".to_owned(), 8),
+                ("mos_clitic_no_te".to_owned(), 9),
+                ("mos_clitic_no_te_diacritic_fold".to_owned(), 8),
+                ("short_t_particle".to_owned(), 1),
+                ("short_t_particle_diacritic_fold".to_owned(), 1),
+                ("t_contracted_clitic".to_owned(), 5),
+                ("t_contracted_clitic_diacritic_fold".to_owned(), 5),
+            ])
+        );
+        let folded = rows
+            .iter()
+            .find(|row| row.kind == "clitic_before_head_diacritic_fold")
+            .expect("folded row");
+        assert!(!folded.pattern.contains('ë'));
+        assert_eq!(folded.anchor, "lexoje");
+    }
+
+    fn pattern_row(index: usize, pattern: &str, anchor: &str) -> StressPattern {
+        StressPattern {
+            target_index: index,
+            target_id: format!("t{index}"),
+            kind: "clitic_before_head".to_owned(),
+            pattern: pattern.to_owned(),
+            anchor: anchor.to_owned(),
+        }
+    }
+
+    #[test]
+    fn anchor_prefilter_matches_naive_oracle() {
+        let long_anchor = "a".repeat(70);
+        let mut rows = vec![
+            pattern_row(0, "të mos këndojë", "këndojë"),
+            pattern_row(1, "të mos çohem", "çohem"),
+            pattern_row(2, "të e ha", "ha"),
+            pattern_row(3, &format!("të {long_anchor}"), &long_anchor),
+        ];
+        for index in 0..70 {
+            let anchor = format!("tok{index}");
+            rows.push(pattern_row(4 + index, &format!("të {anchor}"), &anchor));
+        }
+        let matcher = PhraseStressMatcher::new(rows).expect("matcher");
+        let oracle: HashSet<&str> = matcher
+            .anchor_tokens
+            .iter()
+            .map(String::as_str)
+            .collect();
+
+        let long_token = "b".repeat(70);
+        let rows = [
+            "këndojë në mëngjes".to_owned(),
+            "ai do të këndojë".to_owned(),
+            "nesër këndojë ai".to_owned(),
+            "këndojës së madhe".to_owned(),
+            "kendoje pa diakritikë".to_owned(),
+            "ha bukë".to_owned(),
+            "h a tok".to_owned(),
+            "tok0 dhe tok69".to_owned(),
+            "tok70 mungon".to_owned(),
+            format!("papritur {long_anchor} shfaqet"),
+            format!("papritur {long_token} shfaqet"),
+            // 80-byte 'a' token: same clamped length bit as the 70-byte
+            // anchor, so it must survive the mask and be rejected by the set.
+            format!("{} tjetër", "a".repeat(80)),
+            "çohem herët".to_owned(),
+            "cohem pa ç".to_owned(),
+            "krejt tjetër fjali".to_owned(),
+        ];
+        for row in &rows {
+            let expected = row
+                .split_whitespace()
+                .any(|token| oracle.contains(token));
+            assert_eq!(
+                matcher.has_anchor_token(row),
+                expected,
+                "prefilter disagrees with oracle on {row:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn pattern_matcher_counts_overlapping_occurrences_with_fan_out() {
+        let rows = vec![
+            pattern_row(0, "të mos shkoj", "shkoj"),
+            // fan-out: identical pattern string owned by a second target
+            pattern_row(1, "të mos shkoj", "shkoj"),
+            pattern_row(2, "mos shkoj", "shkoj"),
+            // self-overlapping pattern
+            pattern_row(3, "ha ha", "ha"),
+            // multibyte boundary neighbours
+            pattern_row(4, "çel derën", "çel"),
+        ];
+        let matcher = PhraseStressMatcher::new(rows).expect("matcher");
+
+        let cases: [(&str, &[usize]); 6] = [
+            // "të mos shkoj" contains "mos shkoj" too, both fan-outs fire
+            ("të mos shkoj atje", &[0, 1, 2]),
+            ("unë mos shkoj", &[2]),
+            // "ha ha ha" holds two overlapping "ha ha" occurrences
+            ("ha ha ha", &[3, 3]),
+            ("buzëqesh çel derën", &[4]),
+            ("shkoj", &[]),
+            ("popo po pop", &[]),
+        ];
+        for (text, expected) in cases {
+            let mut actual = matcher.matches_normalized_after_anchor(text);
+            actual.sort_unstable();
+            assert_eq!(actual, expected, "hits differ on {text:?}");
+        }
     }
 }
