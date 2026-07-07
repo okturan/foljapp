@@ -49,7 +49,7 @@
     "build:corpus-search-index": "CARGO_TARGET_DIR=.cache/cargo-target cargo run --release --manifest-path tools/corpus-indexer/Cargo.toml -- build-search-index",
     "search:corpus": "CARGO_TARGET_DIR=.cache/cargo-target cargo run --release --manifest-path tools/corpus-indexer/Cargo.toml -- search-index",
     "download:opus": "tsx scripts/download-opus-corpora.ts",
-    "build:pages": "cd apps/web && npx @cloudflare/next-on-pages@1 --outdir .cf-pages-output && cd .. && node --experimental-strip-types scripts/patch-pages-routes.ts",
+    "build:pages": "cd apps/web && npx @cloudflare/next-on-pages@1 --outdir .cf-pages-output && cd ../.. && node --experimental-strip-types scripts/patch-pages-routes.ts",
     "deploy:pages": "npm run build:pages && cd apps/web && npx wrangler pages deploy .cf-pages-output --project-name foljapp --branch main",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
