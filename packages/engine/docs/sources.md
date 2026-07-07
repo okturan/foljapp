@@ -37,6 +37,15 @@ supported mood/tense combination since `verify-engine-voice-coverage`
 |            | Kaikki has the typo). See the next    |        |
 |            | section.                              |        |
 
+> **Baseline drift, needs its own change (recorded 2026-07-07):** the live
+> run currently reports **19,639 matches / 230 mismatches / 12,579 missing**
+> across the 203-verb corpus. The June 2026 corpus work (middle-passive
+> pruning, 204 → 203 verbs) never refreshed this document, and the mismatch
+> set now spans 10 verbs — the 7 documented-anomaly verbs plus `mbroj`,
+> `perfundoj`, `qendroj`, which are undocumented. Until the delta is
+> investigated verb-by-verb and this baseline is re-recorded, treat
+> 19,639/230 as the observed state, not an accepted baseline.
+
 ### Documented anomalies (engine correct, source disagrees)
 
 The 9 surfaced mismatches are all cases where Kaikki disagrees with both

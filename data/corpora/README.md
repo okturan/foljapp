@@ -27,17 +27,22 @@ This directory tracks the local and candidate corpora used for foljapp example s
 
 Current raw dataset cache total: about 70G.
 
-Derived local artifacts snapshot (2026-06-20):
+Derived local artifacts snapshot (verified 2026-07-07):
 
 | Artifact               | Local cache                                     | Size | Purpose                                                  |
 | ---------------------- | ----------------------------------------------- | ---: | -------------------------------------------------------- |
 | Legacy candidate cache | `.cache/corpus-candidate-shards/v1`             |  65G | Full-row v1 candidate shards retained as fallback        |
-| Split candidate cache  | `.cache/corpus-candidate-shards/split-20260620` |  89G | Current normalized/metadata/token shards for fast traces |
+| Split candidate cache  | `.cache/corpus-candidate-shards/split-20260620` |  88G | Current normalized/metadata/token shards for fast traces |
 | Retained examples DB   | `.cache/corpus-local-full.sqlite`               | 192M | Compact app-facing examples and occurrence rows          |
 | Tantivy search index   | `.cache/corpus-search-tantivy`                  |  36M | Interactive local phrase lookup over retained examples   |
 
-Current `.cache` footprint is about 232G, including raw datasets, candidate
+Current `.cache` footprint is about 231G, including raw datasets, candidate
 caches, retained DBs, search indexes, benchmarks, and build artifacts.
+
+The chunk-era `.anchor-rows-*` sidecar family (33,261 files, ~54G, built by
+2026-06-20 chunked phrase-variant runs and keyed to anchor sets the canonical
+all-target run never matches) was deleted on 2026-07-07. Anchor-row sidecars
+are rebuilt on demand, and only by an explicit `--build-anchor-rows` run.
 
 ## Candidate resources not downloaded
 
@@ -212,6 +217,13 @@ npm run report:corpus-phrase-variants:all
 ```
 
 The full script writes `.cache/corpus-phrase-variant-stress.all.json` and `.md`.
+Check any two report runs for output parity (summary counts, per-target and
+per-pattern matches, samples; timing ignored) with:
+
+```bash
+npm run report:corpus-phrase-variants:diff -- <baseline.json> <candidate.json>
+```
+
 Direct `--forms` or `--target-ids` runs are not implicitly capped; add
 `--limit-targets` only when a filtered run should be truncated.
 Do not use the all-target build-cache command as the default full-scale path:
