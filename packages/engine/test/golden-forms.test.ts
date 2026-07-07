@@ -7,6 +7,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { configure, conjugate } from '../src/conjugate.js';
+import { VERSION } from '../src/version.js';
 
 import { fixtures, punoj, hap, pi, pjek, djeg, jam, jap, shoh, them, laj } from './fixtures.js';
 
@@ -171,9 +172,9 @@ describe('punoj — Class 1', () => {
     expect(r.form).toBe('mos puno');
   });
 
-  it('negative subjunctive present 1sg = "mos të punoj"', () => {
+  it('negative subjunctive present 1sg = "të mos punoj"', () => {
     const r = conjugate(punoj.id, { mood: 'subjunctive', tense: 'present', voice: 'active', person: 1, number: 'singular', polarity: 'negative' });
-    expect(r.form).toBe('mos të punoj');
+    expect(r.form).toBe('të mos punoj');
   });
 
   it('interrogative present indicative 2sg = "a punon"', () => {
@@ -391,7 +392,7 @@ describe('them — middle-passive suppletive stem', () => {
 describe('engineVersion and corpusVersion', () => {
   it('every result carries engineVersion and corpusVersion', () => {
     const r = conjugate(punoj.id, { mood: 'indicative', tense: 'present', voice: 'active', person: 1, number: 'singular' });
-    expect(r.engineVersion).toBe('0.1.0');
+    expect(r.engineVersion).toBe(VERSION);
     expect(r.corpusVersion).toBe('0.1.0');
   });
 });

@@ -37,6 +37,14 @@ supported mood/tense combination since `verify-engine-voice-coverage`
 |            | Kaikki has the typo). See the next    |        |
 |            | section.                              |        |
 
+> **Engine 0.1.1 (2026-07-07, `fix-negation-particles`):** negation now
+> follows standard Albanian — optative negates with `mos` (was `nuk`:
+> \**nuk qofsha* → *mos qofsha*) and the subjunctive negator follows `të`
+> (*mos të punoj* → *të mos punoj*), per Newmark, Hubbard & Prifti (1982)
+> and Husić (2002). Kaikki tables cover affirmative cells only, so the
+> observed totals below are identical before and after (verified:
+> 19,639 / 230 / 12,579 both runs).
+
 > **Baseline drift, needs its own change (recorded 2026-07-07):** the live
 > run currently reports **19,639 matches / 230 mismatches / 12,579 missing**
 > across the 203-verb corpus. The June 2026 corpus work (middle-passive

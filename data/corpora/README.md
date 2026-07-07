@@ -44,6 +44,15 @@ The chunk-era `.anchor-rows-*` sidecar family (33,261 files, ~54G, built by
 all-target run never matches) was deleted on 2026-07-07. Anchor-row sidecars
 are rebuilt on demand, and only by an explicit `--build-anchor-rows` run.
 
+Engine 0.1.1 (`fix-negation-particles`, 2026-07-07) corrected negated
+subjunctive/optative surfaces (`mos të X` → `të mos X`; `nuk <optative>` →
+`mos <optative>`), so `.cache/corpus-targets.json` was regenerated and every
+scan artifact keyed to the old negative targets — target-hit sidecars, the
+missing-forms audit, retained examples and the static playground assets for
+those cells — is stale until the next full scan. That rescan should convert
+the ~24.9k phrase-variant matches the 2026-06-20 stress report recovered for
+reordered negations into canonical exact hits.
+
 ## Candidate resources not downloaded
 
 | Resource                      | Status                       | What it appears to have                                             | Blocker                                                          |

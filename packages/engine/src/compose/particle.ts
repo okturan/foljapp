@@ -31,7 +31,10 @@ export function selectNegation(
   mood: Mood,
   colloquial: boolean,
 ): ParticleSpec {
-  if (mood === 'imperative' || mood === 'subjunctive') {
+  // Standard Albanian negates the imperative, subjunctive, and optative
+  // with "mos" (Newmark et al. 1982; Husić 2002); "s'" only ever replaces
+  // "nuk".
+  if (mood === 'imperative' || mood === 'subjunctive' || mood === 'optative') {
     return { surface: 'mos', name: 'mos' };
   }
   if (colloquial) {

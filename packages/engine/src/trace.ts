@@ -231,7 +231,9 @@ export function trace(verbId: string, options: ConjugateOptions): TraceStep[] {
   // 8. Negation?
   if (options.polarity === 'negative') {
     const neg =
-      options.mood === 'imperative' || options.mood === 'subjunctive'
+      options.mood === 'imperative' ||
+      options.mood === 'subjunctive' ||
+      options.mood === 'optative'
         ? 'mos'
         : options.colloquial
           ? "s'"
@@ -240,7 +242,10 @@ export function trace(verbId: string, options: ConjugateOptions): TraceStep[] {
       kind: 'particle-prepend',
       particle: neg,
       reason: 'negation',
-      summary: `Prepend "${neg}" — ${options.mood} negation.`,
+      summary:
+        options.mood === 'subjunctive'
+          ? `Insert "${neg}" after "të" — subjunctive negation ("të mos …").`
+          : `Prepend "${neg}" — ${options.mood} negation.`,
     });
   }
 

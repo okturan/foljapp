@@ -717,17 +717,29 @@ function applyNegationAndModality(
 
   if (shouldNegate(options.polarity)) {
     const neg = selectNegation(options.mood, options.colloquial ?? false);
-    result = {
-      surface: `${neg.surface} ${result.surface}`,
-      segments: [
-        buildSegment({
-          surface: neg.surface,
-          role: 'particle',
-          particleName: neg.name,
-        }),
-        ...result.segments,
-      ],
-    };
+    const negSegment = buildSegment({
+      surface: neg.surface,
+      role: 'particle',
+      particleName: neg.name,
+    });
+    const [first, ...rest] = result.segments;
+    if (
+      options.mood === 'subjunctive' &&
+      first?.meta?.particleName === 'të' &&
+      result.surface.startsWith('të ')
+    ) {
+      // The subjunctive negator follows "të": "të mos punoj", never
+      // "mos të punoj" (Newmark et al. 1982; Husić 2002).
+      result = {
+        surface: `të ${neg.surface} ${result.surface.slice(3)}`,
+        segments: [first, negSegment, ...rest],
+      };
+    } else {
+      result = {
+        surface: `${neg.surface} ${result.surface}`,
+        segments: [negSegment, ...result.segments],
+      };
+    }
   }
 
   if (options.modality === 'interrogative') {
