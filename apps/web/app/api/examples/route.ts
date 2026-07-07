@@ -146,6 +146,8 @@ function localExamples(
   const exactWhere = signature
     ? `o.target_key = ${sqlString(targetKey)} AND o.signature = ${sqlString(signature)}`
     : `o.target_key = ${sqlString(targetKey)}`;
+  // Must stay in sync with PUBLIC_EXAMPLE_WHERE in
+  // scripts/build-static-examples.ts (the static asset generator).
   const publicExampleWhere = `
     s.flags_json NOT LIKE '%reference_prose%' AND
     s.flags_json NOT LIKE '%inflection_list%' AND

@@ -1,31 +1,21 @@
 'use client';
 
 import type { ConjugateOptions } from '@foljapp/engine';
-import { normalizeSearchKey } from '@foljapp/engine';
+import { generatedSearchTarget, normalizeSearchKey } from '@foljapp/engine';
 import { useEffect, useMemo, useState } from 'react';
+
+import {
+  fetchStaticVerbExamples,
+  lookupStaticExamples,
+  parallelExamplesAsApi,
+  type ApiExample,
+} from '@/lib/static-examples';
 
 interface Props {
   form: string | null;
   options: ConjugateOptions;
-}
-
-interface ApiExample {
-  id: string;
-  sourceType: 'local' | 'parallel';
-  resourceId: string;
-  corpus: string;
-  title: string | null;
-  url: string | null;
-  domain: string | null;
-  genre: string | null;
-  quality: string | null;
-  sentence: string;
-  translation: string | null;
-  matchKind: string;
-  score: number;
-  flags: string[];
-  cellLabel: string | null;
-  ancQuery: string | null;
+  /** Corpus entry id, used to locate the prebuilt example asset. */
+  verbId: string;
 }
 
 interface ApiResponse {
@@ -43,6 +33,48 @@ interface ApiResponse {
     error: string | null;
   };
   examples: ApiExample[];
+  /** True when the payload came from the prebuilt static assets. */
+  prebuilt?: boolean;
+}
+
+const EXAMPLE_LIMIT = 8;
+
+async function staticFallbackResponse(
+  verbId: string,
+  form: string,
+  options: ConjugateOptions,
+  signal: AbortSignal,
+): Promise<ApiResponse | null> {
+  const file = await fetchStaticVerbExamples(verbId, signal);
+  if (!file) return null;
+
+  const target = generatedSearchTarget(form, options);
+  const lookupKey = target?.targetKey ?? normalizeSearchKey(form);
+  const examples = lookupStaticExamples(
+    file,
+    lookupKey,
+    target?.signature ?? null,
+    EXAMPLE_LIMIT,
+  );
+  const remaining = Math.max(EXAMPLE_LIMIT - examples.length, 0);
+  if (remaining > 0) {
+    examples.push(...parallelExamplesAsApi(form, remaining));
+  }
+
+  return {
+    lookupForm: lookupKey || null,
+    target: target
+      ? {
+          signature: target.signature,
+          ancQuery: target.ancQuery,
+          ancTags: target.ancTags,
+          cellLabel: target.cellLabel,
+        }
+      : null,
+    local: { available: false, path: '', bytes: 0, error: null },
+    examples,
+    prebuilt: true,
+  };
 }
 
 type SourceFilter = 'all' | 'local' | 'translated';
@@ -92,7 +124,7 @@ function formatBytes(bytes: number): string {
   return `${value.toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
 }
 
-export function CorpusExamples({ form, options }: Props) {
+export function CorpusExamples({ form, options, verbId }: Props) {
   const lookupForm = useMemo(
     () => (form ? normalizeSearchKey(form) : null),
     [form],
@@ -112,16 +144,44 @@ export function CorpusExamples({ form, options }: Props) {
     const controller = new AbortController();
     setLoading(true);
     setError(null);
-    fetch(examplesUrl(form, options), { signal: controller.signal })
-      .then(async (response) => {
+
+    async function load(): Promise<void> {
+      let payload: ApiResponse | null = null;
+      let apiError: Error | null = null;
+      try {
+        const response = await fetch(examplesUrl(form as string, options), {
+          signal: controller.signal,
+        });
         if (!response.ok) {
           throw new Error(`examples API returned ${response.status}`);
         }
-        return (await response.json()) as ApiResponse;
-      })
-      .then((payload) => {
-        setData(payload);
-      })
+        payload = (await response.json()) as ApiResponse;
+      } catch (err) {
+        if ((err as Error).name === 'AbortError') return;
+        apiError = err as Error;
+      }
+
+      // The deployed site has no examples API, and dev without the local DB
+      // returns an empty local set; both fall back to the prebuilt assets.
+      const needsStatic =
+        !payload ||
+        (!payload.local.available &&
+          !payload.examples.some((example) => example.sourceType === 'local'));
+      if (needsStatic) {
+        const fallback = await staticFallbackResponse(
+          verbId,
+          form as string,
+          options,
+          controller.signal,
+        );
+        if (fallback) payload = fallback;
+      }
+
+      if (!payload) throw apiError ?? new Error('examples unavailable');
+      setData(payload);
+    }
+
+    load()
       .catch((err: Error) => {
         if (err.name !== 'AbortError') setError(err.message);
       })
@@ -130,7 +190,7 @@ export function CorpusExamples({ form, options }: Props) {
       });
 
     return () => controller.abort();
-  }, [form, lookupForm, options]);
+  }, [form, lookupForm, options, verbId]);
 
   if (!lookupForm) return null;
 
@@ -217,7 +277,9 @@ export function CorpusExamples({ form, options }: Props) {
                 </button>
               );
             })}
-            {data?.local.available ? (
+            {data?.prebuilt ? (
+              <span className="text-xs text-stone-400">prebuilt examples</span>
+            ) : data?.local.available ? (
               <span className="text-xs text-stone-400">
                 local DB {formatBytes(data.local.bytes)}
               </span>

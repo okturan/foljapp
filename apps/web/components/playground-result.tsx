@@ -74,7 +74,11 @@ export function PlaygroundResult({
             </p>
           ) : null}
           <DerivationPanel steps={traceSteps} />
-          <CorpusExamples form={result.form} options={options} />
+          <CorpusExamples
+            form={result.form}
+            options={options}
+            verbId={verbSlug}
+          />
         </>
       ) : unsupported ? (
         <p className="mt-2 text-stone-400 italic">
