@@ -17,6 +17,7 @@ This directory tracks the local and candidate corpora used for foljapp example s
 | BigMind Albanian                        | `.cache/datasets/huggingface/bigmind-albanian`                                                           | 991M | Public instruction-style parquet shards                                                       | Rust generic parquet text reader; not direct corpus evidence       |
 | Albanian WikiOrca                       | `.cache/datasets/huggingface/albanian-wikiorca`                                                          | 220M | Public question/response parquet shards                                                       | Rust generic parquet text reader; not direct attestation evidence  |
 | FineWeb2 Albanian varieties             | `.cache/datasets/monolingual-albanian/fineweb2`                                                          | 8.5G | Public FineWeb2 `als_Latn` and `aln_Latn` parquet shards                                      | Rust generic parquet text reader                                   |
+| CulturaX Albanian                       | `.cache/datasets/monolingual-albanian/culturax-sq`                                                       | 8.5G | 4 `sq` parquet shards of cleaned Common-Crawl Albanian web text (130.6M candidates)           | Rust generic parquet text reader; CC-derived, overlaps existing web sets |
 | HPLT v3 Albanian `als_Latn`             | `.cache/datasets/monolingual-albanian/hplt-v3/als_Latn`                                                  |  12G | Six JSONL.ZST shards of Albanian web documents with URL/crawl metadata                        | Broad web examples with provenance after filtering                 |
 | Leipzig Albanian corpora                | `.cache/datasets/monolingual-albanian/leipzig`                                                           | 1.9G | 23 Albanian community/news/Wikipedia sentence archives                                        | Sentence examples after dedupe                                     |
 | Tatoeba full exports                    | `.cache/datasets/tatoeba`                                                                                | 433M | Full sentence, link, and tag exports                                                          | Small attributed sentence examples                                 |
@@ -25,14 +26,14 @@ This directory tracks the local and candidate corpora used for foljapp example s
 | UD Albanian STAF                        | `.cache/datasets/universal-dependencies/UD_Albanian-STAF-main.zip`                                       |  72K | CoNLL-U train/dev/test treebank                                                               | Morphology/syntax checks                                           |
 | UD Albanian TSA                         | `.cache/datasets/universal-dependencies/UD_Albanian-TSA-main.zip`                                        |  20K | CoNLL-U test treebank                                                                         | Morphology/syntax checks                                           |
 
-Current raw dataset cache total: about 70G.
+Current raw dataset cache total: about 78G (CulturaX Albanian sq shards added 2026-07-09, +8.5G).
 
 Derived local artifacts snapshot (verified 2026-07-07):
 
 | Artifact               | Local cache                                     | Size | Purpose                                                  |
 | ---------------------- | ----------------------------------------------- | ---: | -------------------------------------------------------- |
 | Legacy candidate cache | `.cache/corpus-candidate-shards/v1`             |  65G | Full-row v1 candidate shards retained as fallback        |
-| Split candidate cache  | `.cache/corpus-candidate-shards/split-20260620` |  88G | Current normalized/metadata/token shards for fast traces |
+| Split candidate cache  | `.cache/corpus-candidate-shards/split-20260620` |  98G | Current normalized/metadata/token shards for fast traces |
 | Retained examples DB   | `.cache/corpus-local-full.sqlite`               | 192M | Compact app-facing examples and occurrence rows          |
 | Tantivy search index   | `.cache/corpus-search-tantivy`                  |  36M | Interactive local phrase lookup over retained examples   |
 

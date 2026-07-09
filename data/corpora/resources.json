@@ -35,41 +35,121 @@
         "Not enough by itself for rare Albanian-only forms."
       ],
       "corpora": [
-        { "name": "NLLB", "version": "v1", "alignmentPairs": 69172136 },
-        { "name": "CCMatrix", "version": "v1", "alignmentPairs": 22358158 },
-        { "name": "HPLT", "version": "v3", "alignmentPairs": 6864132 },
-        { "name": "MultiHPLT", "version": "v3", "alignmentPairs": 6864132 },
-        { "name": "CCAligned", "version": "v1", "alignmentPairs": 2317644 },
+        {
+          "name": "NLLB",
+          "version": "v1",
+          "alignmentPairs": 69172136
+        },
+        {
+          "name": "CCMatrix",
+          "version": "v1",
+          "alignmentPairs": 22358158
+        },
+        {
+          "name": "HPLT",
+          "version": "v3",
+          "alignmentPairs": 6864132
+        },
+        {
+          "name": "MultiHPLT",
+          "version": "v3",
+          "alignmentPairs": 6864132
+        },
+        {
+          "name": "CCAligned",
+          "version": "v1",
+          "alignmentPairs": 2317644
+        },
         {
           "name": "OpenSubtitles",
           "version": "v2024",
           "alignmentPairs": 2193576
         },
-        { "name": "XLEnt", "version": "v1.2", "alignmentPairs": 1361565 },
-        { "name": "MaCoCu", "version": "v2", "alignmentPairs": 507538 },
-        { "name": "MultiMaCoCu", "version": "v2", "alignmentPairs": 507538 },
-        { "name": "Tanzil", "version": "v1", "alignmentPairs": 368134 },
-        { "name": "SETIMES", "version": "v2", "alignmentPairs": 227516 },
-        { "name": "WikiMatrix", "version": "v1", "alignmentPairs": 180112 },
-        { "name": "GNOME", "version": "v1", "alignmentPairs": 151012 },
+        {
+          "name": "XLEnt",
+          "version": "v1.2",
+          "alignmentPairs": 1361565
+        },
+        {
+          "name": "MaCoCu",
+          "version": "v2",
+          "alignmentPairs": 507538
+        },
+        {
+          "name": "MultiMaCoCu",
+          "version": "v2",
+          "alignmentPairs": 507538
+        },
+        {
+          "name": "Tanzil",
+          "version": "v1",
+          "alignmentPairs": 368134
+        },
+        {
+          "name": "SETIMES",
+          "version": "v2",
+          "alignmentPairs": 227516
+        },
+        {
+          "name": "WikiMatrix",
+          "version": "v1",
+          "alignmentPairs": 180112
+        },
+        {
+          "name": "GNOME",
+          "version": "v1",
+          "alignmentPairs": 151012
+        },
         {
           "name": "wikimedia",
           "version": "v20230407",
           "alignmentPairs": 121077
         },
-        { "name": "QED", "version": "v2.0a", "alignmentPairs": 117215 },
-        { "name": "TED2020", "version": "v1", "alignmentPairs": 69896 },
-        { "name": "bible-uedin", "version": "v1", "alignmentPairs": 62195 },
-        { "name": "NeuLab-TedTalks", "version": "v1", "alignmentPairs": 47272 },
-        { "name": "ELRC-5067-SciPar", "version": "v1", "alignmentPairs": 7780 },
+        {
+          "name": "QED",
+          "version": "v2.0a",
+          "alignmentPairs": 117215
+        },
+        {
+          "name": "TED2020",
+          "version": "v1",
+          "alignmentPairs": 69896
+        },
+        {
+          "name": "bible-uedin",
+          "version": "v1",
+          "alignmentPairs": 62195
+        },
+        {
+          "name": "NeuLab-TedTalks",
+          "version": "v1",
+          "alignmentPairs": 47272
+        },
+        {
+          "name": "ELRC-5067-SciPar",
+          "version": "v1",
+          "alignmentPairs": 7780
+        },
         {
           "name": "GlobalVoices",
           "version": "v2018q4",
           "alignmentPairs": 6078
         },
-        { "name": "TildeMODEL", "version": "v2018", "alignmentPairs": 3058 },
-        { "name": "EUbookshop", "version": "v2", "alignmentPairs": 2223 },
-        { "name": "Tatoeba", "version": "v2023-04-12", "alignmentPairs": 1094 },
+        {
+          "name": "TildeMODEL",
+          "version": "v2018",
+          "alignmentPairs": 3058
+        },
+        {
+          "name": "EUbookshop",
+          "version": "v2",
+          "alignmentPairs": 2223
+        },
+        {
+          "name": "Tatoeba",
+          "version": "v2023-04-12",
+          "alignmentPairs": 1094
+        },
         {
           "name": "ELRC-3052-wikipedia_health",
           "version": "v1",
@@ -80,8 +160,16 @@
           "version": "v1",
           "alignmentPairs": 389
         },
-        { "name": "ELRC_2922", "version": "v1", "alignmentPairs": 388 },
-        { "name": "Ubuntu", "version": "v14.10", "alignmentPairs": null }
+        {
+          "name": "ELRC_2922",
+          "version": "v1",
+          "alignmentPairs": 388
+        },
+        {
+          "name": "Ubuntu",
+          "version": "v14.10",
+          "alignmentPairs": null
+        }
       ]
     },
     {
@@ -128,9 +216,21 @@
       "indexerSupport": "rust",
       "provenanceGranularity": "Document URL/domain/title plus sentence number generated locally.",
       "redistributionPolicy": "Raw corpus stays local; derived short examples need source labels.",
-      "schema": ["id", "title", "text", "url", "domain", "tld", "genre"],
+      "schema": [
+        "id",
+        "title",
+        "text",
+        "url",
+        "domain",
+        "tld",
+        "genre"
+      ],
       "contents": "Document-level Albanian web text with URL/domain/title and genre metadata. Good candidate for monolingual sentence examples with provenance.",
-      "observedUsefulForms": ["punuakam", "punuaka", "punuakan"],
+      "observedUsefulForms": [
+        "punuakam",
+        "punuaka",
+        "punuakan"
+      ],
       "cautions": [
         "Documents can be very large; sentence segmentation and dedupe are required.",
         "JSON lines contain full documents, so direct grep output can be unwieldy."
@@ -157,7 +257,9 @@
         "p id/quality/lm_score/sensitive/heading/lang"
       ],
       "contents": "Albanian web paragraphs with document and paragraph quality metadata. Strong candidate for filtered example search because paragraph quality and language tags are explicit.",
-      "observedUsefulForms": ["punuakam"],
+      "observedUsefulForms": [
+        "punuakam"
+      ],
       "cautions": [
         "XML parsing is needed; do not use ad hoc string slicing for ingestion.",
         "Some paragraphs are headings or non-Albanian despite being inside the Albanian corpus."
@@ -178,9 +280,15 @@
       "indexerSupport": "rust",
       "provenanceGranularity": "Local line number only; no source URL in the raw file.",
       "redistributionPolicy": "Do not redistribute raw CC100 text from foljapp; keep local cache only.",
-      "schema": ["one text line per record"],
+      "schema": [
+        "one text line per record"
+      ],
       "contents": "Large raw Albanian web text. It finds rare forms that OPUS misses, including natural-looking occurrences of admirative forms.",
-      "observedUsefulForms": ["punuakam", "punuaka", "punuakan"],
+      "observedUsefulForms": [
+        "punuakam",
+        "punuaka",
+        "punuakan"
+      ],
       "cautions": [
         "Very noisy raw web data; sampled lines included junk/adult/spam text.",
         "No URL or document metadata in the local text file.",
@@ -207,7 +315,11 @@
       "indexerSupport": "rust",
       "provenanceGranularity": "Document URL/timestamp plus shard line and sentence number generated locally.",
       "redistributionPolicy": "Do not redistribute raw mC4 shards from foljapp; keep local cache only.",
-      "schema": ["text", "timestamp", "url"],
+      "schema": [
+        "text",
+        "timestamp",
+        "url"
+      ],
       "contents": "Albanian mC4 JSON.GZ shards with web document text, timestamp, and URL. Useful for broad monolingual sentence recall with basic provenance.",
       "cautions": [
         "Very large web documents need sentence segmentation, dedupe, and filtering before UI use.",
@@ -307,7 +419,10 @@
       "downloadedBytes": 9108035860,
       "onDiskSize": "8.5G",
       "shardCount": 5,
-      "languages": ["als_Latn", "aln_Latn"],
+      "languages": [
+        "als_Latn",
+        "aln_Latn"
+      ],
       "license": "ODC-BY",
       "indexerSupport": "rust-generic-parquet-text-reader",
       "provenanceGranularity": "Parquet row metadata after schema inspection.",
@@ -334,7 +449,16 @@
       "indexerSupport": "rust",
       "provenanceGranularity": "Common Crawl URL, crawl id, shard, record id, and generated sentence number.",
       "redistributionPolicy": "Keep raw shards local; derived examples need URL/source labels and HPLT/Common Crawl term review.",
-      "schema": ["text", "u", "ts", "crawl_id", "lang", "prob", "filter", "id"],
+      "schema": [
+        "text",
+        "u",
+        "ts",
+        "crawl_id",
+        "lang",
+        "prob",
+        "filter",
+        "id"
+      ],
       "contents": "Large HPLT v3 Albanian web corpus shards with document text and source URL metadata.",
       "cautions": [
         "Common Crawl-derived web data overlaps with MaCoCu, CC100, mC4, FineWeb2, CulturaX, and OSCAR.",
@@ -376,7 +500,11 @@
       "indexerSupport": "rust",
       "provenanceGranularity": "Tatoeba sentence id and public sentence URL.",
       "redistributionPolicy": "Short attributed examples may be used under Tatoeba license; keep raw exports local.",
-      "schema": ["sentences_detailed.csv", "links.csv", "tags.csv"],
+      "schema": [
+        "sentences_detailed.csv",
+        "links.csv",
+        "tags.csv"
+      ],
       "contents": "Full Tatoeba sentence, link, and tag exports. The Rust scanner currently indexes Albanian rows from sentences_detailed.",
       "cautions": [
         "Small compared with web corpora.",
@@ -420,9 +548,15 @@
       "provenanceGranularity": "Local line number only; no source URL in the raw file.",
       "redistributionPolicy": "Raw corpus stays local; derived examples need filtering because source provenance is weak.",
       "lineCount": 8380151,
-      "schema": ["one text line per record"],
+      "schema": [
+        "one text line per record"
+      ],
       "contents": "Line-oriented Albanian corpus for language-model training. It includes both reference/grammar material and general text.",
-      "observedUsefulForms": ["punuakam", "punuaka", "punuakan"],
+      "observedUsefulForms": [
+        "punuakam",
+        "punuaka",
+        "punuakan"
+      ],
       "cautions": [
         "Many hits for rare forms are grammar/reference prose rather than natural sentences.",
         "No URL or document metadata in the local text file."
@@ -470,7 +604,7 @@
     },
     {
       "id": "culturax-sq",
-      "status": "gated-not-downloaded",
+      "status": "downloaded",
       "kind": "monolingual-web-parquet",
       "title": "CulturaX Albanian",
       "sourceUrl": "https://huggingface.co/datasets/uonlp/CulturaX",
@@ -484,10 +618,9 @@
       ],
       "access": "Hugging Face auto-gated; requires accepting terms and an authenticated token.",
       "contents": "Large multilingual cleaned web corpus with Albanian shards. Good candidate for broader monolingual coverage after access is granted.",
-      "cautions": [
-        "Not downloaded locally yet.",
-        "License/access terms must be checked before indexing or redistribution."
-      ]
+      "localPath": ".cache/datasets/monolingual-albanian/culturax-sq",
+      "downloadedAt": "2026-07-09",
+      "notes": "Albanian (sq) shards downloaded 2026-07-09; CC-derived, overlaps MaCoCu/CC100/mC4/FineWeb2 so expect modest net-new attestation."
     },
     {
       "id": "oscar-sq",

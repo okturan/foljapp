@@ -1155,7 +1155,8 @@ fn source_kind(id: &str, format: Option<&str>) -> Option<SourceKind> {
             | "hf-albanian-english-bundled"
             | "hf-bigmind-albanian"
             | "hf-albanian-wikiorca"
-            | "fineweb2-albanian-varieties",
+            | "fineweb2-albanian-varieties"
+            | "culturax-sq",
             "Parquet shards",
         ) => Some(SourceKind::ParquetDir),
         ("wikimedia-sq-latest", "MediaWiki XML bz2 dumps") => Some(SourceKind::WikimediaXmlBz2Dir),
