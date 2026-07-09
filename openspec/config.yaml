@@ -59,7 +59,10 @@ context: |
   ## Output quality bars
   - Every conjugated form has a stable URL + permalink anchor
   - Every morphological claim cites its source
-  - Every page statically renderable (SEO + offline-friendly via SW)
+  - Every page statically renderable (SEO + offline-friendly via SW) —
+    except verb-page conjugation tables, which are client-rendered from
+    the corpus bundle (artifact-size tradeoff, ratified 2026-07-07;
+    page shell and metadata stay static)
   - Visual decomposition shows: particle / auxiliary / stem / ending / voice
   - All output downloadable as JSON / CSV / CoNLL-U / Leipzig IGT
   - All forms also rendered in IPA (phase 5)

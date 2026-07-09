@@ -6,9 +6,10 @@
   "auxiliary": "kam",
   "principalParts": {
     "present": "nxis",
-    "aorist": "nxis",
-    "participle": "nxisur"
+    "aorist": "nxit",
+    "participle": "nxitur"
   },
+  "flags": { "middlePassiveThirdPersonOnly": true },
   "sources": [
     {
       "source": "kaikki",
@@ -19,5 +20,30 @@
       "reference": "scaffolded by ingest-kaikki-batch"
     }
   ],
+  "cellOverrides": {
+    "indicative.present": {
+      "2sg": "nxit",
+      "3sg": "nxit"
+    },
+    "indicative.present.middle-passive": {
+      "3sg": "nxitet",
+      "3pl": "nxiten"
+    },
+    "indicative.imperfect.middle-passive": {
+      "3sg": "nxitej",
+      "3pl": "nxiteshin"
+    },
+    "optative.present": {
+      "1sg": "nxitsha",
+      "2sg": "nxitsh",
+      "3sg": "nxittë",
+      "1pl": "nxitshim",
+      "2pl": "nxitshi",
+      "3pl": "nxitshin"
+    },
+    "imperative.present": {
+      "2sg": "nxit"
+    }
+  },
   "dialect": "tosk"
 }

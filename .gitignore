@@ -9,6 +9,7 @@ node_modules/
 out/
 dist/
 build/
+target/
 .cf-pages-output/
 *.tsbuildinfo
 next-env.d.ts
@@ -32,6 +33,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+errors.log
 
 # IDEs and editors
 .vscode/
@@ -60,3 +62,7 @@ Icon
 # TypeScript cache
 *.tsbuildinfo
 .cache/
+
+# Python cache
+__pycache__/
+*.py[cod]

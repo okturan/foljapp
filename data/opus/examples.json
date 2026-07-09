@@ -1,0 +1,397 @@
+{
+  "generatedAt": "2026-06-16T00:00:00.000Z",
+  "source": "OPUS",
+  "sourceUrl": "https://opus.nlpl.eu/",
+  "apiUrl": "https://opus.nlpl.eu/opusapi",
+  "languagePair": {
+    "source": "sq",
+    "target": "en"
+  },
+  "formFilter": [
+    "mësoj",
+    "mëson",
+    "punoj",
+    "punojnë",
+    "punon",
+    "punonte",
+    "punuake",
+    "punuar",
+    "të punoj"
+  ],
+  "corpora": [
+    {
+      "corpus": "Tatoeba",
+      "version": "v2023-04-12",
+      "preprocessing": "moses",
+      "sentencePairs": 1094,
+      "sourceLanguage": "en",
+      "targetLanguage": "sq",
+      "opusUrl": "https://opus.nlpl.eu/datasets/Tatoeba",
+      "downloadUrl": "https://object.pouta.csc.fi/OPUS-Tatoeba/v2023-04-12/moses/en-sq.txt.zip"
+    },
+    {
+      "corpus": "GlobalVoices",
+      "version": "v2018q4",
+      "preprocessing": "moses",
+      "sentencePairs": 6078,
+      "sourceLanguage": "en",
+      "targetLanguage": "sq",
+      "opusUrl": "https://opus.nlpl.eu/datasets/GlobalVoices",
+      "downloadUrl": "https://object.pouta.csc.fi/OPUS-GlobalVoices/v2018q4/moses/en-sq.txt.zip"
+    },
+    {
+      "corpus": "wikimedia",
+      "version": "v20230407",
+      "preprocessing": "moses",
+      "sentencePairs": 121077,
+      "sourceLanguage": "en",
+      "targetLanguage": "sq",
+      "opusUrl": "https://opus.nlpl.eu/datasets/wikimedia",
+      "downloadUrl": "https://object.pouta.csc.fi/OPUS-wikimedia/v20230407/moses/en-sq.txt.zip"
+    },
+    {
+      "corpus": "WikiMatrix",
+      "version": "v1",
+      "preprocessing": "moses",
+      "sentencePairs": 180112,
+      "sourceLanguage": "en",
+      "targetLanguage": "sq",
+      "opusUrl": "https://opus.nlpl.eu/datasets/WikiMatrix",
+      "downloadUrl": "https://object.pouta.csc.fi/OPUS-WikiMatrix/v1/moses/en-sq.txt.zip"
+    },
+    {
+      "corpus": "SETIMES",
+      "version": "v2",
+      "preprocessing": "moses",
+      "sentencePairs": 227516,
+      "sourceLanguage": "en",
+      "targetLanguage": "sq",
+      "opusUrl": "https://opus.nlpl.eu/datasets/SETIMES",
+      "downloadUrl": "https://object.pouta.csc.fi/OPUS-SETIMES/v2/moses/en-sq.txt.zip"
+    },
+    {
+      "corpus": "GNOME",
+      "version": "v1",
+      "preprocessing": "moses",
+      "sentencePairs": 151012,
+      "sourceLanguage": "en",
+      "targetLanguage": "sq",
+      "opusUrl": "https://opus.nlpl.eu/datasets/GNOME",
+      "downloadUrl": "https://object.pouta.csc.fi/OPUS-GNOME/v1/moses/en-sq.txt.zip"
+    },
+    {
+      "corpus": "TED2020",
+      "version": "v1",
+      "preprocessing": "moses",
+      "sentencePairs": 69896,
+      "sourceLanguage": "en",
+      "targetLanguage": "sq",
+      "opusUrl": "https://opus.nlpl.eu/datasets/TED2020",
+      "downloadUrl": "https://object.pouta.csc.fi/OPUS-TED2020/v1/moses/en-sq.txt.zip"
+    },
+    {
+      "corpus": "QED",
+      "version": "v2.0a",
+      "preprocessing": "moses",
+      "sentencePairs": 117215,
+      "sourceLanguage": "en",
+      "targetLanguage": "sq",
+      "opusUrl": "https://opus.nlpl.eu/datasets/QED",
+      "downloadUrl": "https://object.pouta.csc.fi/OPUS-QED/v2.0a/moses/en-sq.txt.zip"
+    },
+    {
+      "corpus": "OpenSubtitles",
+      "version": "v2024",
+      "preprocessing": "moses",
+      "sentencePairs": 2193576,
+      "sourceLanguage": "en",
+      "targetLanguage": "sq",
+      "opusUrl": "https://opus.nlpl.eu/datasets/OpenSubtitles",
+      "downloadUrl": "https://object.pouta.csc.fi/OPUS-OpenSubtitles/v2024/moses/en-sq.txt.zip"
+    }
+  ],
+  "examples": {
+    "mësoj": [
+      {
+        "corpus": "Tatoeba",
+        "version": "v2023-04-12",
+        "sentenceNumber": 418,
+        "sq": "Mua më pëlqen të mësoj gjuhë.",
+        "en": "I like learning languages.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/Tatoeba"
+      },
+      {
+        "corpus": "GlobalVoices",
+        "version": "v2018q4",
+        "sentenceNumber": 1825,
+        "sq": "Më duket jashtëzakonisht vështirë të kuptoj dhe mësoj anglisht dhe prandaj nuk e përdor shumë për të shkruar.",
+        "en": "I find it extremely difficult to understand and learn English and this is why I don't use it a lot in writing.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/GlobalVoices"
+      },
+      {
+        "corpus": "wikimedia",
+        "version": "v20230407",
+        "sentenceNumber": 19339,
+        "sq": "Mualimi është mësues në mejtep, i cili ka për detyrë që fëmijëve parashkollorë t'iu mësoj bazat e fesë islame dhe shkrim-leximin arab.Mandej , iu mëson mësimin e [[Kur'ani]]t.",
+        "en": "The \"marabout\" is known as \"Sayyed\" (سيد) to the Arabic speaking Maghribians teachers of Islam teach scholars",
+        "opusUrl": "https://opus.nlpl.eu/datasets/wikimedia"
+      },
+      {
+        "corpus": "WikiMatrix",
+        "version": "v1",
+        "sentenceNumber": 11350,
+        "sq": "Fëmija i gjashtë nga tetë, në një familje të varfër, ajo filloj të luaj në piano në moshën 3 vjeçare; kënga e parë që mësoj ishte \"God Be With You, Till We Meet Again\"(\"Zoti qoftë me ty, derisa të takohemi përsëri\").",
+        "en": "The sixth of eight children in a poor family, she began playing piano at the age of three or four; the first song she learned was \"God Be With You, Till We Meet Again\".",
+        "opusUrl": "https://opus.nlpl.eu/datasets/WikiMatrix"
+      }
+    ],
+    "mëson": [
+      {
+        "corpus": "Tatoeba",
+        "version": "v2023-04-12",
+        "sentenceNumber": 277,
+        "sq": "Kush ju mëson?",
+        "en": "Who teaches you?",
+        "opusUrl": "https://opus.nlpl.eu/datasets/Tatoeba"
+      },
+      {
+        "corpus": "wikimedia",
+        "version": "v20230407",
+        "sentenceNumber": 15448,
+        "sq": "Kjo situatë mund të gjendet edhe në romanin e George Orwell 1984 ku Big Brother dhe qeveria kontrollojnë se çfarë kombi dëgjon, sheh, dhe mëson.",
+        "en": "This situation can also be found in the George Orwell novel Nineteen Eighty-Four where Big Brother and the government literally control what the nation hears, sees, and learns.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/wikimedia"
+      },
+      {
+        "corpus": "WikiMatrix",
+        "version": "v1",
+        "sentenceNumber": 1675,
+        "sq": "Tiger!\", Mowgli është adoptuar nga Messua dhe burri i saj dhe mëson mënyra njerëzore.",
+        "en": "Tiger!\", Mowgli is adopted by Messua and her husband and learns human ways.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/WikiMatrix"
+      },
+      {
+        "corpus": "SETIMES",
+        "version": "v2",
+        "sentenceNumber": 32239,
+        "sq": "Nihat Ali Ozkan, një ekspert i grupit thotë se ky po mëson nga përvojat e organizatave të tjera terroriste kudo në botë.",
+        "en": "Nihat Ali Ozcan, an expert on the group, says it is learning from the experiences of other terrorist organisations around the world.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/SETIMES"
+      }
+    ],
+    "punoj": [
+      {
+        "corpus": "Tatoeba",
+        "version": "v2023-04-12",
+        "sentenceNumber": 266,
+        "sq": "Punoj për McDonald's.",
+        "en": "I work for McDonald's.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/Tatoeba"
+      },
+      {
+        "corpus": "GlobalVoices",
+        "version": "v2018q4",
+        "sentenceNumber": 1594,
+        "sq": "Për mua, kjo është gazeta për të cilën nuk më lejohet të punoj.",
+        "en": "For me, this is the magazine I'm not allowed to work for.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/GlobalVoices"
+      },
+      {
+        "corpus": "wikimedia",
+        "version": "v20230407",
+        "sentenceNumber": 1005,
+        "sq": "Cray nuk i pëlqente të punoj makina të 'zakonshme', të detyruara të projektoheshin me ndërtim me kosto të ulët, ashtu që CDC të mund të shesë shumë prej tyre.",
+        "en": "Cray did not enjoy working on such 'mundane' machines, constrained to design for low-cost construction, so CDC could sell lots of them.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/wikimedia"
+      },
+      {
+        "corpus": "WikiMatrix",
+        "version": "v1",
+        "sentenceNumber": 763,
+        "sq": "Une dua te punoj dhe me pas te shkoj ne shtepi dhe te jetoj ne privatesi\".",
+        "en": "I want to work and then go home and live in private.\"",
+        "opusUrl": "https://opus.nlpl.eu/datasets/WikiMatrix"
+      }
+    ],
+    "punojnë": [
+      {
+        "corpus": "Tatoeba",
+        "version": "v2023-04-12",
+        "sentenceNumber": 105,
+        "sq": "Ata të dy po punojnë tek dyqani i kafshëve shtëpiake.",
+        "en": "They are both working at the pet store.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/Tatoeba"
+      },
+      {
+        "corpus": "GlobalVoices",
+        "version": "v2018q4",
+        "sentenceNumber": 1170,
+        "sq": "Për ne është me rëndësi që të punojnë stacionet matëse dhe qytetarët të mund t'i marrin informatat për kualitetin e ajrit nga ekranet e pajisjeve,\" tha Kërstevski.",
+        "en": "For us the important thing is that the measuring stations work and that the citizens can get air quality info from displays on the devices,\" Krstevski said.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/GlobalVoices"
+      },
+      {
+        "corpus": "wikimedia",
+        "version": "v20230407",
+        "sentenceNumber": 311,
+        "sq": "Giovanni Domenico Cassini gjithashtu ishte i pari nga familja e tij që të filloj të punojnë në projektin e krijimit të hartës topografike të Francës.",
+        "en": "Giovanni Domenico Cassini was also the first of his family to begin work on the project of creating a topographic map of France.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/wikimedia"
+      },
+      {
+        "corpus": "WikiMatrix",
+        "version": "v1",
+        "sentenceNumber": 118,
+        "sq": "2) Nëse 8 dhjetori është një ditë pune, punonjësit mund të punojnë në dyqane.",
+        "en": "2) If 8 December is a working day, employees may work in shops.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/WikiMatrix"
+      }
+    ],
+    "punon": [
+      {
+        "corpus": "Tatoeba",
+        "version": "v2023-04-12",
+        "sentenceNumber": 388,
+        "sq": "Punon.",
+        "en": "It works.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/Tatoeba"
+      },
+      {
+        "corpus": "GlobalVoices",
+        "version": "v2018q4",
+        "sentenceNumber": 1160,
+        "sq": "Ueb-faqja \"Shkupi merr frymë\", në të cilën, deri para Kërshëndellave, drejtpërsëdrejti publikoheshin të dhënat, akoma nuk punon, dhe sipas të gjitha gjasave as që do të punojë në të ardhmen.",
+        "en": "The website \"Skopje Breathing,\" which published a live data feed until Christmas , is still not working, and most likely will not work in the future.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/GlobalVoices"
+      },
+      {
+        "corpus": "wikimedia",
+        "version": "v20230407",
+        "sentenceNumber": 88,
+        "sq": "Davidi ishte i punësuar në moshën 10-vjeçare në mullirin e pambukut të Henri Monteith & Co. në Blantyre Punon.",
+        "en": "He and his brother John, worked twelve-hour days as piecers, tying broken cotton threads on the spinning machines.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/wikimedia"
+      },
+      {
+        "corpus": "WikiMatrix",
+        "version": "v1",
+        "sentenceNumber": 1295,
+        "sq": "Jo aq serioz sa partneri i tij, ai gjithashtu punon fort në kërkimin e Will Byers.",
+        "en": "Not nearly as serious as his partner, he still works hard in the search for Will Byers.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/WikiMatrix"
+      }
+    ],
+    "punonte": [
+      {
+        "corpus": "GlobalVoices",
+        "version": "v2018q4",
+        "sentenceNumber": 1567,
+        "sq": "Përderisa punonte si mësues i gjuhës angleze e më vonë edhe si inzhenjer për IT, duke garruar në karaoke, u zbulua nga një shtëpi diskografike dhe u bë i famshëm në Japoni.",
+        "en": "While working as an English teacher and later as an IT engineer, through performances at local karaoke competitions, he was discovered by a record label and eventually rose to fame in Japan.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/GlobalVoices"
+      },
+      {
+        "corpus": "wikimedia",
+        "version": "v20230407",
+        "sentenceNumber": 5881,
+        "sq": "Gjatë kohës sa ishte anëtare e dhomës së Përfaqësuesve ajo vazhdoi të punonte si profesor asistent, aty ku është edhe tani.[1]",
+        "en": "She remained assistant professor during her membership of the House of Representatives, now at the VU University of Amsterdam.[1]",
+        "opusUrl": "https://opus.nlpl.eu/datasets/wikimedia"
+      },
+      {
+        "corpus": "WikiMatrix",
+        "version": "v1",
+        "sentenceNumber": 832,
+        "sq": "Në robëri vazhdoi të punonte si mjek dhe \"u bë mjaft miqësor me disa rusë, kryesisht mjekë\".",
+        "en": "In captivity he continued to work as a medic and \"got quite friendly with some Russians, mostly doctors\".",
+        "opusUrl": "https://opus.nlpl.eu/datasets/WikiMatrix"
+      },
+      {
+        "corpus": "SETIMES",
+        "version": "v2",
+        "sentenceNumber": 11,
+        "sq": "\"Babai im punonte në Hidroteknika, [si dhe unë] deri në dhjetor 1990, por pastaj u hoqa sepse autoritetet serbe na hoqën.",
+        "en": "\"My father worked at Hidroteknika, [as did] I until December 1990, but then I was removed because Serbian authorities removed us.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/SETIMES"
+      }
+    ],
+    "punuake": [
+      {
+        "corpus": "OpenSubtitles",
+        "version": "v2024",
+        "sentenceNumber": 309887,
+        "sq": "Më nuk punuake në dhomën e ngrënies.",
+        "en": "You don't work in the dining room anymore.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/OpenSubtitles"
+      }
+    ],
+    "punuar": [
+      {
+        "corpus": "Tatoeba",
+        "version": "v2023-04-12",
+        "sentenceNumber": 1067,
+        "sq": "Shqiptarët lexojnë Kuran kur nuk janë duke punuar.",
+        "en": "Albanians read Quran when they are not working.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/Tatoeba"
+      },
+      {
+        "corpus": "GlobalVoices",
+        "version": "v2018q4",
+        "sentenceNumber": 1369,
+        "sq": "Megjithatë, duket se forcat me mbështetje më të fuqishme janë duke punuar për nxitje trazirash.",
+        "en": "However, it seems that forces with powerful backing are working on stirring unrest.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/GlobalVoices"
+      },
+      {
+        "corpus": "wikimedia",
+        "version": "v20230407",
+        "sentenceNumber": 459,
+        "sq": "Në të menaxhimit të projektit, një detyrë është një aktivitet që duhet të realizohet brenda një periudhe kohore, ose nga një afati i fundit për të punuar në drejtim të lidhura me punën e qëllimeve.",
+        "en": "In project management, a task is an activity that needs to be accomplished within a defined period of time or by a deadline to work towards work-related goals.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/wikimedia"
+      },
+      {
+        "corpus": "WikiMatrix",
+        "version": "v1",
+        "sentenceNumber": 598,
+        "sq": "Serbia ka caktuar roje dhe agjentët doganore për të punuar në kufi.",
+        "en": "Serbia has appointed guards and customs agents to work at the border.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/WikiMatrix"
+      }
+    ],
+    "të punoj": [
+      {
+        "corpus": "Tatoeba",
+        "version": "v2023-04-12",
+        "sentenceNumber": 574,
+        "sq": "Unë nuk dua të punoj në këto kushte.",
+        "en": "I don't want to work under these conditions.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/Tatoeba"
+      },
+      {
+        "corpus": "GlobalVoices",
+        "version": "v2018q4",
+        "sentenceNumber": 1594,
+        "sq": "Për mua, kjo është gazeta për të cilën nuk më lejohet të punoj.",
+        "en": "For me, this is the magazine I'm not allowed to work for.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/GlobalVoices"
+      },
+      {
+        "corpus": "wikimedia",
+        "version": "v20230407",
+        "sentenceNumber": 1005,
+        "sq": "Cray nuk i pëlqente të punoj makina të 'zakonshme', të detyruara të projektoheshin me ndërtim me kosto të ulët, ashtu që CDC të mund të shesë shumë prej tyre.",
+        "en": "Cray did not enjoy working on such 'mundane' machines, constrained to design for low-cost construction, so CDC could sell lots of them.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/wikimedia"
+      },
+      {
+        "corpus": "WikiMatrix",
+        "version": "v1",
+        "sentenceNumber": 7634,
+        "sq": "Unë shpresoj të punoj fortë, të stërvitem mirë, dhe të përjetojnë shumë gëzim këtu.",
+        "en": "I hope to work hard, to train well, and to experience a lot of joy here.",
+        "opusUrl": "https://opus.nlpl.eu/datasets/WikiMatrix"
+      }
+    ]
+  }
+}

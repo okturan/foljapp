@@ -134,8 +134,12 @@ export interface VerbEntryFlags {
   isSuppletive?: boolean;
   hasMutation?: boolean;
   irregularAorist?: boolean;
-  /** Verb has no middle-passive voice (copula `jam`, intransitive `iki`/`vij`). */
+  /** Verb has no middle-passive voice (copula `jam`, intransitives such as `iki`). */
   noMiddlePassive?: boolean;
+  /** Defective finite verb whose usable forms are restricted to 3sg/3pl. */
+  thirdPersonOnly?: boolean;
+  /** Middle-passive finite cells are restricted to 3sg/3pl; active voice is unaffected. */
+  middlePassiveThirdPersonOnly?: boolean;
 }
 
 /**
@@ -274,6 +278,14 @@ export type TraceStep =
   | {
       kind: 'particle-prepend';
       particle: string;
+      reason: string;
+      summary: string;
+    }
+  | {
+      kind: 'particle-insert';
+      particle: string;
+      /** The existing particle this one is inserted after (e.g. "të"). */
+      afterParticle: string;
       reason: string;
       summary: string;
     }

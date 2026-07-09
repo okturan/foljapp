@@ -10,10 +10,22 @@
     "participle": "folur"
   },
   "sources": [
-    { "source": "husic", "reference": "2C (stem alternation flas/flet/flis + suppletive aorist fol)" },
-    { "source": "kaikki", "reference": "https://en.wiktionary.org/wiki/flas#Albanian" }
+    {
+      "source": "husic",
+      "reference": "2C (stem alternation flas/flet/flis + suppletive aorist fol)"
+    },
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/flas#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "Newmark, Hubbard & Prifti 1982 — non-active present/imperfect with mutated stem (flit-)"
+    }
   ],
-  "flags": { "irregularAorist": true },
+  "flags": {
+    "irregularAorist": true
+  },
   "dialect": "tosk",
   "notes": "Three present-system stems: flas (1sg/1pl/3pl), flet (2sg/3sg), flis (2pl + all imperfect). Aorist takes Class 2 endings on stem 'fol'.",
   "cellOverrides": {
@@ -52,6 +64,22 @@
     "imperative.present": {
       "2sg": "fol",
       "2pl": "flisni"
+    },
+    "indicative.present.middle-passive": {
+      "1sg": "flitem",
+      "2sg": "flitesh",
+      "3sg": "flitet",
+      "1pl": "flitemi",
+      "2pl": "fliteni",
+      "3pl": "fliten"
+    },
+    "indicative.imperfect.middle-passive": {
+      "1sg": "flitesha",
+      "2sg": "fliteshe",
+      "3sg": "flitej",
+      "1pl": "fliteshim",
+      "2pl": "fliteshit",
+      "3pl": "fliteshin"
     }
   }
 }

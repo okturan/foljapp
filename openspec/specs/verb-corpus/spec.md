@@ -289,3 +289,113 @@ This invariant is enforced by a unit test (`apps/web/lib/corpus-husic-citations.
 - **WHEN** the verb's JSON is loaded
 - **THEN** the absence of a `husic` citation SHALL NOT cause a build error
 
+### Requirement: Mutated middle-passive stems are sourced cellOverrides
+
+Mutated middle-passive stems SHALL be carried as sourced `cellOverrides`
+when the engine cannot derive them from the principal parts, each verb
+citing a source for the paradigm. `flas` SHALL use the **flit-** stem
+(*flitem, flitet, flitej, …*) and `tërheq` the **tërhiq-** stem
+(*tërhiqem, tërhiqet, tërhiqej, …*) for middle-passive present and
+imperfect, per Newmark, Hubbard & Prifti (1982) and FGJSH.
+
+#### Scenario: flas middle-passive present uses the flit- stem
+
+- **WHEN** `conjugate('flas', { mood: 'indicative', tense: 'present',
+  voice: 'middle-passive', person: 3, number: 'singular' })` runs
+- **THEN** the surface SHALL be `flitet`, never \*`flaset`
+- **AND** the subjunctive present MP SHALL derive as `të flitet`
+
+#### Scenario: tërheq middle-passive imperfect uses the tërhiq- stem
+
+- **WHEN** the indicative imperfect middle-passive 3sg of `tërheq` is
+  conjugated
+- **THEN** the surface SHALL be `tërhiqej`, never \*`tërheqej`
+
+#### Scenario: aorist middle-passive is unchanged
+
+- **WHEN** the indicative aorist middle-passive 3sg of `flas` and `tërheq`
+  are conjugated
+- **THEN** the surfaces SHALL remain `u fol` and `u tërhoq`
+
+#### Scenario: suppletive and mutating controls are unaffected
+
+- **GIVEN** the suppletive verb `them` and the phonologically-mutating verb
+  `djeg`
+- **WHEN** their indicative present middle-passive 3sg cells are conjugated
+- **THEN** the surfaces SHALL remain `thuhet` and `digjet`
+
+### Requirement: Impersonal middle-passive verbs use the third-person flag
+
+Verbs whose middle-passive SHALL be restricted to impersonal (third-person)
+use — per FGJSH *vetv.* marking and corpus attestation — carry
+`flags.middlePassiveThirdPersonOnly` rather than `noMiddlePassive`. `iki`,
+`gjezdis`, and `qendroj` SHALL conjugate third-person middle-passive cells
+(*iket*, *gjezdiset*, *qëndrohet*) and SHALL refuse first/second-person
+middle-passive cells with `UnsupportedCellError`.
+
+#### Scenario: iket conjugates, ikem refuses
+
+- **WHEN** the indicative present middle-passive 3sg of `iki` is conjugated
+- **THEN** the surface SHALL be `iket`
+- **AND** the same cell with person 1 SHALL throw `UnsupportedCellError`
+
+#### Scenario: qëndrohet resolves the Husić conflict
+
+- **WHEN** the indicative present middle-passive 3sg of `qendroj` is
+  conjugated
+- **THEN** the surface SHALL be `qëndrohet`, matching the Husić cache row
+
+#### Scenario: suppletive and mutating full-MP verbs are unaffected
+
+- **GIVEN** the suppletive verb `them` and the phonologically-mutating verb
+  `djeg`
+- **WHEN** their first-person middle-passive present cells are conjugated
+- **THEN** they SHALL conjugate normally (`thuhem`, `digjem`) — the
+  restriction applies only to flagged verbs
+
+### Requirement: Verification treats voice-flag refusals as decisions
+
+`scripts/verify-engine.ts` SHALL count a cell as a match when the engine
+refuses it due to an editorial voice flag (`noMiddlePassive`, or
+`middlePassiveThirdPersonOnly` on a non-third-person middle-passive cell),
+regardless of mechanically-generated source-cache rows, and SHALL report
+the number of such flag-suppressed cells (and how many carried source
+data) so the conflicts stay visible.
+
+#### Scenario: Flagged verb with Husić rows verifies clean
+
+- **GIVEN** a verb flagged `middlePassiveThirdPersonOnly` whose Husić cache
+  carries first-person middle-passive rows
+- **WHEN** verify-engine probes those cells
+- **THEN** they SHALL count as flag-suppressed matches, not mismatches
+- **AND** the summary SHALL report the flag-suppressed total
+
+### Requirement: Voice-flag decisions are grounded in full-corpus evidence
+
+Voice-flag changes SHALL cite full-corpus attestation counts, and `udhetoj`
+SHALL carry no middle-passive restriction: its non-active paradigm
+(*udhëtohet*, *udhëtohej*, *udhëtohesh*, …) conjugates mechanically like
+`shkoj`'s. Verbs whose non-active surfaces are homograph-contaminated
+(`rri` via `rrah`, `vij` via `vë`) SHALL keep their flags with the
+contamination recorded as the rationale.
+
+#### Scenario: udhëtohet conjugates across persons
+
+- **WHEN** the indicative present middle-passive of `udhetoj` is conjugated
+  for 3sg and 2sg
+- **THEN** the surfaces SHALL be `udhëtohet` and `udhëtohesh`
+- **AND** neither SHALL throw `UnsupportedCellError`
+
+#### Scenario: Suppletive and mutating controls unaffected
+
+- **GIVEN** the suppletive verb `them` and the mutating verb `pjek`
+- **WHEN** their present middle-passive 3sg cells are conjugated
+- **THEN** the surfaces SHALL remain `thuhet` and `piqet`
+
+#### Scenario: rri remains flagged with rationale
+
+- **WHEN** a middle-passive cell of `rri` is requested
+- **THEN** the engine SHALL throw `UnsupportedCellError`
+- **AND** the corpora README SHALL record the rrihet/rrah homograph
+  contamination as the reason
+

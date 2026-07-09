@@ -10,9 +10,18 @@
     "participle": "tërhequr"
   },
   "sources": [
-    { "source": "kaikki", "reference": "https://en.wiktionary.org/wiki/t%C3%ABrheq#Albanian" }
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/t%C3%ABrheq#Albanian"
+    },
+    {
+      "source": "manual",
+      "reference": "Newmark, Hubbard & Prifti 1982 — non-active present/imperfect with mutated stem (tërhiq-)"
+    }
   ],
-  "flags": { "irregularAorist": true },
+  "flags": {
+    "irregularAorist": true
+  },
   "dialect": "tosk",
   "notes": "Three-stem alternation: tërheq (1sg/1pl/3pl), tërhiq (2pl + all imperfect), tërhoq (aorist).",
   "cellOverrides": {
@@ -33,6 +42,22 @@
     "imperative.present": {
       "2sg": "tërhiq",
       "2pl": "tërhiqni"
+    },
+    "indicative.present.middle-passive": {
+      "1sg": "tërhiqem",
+      "2sg": "tërhiqesh",
+      "3sg": "tërhiqet",
+      "1pl": "tërhiqemi",
+      "2pl": "tërhiqeni",
+      "3pl": "tërhiqen"
+    },
+    "indicative.imperfect.middle-passive": {
+      "1sg": "tërhiqesha",
+      "2sg": "tërhiqeshe",
+      "3sg": "tërhiqej",
+      "1pl": "tërhiqeshim",
+      "2pl": "tërhiqeshit",
+      "3pl": "tërhiqeshin"
     }
   }
 }

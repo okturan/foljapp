@@ -2,7 +2,6 @@
   { "lemma": "tërheqoj",   "translationEn": "alt of tërheq",                   "class": 1, "auxiliary": "kam", "irregular": true, "notes": "skip — alternative of tërheq" },
   { "lemma": "qartësoj",   "translationEn": "to clarify",                      "class": 1, "auxiliary": "kam" },
   { "lemma": "vërtetoj",   "translationEn": "to prove / confirm",              "class": 1, "auxiliary": "kam" },
-  { "lemma": "lidhoj",     "translationEn": "to bind / connect",               "class": 1, "auxiliary": "kam" },
   { "lemma": "shqipëroj",  "translationEn": "to translate to Albanian",        "class": 1, "auxiliary": "kam" },
   { "lemma": "shpalos",    "translationEn": "to unfold / reveal",              "class": 2, "auxiliary": "kam" },
   { "lemma": "kërcënoj",   "translationEn": "to threaten",                     "class": 1, "auxiliary": "kam" },

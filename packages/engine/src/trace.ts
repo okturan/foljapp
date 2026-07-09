@@ -231,17 +231,31 @@ export function trace(verbId: string, options: ConjugateOptions): TraceStep[] {
   // 8. Negation?
   if (options.polarity === 'negative') {
     const neg =
-      options.mood === 'imperative' || options.mood === 'subjunctive'
+      options.mood === 'imperative' ||
+      options.mood === 'subjunctive' ||
+      options.mood === 'optative'
         ? 'mos'
         : options.colloquial
           ? "s'"
           : 'nuk';
-    steps.push({
-      kind: 'particle-prepend',
-      particle: neg,
-      reason: 'negation',
-      summary: `Prepend "${neg}" — ${options.mood} negation.`,
-    });
+    if (options.mood === 'subjunctive') {
+      // The subjunctive negator is inserted after "të", not prepended, so
+      // steps fold to "të mos …" rather than "mos të …".
+      steps.push({
+        kind: 'particle-insert',
+        particle: neg,
+        afterParticle: 'të',
+        reason: 'negation',
+        summary: `Insert "${neg}" after "të" — subjunctive negation ("të mos …").`,
+      });
+    } else {
+      steps.push({
+        kind: 'particle-prepend',
+        particle: neg,
+        reason: 'negation',
+        summary: `Prepend "${neg}" — ${options.mood} negation.`,
+      });
+    }
   }
 
   // 9. Interrogative?

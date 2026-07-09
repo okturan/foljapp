@@ -1,17 +1,22 @@
 'use client';
 
-import type { TraceStep } from '@foljapp/engine';
+import type { ConjugateOptions, TraceStep } from '@foljapp/engine';
 import Link from 'next/link';
 import { useState } from 'react';
 
+import { CorpusExamples } from '@/components/corpus-examples';
 import { DecomposedForm } from '@/components/decomposed-form';
 import { DerivationPanel } from '@/components/derivation-panel';
 import { toIpaBracketed } from '@/lib/ipa';
 
 interface Props {
   /** Engine output, or null when unsupported / errored. */
-  result: { decomposition: import('@foljapp/engine').DecompositionSegment[]; form: string } | null;
+  result: {
+    decomposition: import('@foljapp/engine').DecompositionSegment[];
+    form: string;
+  } | null;
   traceSteps: TraceStep[];
+  options: ConjugateOptions;
   unsupported: boolean;
   errorMsg: string | null;
   /** Canonical URL slug for the verb. */
@@ -30,6 +35,7 @@ interface Props {
 export function PlaygroundResult({
   result,
   traceSteps,
+  options,
   unsupported,
   errorMsg,
   verbSlug,
@@ -50,7 +56,7 @@ export function PlaygroundResult({
 
   return (
     <>
-      <p className="text-xs uppercase tracking-wider text-stone-400">Form</p>
+      <p className="text-xs tracking-wider text-stone-400 uppercase">Form</p>
       {result ? (
         <>
           <div className="mt-2 text-3xl">
@@ -62,12 +68,17 @@ export function PlaygroundResult({
           {gloss ? (
             <p
               data-testid="english-gloss"
-              className="mt-1 text-sm italic text-stone-500"
+              className="mt-1 text-sm text-stone-500 italic"
             >
               &ldquo;{gloss}&rdquo;
             </p>
           ) : null}
           <DerivationPanel steps={traceSteps} />
+          <CorpusExamples
+            form={result.form}
+            options={options}
+            verbId={verbSlug}
+          />
         </>
       ) : unsupported ? (
         <p className="mt-2 text-stone-400 italic">

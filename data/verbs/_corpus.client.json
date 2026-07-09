@@ -533,6 +533,9 @@
         "reference": "scaffolded by ingest-kaikki-batch"
       }
     ],
+    "flags": {
+      "middlePassiveThirdPersonOnly": true
+    },
     "dialect": "tosk"
   },
   {
@@ -1290,10 +1293,26 @@
       }
     ],
     "flags": {
-      "irregularAorist": true
+      "irregularAorist": true,
+      "noMiddlePassive": true,
+      "thirdPersonOnly": true
     },
     "dialect": "tosk",
     "notes": "Defective: in practice only 3sg/3pl forms are used. englishForms uses defective 'must' for present and 'had to' periphrasis for past/perfect (the only English equivalent that conjugates across tenses).",
+    "cellOverrides": {
+      "indicative.present": {
+        "3sg": "duhet",
+        "3pl": "duhen"
+      },
+      "indicative.imperfect": {
+        "3sg": "duhej",
+        "3pl": "duheshin"
+      },
+      "subjunctive.present": {
+        "3sg": "duhet",
+        "3pl": "duhen"
+      }
+    },
     "englishForms": {
       "base": "must",
       "past": "had to",
@@ -1441,6 +1460,9 @@
         "reference": "scaffolded by ingest-kaikki-batch"
       }
     ],
+    "flags": {
+      "middlePassiveThirdPersonOnly": true
+    },
     "dialect": "tosk"
   },
   {
@@ -1533,6 +1555,9 @@
         "reference": "scaffolded by ingest-kaikki-batch"
       }
     ],
+    "flags": {
+      "middlePassiveThirdPersonOnly": true
+    },
     "dialect": "tosk"
   },
   {
@@ -1763,6 +1788,9 @@
         "reference": "scaffolded by ingest-kaikki-batch"
       }
     ],
+    "flags": {
+      "middlePassiveThirdPersonOnly": true
+    },
     "dialect": "tosk"
   },
   {
@@ -1862,6 +1890,10 @@
       {
         "source": "kaikki",
         "reference": "https://en.wiktionary.org/wiki/flas#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "Newmark, Hubbard & Prifti 1982 — non-active present/imperfect with mutated stem (flit-)"
       }
     ],
     "flags": {
@@ -1905,6 +1937,22 @@
       "imperative.present": {
         "2sg": "fol",
         "2pl": "flisni"
+      },
+      "indicative.present.middle-passive": {
+        "1sg": "flitem",
+        "2sg": "flitesh",
+        "3sg": "flitet",
+        "1pl": "flitemi",
+        "2pl": "fliteni",
+        "3pl": "fliten"
+      },
+      "indicative.imperfect.middle-passive": {
+        "1sg": "flitesha",
+        "2sg": "fliteshe",
+        "3sg": "flitej",
+        "1pl": "fliteshim",
+        "2pl": "fliteshit",
+        "3pl": "fliteshin"
       }
     }
   },
@@ -2159,6 +2207,9 @@
         "reference": "scaffolded by ingest-kaikki-batch"
       }
     ],
+    "flags": {
+      "middlePassiveThirdPersonOnly": true
+    },
     "dialect": "tosk"
   },
   {
@@ -2565,7 +2616,7 @@
       }
     ],
     "flags": {
-      "noMiddlePassive": true
+      "middlePassiveThirdPersonOnly": true
     },
     "dialect": "tosk",
     "notes": "Class 2D pattern: 1sg present takes -i, 2sg/3sg present take -ën, aorist 3sg takes -u. Encoded via cellOverrides rather than introducing a new paradigm class for one verb. Intransitive — no MP voice in standard Albanian.",
@@ -3529,29 +3580,6 @@
     "dialect": "tosk"
   },
   {
-    "id": "lidhoj",
-    "lemma": "lidhoj",
-    "translationEn": "to bind / connect",
-    "class": 1,
-    "auxiliary": "kam",
-    "principalParts": {
-      "present": "lidho",
-      "aorist": "lidhua",
-      "participle": "lidhuar"
-    },
-    "sources": [
-      {
-        "source": "kaikki",
-        "reference": "https://en.wiktionary.org/wiki/lidhoj#Albanian"
-      },
-      {
-        "source": "manual",
-        "reference": "scaffolded by ingest-kaikki-batch"
-      }
-    ],
-    "dialect": "tosk"
-  },
-  {
     "id": "lind",
     "lemma": "lind",
     "translationEn": "to born (be born)",
@@ -3689,8 +3717,8 @@
     "auxiliary": "kam",
     "principalParts": {
       "present": "mbro",
-      "aorist": "mbrua",
-      "participle": "mbruar"
+      "aorist": "mbrojt",
+      "participle": "mbrojtur"
     },
     "sources": [
       {
@@ -3698,11 +3726,29 @@
         "reference": "https://en.wiktionary.org/wiki/mbroj#Albanian"
       },
       {
+        "source": "uniparser",
+        "reference": "mbroj brej/brej-1"
+      },
+      {
         "source": "manual",
         "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
       }
     ],
-    "dialect": "tosk"
+    "flags": {
+      "irregularAorist": true
+    },
+    "dialect": "tosk",
+    "notes": "Irregular aorist and participle use mbrojt-: mbrojta/mbrojte/mbrojti/mbrojtëm/mbrojtët/mbrojtën, participle mbrojtur.",
+    "cellOverrides": {
+      "indicative.aorist": {
+        "1sg": "mbrojta",
+        "2sg": "mbrojte",
+        "3sg": "mbrojti",
+        "1pl": "mbrojtëm",
+        "2pl": "mbrojtët",
+        "3pl": "mbrojtën"
+      }
+    }
   },
   {
     "id": "mbyll",
@@ -4081,8 +4127,8 @@
     "auxiliary": "kam",
     "principalParts": {
       "present": "nxis",
-      "aorist": "nxis",
-      "participle": "nxisur"
+      "aorist": "nxit",
+      "participle": "nxitur"
     },
     "sources": [
       {
@@ -4094,7 +4140,35 @@
         "reference": "scaffolded by ingest-kaikki-batch"
       }
     ],
-    "dialect": "tosk"
+    "flags": {
+      "middlePassiveThirdPersonOnly": true
+    },
+    "dialect": "tosk",
+    "cellOverrides": {
+      "indicative.present": {
+        "2sg": "nxit",
+        "3sg": "nxit"
+      },
+      "indicative.present.middle-passive": {
+        "3sg": "nxitet",
+        "3pl": "nxiten"
+      },
+      "indicative.imperfect.middle-passive": {
+        "3sg": "nxitej",
+        "3pl": "nxiteshin"
+      },
+      "optative.present": {
+        "1sg": "nxitsha",
+        "2sg": "nxitsh",
+        "3sg": "nxittë",
+        "1pl": "nxitshim",
+        "2pl": "nxitshi",
+        "3pl": "nxitshin"
+      },
+      "imperative.present": {
+        "2sg": "nxit"
+      }
+    }
   },
   {
     "id": "ofroj",
@@ -4427,6 +4501,9 @@
         "reference": "Husić 2002 — parsed cache (.cache/husic/qendroj.jsonl)"
       }
     ],
+    "flags": {
+      "middlePassiveThirdPersonOnly": true
+    },
     "dialect": "tosk"
   },
   {
@@ -4505,7 +4582,8 @@
       }
     ],
     "flags": {
-      "irregularAorist": true
+      "irregularAorist": true,
+      "noMiddlePassive": true
     },
     "dialect": "tosk",
     "notes": "Aorist stem ndenj takes Class 2 endings (consonant stem). Optative is built from aorist stem with -ça-/-ç family endings.",
@@ -4940,6 +5018,10 @@
       {
         "source": "kaikki",
         "reference": "https://en.wiktionary.org/wiki/t%C3%ABrheq#Albanian"
+      },
+      {
+        "source": "manual",
+        "reference": "Newmark, Hubbard & Prifti 1982 — non-active present/imperfect with mutated stem (tërhiq-)"
       }
     ],
     "flags": {
@@ -4965,6 +5047,22 @@
       "imperative.present": {
         "2sg": "tërhiq",
         "2pl": "tërhiqni"
+      },
+      "indicative.present.middle-passive": {
+        "1sg": "tërhiqem",
+        "2sg": "tërhiqesh",
+        "3sg": "tërhiqet",
+        "1pl": "tërhiqemi",
+        "2pl": "tërhiqeni",
+        "3pl": "tërhiqen"
+      },
+      "indicative.imperfect.middle-passive": {
+        "1sg": "tërhiqesha",
+        "2sg": "tërhiqeshe",
+        "3sg": "tërhiqej",
+        "1pl": "tërhiqeshim",
+        "2pl": "tërhiqeshit",
+        "3pl": "tërhiqeshin"
       }
     }
   },
@@ -4989,7 +5087,26 @@
       "isSuppletive": true,
       "irregularAorist": true
     },
-    "dialect": "tosk"
+    "dialect": "tosk",
+    "notes": "Suppletive MP indicative present/imperfect use the thu- stem.",
+    "cellOverrides": {
+      "indicative.present.middle-passive": {
+        "1sg": "thuhem",
+        "2sg": "thuhesh",
+        "3sg": "thuhet",
+        "1pl": "thuhemi",
+        "2pl": "thuheni",
+        "3pl": "thuhen"
+      },
+      "indicative.imperfect.middle-passive": {
+        "1sg": "thuhesha",
+        "2sg": "thuheshe",
+        "3sg": "thuhej",
+        "1pl": "thuheshim",
+        "2pl": "thuheshit",
+        "3pl": "thuheshin"
+      }
+    }
   },
   {
     "id": "themeloj",

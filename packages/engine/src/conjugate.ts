@@ -717,17 +717,29 @@ function applyNegationAndModality(
 
   if (shouldNegate(options.polarity)) {
     const neg = selectNegation(options.mood, options.colloquial ?? false);
-    result = {
-      surface: `${neg.surface} ${result.surface}`,
-      segments: [
-        buildSegment({
-          surface: neg.surface,
-          role: 'particle',
-          particleName: neg.name,
-        }),
-        ...result.segments,
-      ],
-    };
+    const negSegment = buildSegment({
+      surface: neg.surface,
+      role: 'particle',
+      particleName: neg.name,
+    });
+    const [first, ...rest] = result.segments;
+    if (
+      options.mood === 'subjunctive' &&
+      first?.meta?.particleName === 'të' &&
+      result.surface.startsWith('të ')
+    ) {
+      // The subjunctive negator follows "të": "të mos punoj", never
+      // "mos të punoj" (Newmark et al. 1982; Husić 2002).
+      result = {
+        surface: `të ${neg.surface} ${result.surface.slice(3)}`,
+        segments: [first, negSegment, ...rest],
+      };
+    } else {
+      result = {
+        surface: `${neg.surface} ${result.surface}`,
+        segments: [negSegment, ...result.segments],
+      };
+    }
   }
 
   if (options.modality === 'interrogative') {
@@ -788,7 +800,26 @@ export function conjugate(
   const person = (options.person ?? 2) as Person;
   const number = options.number ?? 'singular';
 
-  // Verbs flagged noMiddlePassive (copula `jam`, intransitive `iki`/`vij`)
+  if (options.mood !== 'non-finite' && entry.flags?.thirdPersonOnly && person !== 3) {
+    throw new UnsupportedCellError(
+      `${cellLabel(person, number)}/${options.mood}`,
+      `${entry.id} only supports third-person finite cells (flag thirdPersonOnly)`,
+    );
+  }
+
+  if (
+    options.mood !== 'non-finite' &&
+    voice === 'middle-passive' &&
+    entry.flags?.middlePassiveThirdPersonOnly &&
+    person !== 3
+  ) {
+    throw new UnsupportedCellError(
+      `${cellLabel(person, number)}/${options.mood}/middle-passive`,
+      `${entry.id} only supports third-person finite middle-passive cells (flag middlePassiveThirdPersonOnly)`,
+    );
+  }
+
+  // Verbs flagged noMiddlePassive (copula `jam`, intransitives such as `iki`)
   // have no MP voice in standard Albanian. Refuse before paradigm dispatch
   // so the engine never fabricates forms like `jamem`/`ikem`/`vihem`.
   if (voice === 'middle-passive' && entry.flags?.noMiddlePassive) {

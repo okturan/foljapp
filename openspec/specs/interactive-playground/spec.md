@@ -231,9 +231,9 @@ The client-side engine SHALL be configured at module load with the full corpus �
 
 #### Scenario: Verb-page lemma list and playground lemma list match
 
-- **GIVEN** the corpus index `data/verbs/index.json` lists 204 lemmas
+- **GIVEN** the corpus index `data/verbs/index.json` lists `N` lemmas
 - **WHEN** the playground configures its client-side engine on first load
-- **THEN** the engine's `listVerbs()` SHALL return 204 entries
+- **THEN** the engine's `listVerbs()` SHALL return `N` entries
 - **AND** for every lemma `L` rendered as a static `/verb/<L>` page, `/playground?verb=<L>` SHALL conjugate `L` without throwing `UnknownVerbError`
 
 ### Requirement: Compact option groups pack into a responsive parent grid
@@ -326,4 +326,54 @@ The following controls SHALL apply feasibility-based disabling: **Mood**, **Tens
 - **WHEN** the page renders
 - **THEN** both Polarity pills (`affirmative`, `negative`) SHALL be enabled
 - **AND** both Modality pills (`declarative`, `interrogative`) SHALL be enabled
+
+### Requirement: Corpus examples render without the live examples API
+
+The playground's Examples panel SHALL source retained-corpus examples from
+the prebuilt per-verb assets (`/examples/<verbId>.json`) in every
+environment. The `/api/examples` route SHALL run on the Edge runtime,
+SHALL always report `local.available: false`, and SHALL serve only target
+derivation (`lookupForm`, `target`) plus OPUS parallel pairs; the panel's
+fallback then loads the asset and composes retained rows first —
+signature-restricted lookup before the key-wide fallback — followed by
+parallel pairs, within the same total example cap. When the API is
+entirely unreachable the panel SHALL fall back the same way.
+
+#### Scenario: Playground shows attested examples for a suppletive verb
+
+- **GIVEN** `jam` has retained corpus examples in `/examples/jam.json`
+- **WHEN** the user selects a `jam` cell whose target key has retained
+  examples
+- **THEN** the Examples panel SHALL render those sentences with their
+  corpus provenance (source name, and link when a URL was retained)
+- **AND** the panel SHALL indicate that prebuilt examples are being shown
+
+#### Scenario: Phonologically-mutating verb falls back by target key
+
+- **GIVEN** the static asset for `djeg` contains rows for target key
+  `digjet` under a different signature than the one requested
+- **WHEN** signature-restricted lookup finds no rows
+- **THEN** the panel SHALL fall back to all rows for the target key
+
+#### Scenario: The examples route deploys to the Edge runtime
+
+- **WHEN** the Cloudflare Pages artifact is built with next-on-pages
+- **THEN** the build SHALL succeed with `/api/examples` configured for the
+  Edge runtime
+- **AND** the route SHALL respond without any Node.js-only APIs
+
+### Requirement: Per-verb example assets are generated from the retained corpus
+
+`npm run build:static-examples` SHALL regenerate
+`apps/web/public/examples/<verbId>.json` for every corpus verb plus an
+`index.json` manifest, applying the same public-example quality filter as
+the examples API, capping stored examples per target, and producing
+deterministic output for a given database state. The assets SHALL be
+committed so production builds require no local corpus artifacts.
+
+#### Scenario: Regeneration is deterministic
+
+- **WHEN** the generator runs twice against the same database with
+  `--frozen-time`
+- **THEN** the emitted files SHALL be byte-identical
 

@@ -129,7 +129,7 @@ describe('english-gloss audit — every cell yields a non-empty string', () => {
           (failures.length > 25 ? `\n... +${failures.length - 25} more` : ''),
       );
     }
-    // Sanity: should be ~204 verbs * 5 moods * (avg ~4 tenses) * 2 voices * 6 p/n * 2 pol * 2 mod
+    // Sanity: corpus verbs * 5 moods * (avg ~4 tenses) * 2 voices * 6 p/n * 2 pol * 2 mod
     expect(totalCalls).toBeGreaterThan(50_000);
   });
 

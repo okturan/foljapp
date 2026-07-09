@@ -68,13 +68,8 @@ test('keyboard focus surfaces tooltip', async ({ page }) => {
   await expect(stem).toHaveAttribute('title', /verb stem/i);
 });
 
-test('static title attribute is present without JS', async ({ browser }) => {
-  const ctx = await browser.newContext({ javaScriptEnabled: false });
-  const page = await ctx.newPage();
-  await page.goto('/verb/punoj');
-  const html = await page.content();
-  // The native title attribute renders into static HTML
-  expect(html).toContain('verb stem');
-  expect(html).toContain('subjunctive');
-  await ctx.close();
-});
+// The former "static title attribute is present without JS" test was
+// retired by accept-client-rendered-tables: conjugation tables are
+// deliberately client-rendered (see reference-pages spec), so segment
+// title attributes only exist after hydration — covered by the
+// keyboard-focus test above.

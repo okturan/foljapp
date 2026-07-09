@@ -10,10 +10,18 @@
     "participle": "ikur"
   },
   "sources": [
-    { "source": "husic", "reference": "2D (1sg present takes -i ending)" },
-    { "source": "kaikki", "reference": "https://en.wiktionary.org/wiki/iki#Albanian" }
+    {
+      "source": "husic",
+      "reference": "2D (1sg present takes -i ending)"
+    },
+    {
+      "source": "kaikki",
+      "reference": "https://en.wiktionary.org/wiki/iki#Albanian"
+    }
   ],
-  "flags": { "noMiddlePassive": true },
+  "flags": {
+    "middlePassiveThirdPersonOnly": true
+  },
   "dialect": "tosk",
   "notes": "Class 2D pattern: 1sg present takes -i, 2sg/3sg present take -ën, aorist 3sg takes -u. Encoded via cellOverrides rather than introducing a new paradigm class for one verb. Intransitive — no MP voice in standard Albanian.",
   "cellOverrides": {

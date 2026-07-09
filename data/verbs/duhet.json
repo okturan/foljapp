@@ -12,8 +12,26 @@
   "sources": [
     { "source": "husic", "reference": "Defective / impersonal" }
   ],
-  "flags": { "irregularAorist": true },
+  "flags": {
+    "irregularAorist": true,
+    "noMiddlePassive": true,
+    "thirdPersonOnly": true
+  },
   "dialect": "tosk",
+  "cellOverrides": {
+    "indicative.present": {
+      "3sg": "duhet",
+      "3pl": "duhen"
+    },
+    "indicative.imperfect": {
+      "3sg": "duhej",
+      "3pl": "duheshin"
+    },
+    "subjunctive.present": {
+      "3sg": "duhet",
+      "3pl": "duhen"
+    }
+  },
   "englishForms": {
     "base": "must",
     "past": "had to",

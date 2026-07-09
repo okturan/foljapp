@@ -27,7 +27,7 @@ The verifier probes both active and middle-passive voice across every
 supported mood/tense combination since `verify-engine-voice-coverage`
 (2026-04-28).
 
-| Match rate | 19100 / 19109 cells across 204 verbs | 99.95% |
+| Historical match rate | 19100 / 19109 cells across the former 204-verb corpus | 99.95% |
 |            | (15467 Kaikki + 539 Husić-direct +    |        |
 |            | 2482 Husić-derived + 306 from         |        |
 |            | engine-throws-with-no-source under    |        |
@@ -36,6 +36,66 @@ supported mood/tense combination since `verify-engine-voice-coverage`
 |            | (engine matches standard Albanian,   |        |
 |            | Kaikki has the typo). See the next    |        |
 |            | section.                              |        |
+
+> **Corpus 0.1.6 (2026-07-07, `fix-flas-terheq-mp-stems`):** `flas` and
+> `tërheq` gain sourced middle-passive present/imperfect cellOverrides with
+> the mutated stems **flit-** / **tërhiq-** (*flitet*, *flitej*,
+> *tërhiqet*, *tërhiqej* — Newmark et al. 1982; FGJSH), closing the
+> non-goal deferred by `suppress-mp-for-intransitives`. The engine
+> previously applied MP endings to the active stems (\**flaset*,
+> \**tërheqet*). MP aorists (*u fol*, *u tërhoq*) were already correct.
+> Kaikki carries no ground truth for these cells, so the totals below are
+> unchanged (verified before/after: 19,639 / 230).
+
+> **Engine 0.1.1 (2026-07-07, `fix-negation-particles`):** negation now
+> follows standard Albanian — optative negates with `mos` (was `nuk`:
+> \**nuk qofsha* → *mos qofsha*) and the subjunctive negator follows `të`
+> (*mos të punoj* → *të mos punoj*), per Newmark, Hubbard & Prifti (1982)
+> and Husić (2002). Kaikki tables cover affirmative cells only, so the
+> observed totals below are identical before and after (verified:
+> 19,639 / 230 / 12,579 both runs).
+
+> **Current baseline (engine 0.1.1, corpus 0.1.7, re-recorded 2026-07-07
+> after `impersonal-middle-passive-flags`):** **19,619 matches / 168
+> mismatches / 12,661 missing**, with 870 of the matches being
+> flag-suppressed voice refusals (42 of those had mechanical source-cache
+> rows — the accepted editorial conflicts). Versus the previous
+> 19,639/230/12,579: qendroj's 62 mismatches resolved (+20 Husić-derived
+> matches for its now-conjugating third-person MP cells, +42
+> flag-suppressed), and 82 newly-unlocked third-person MP cells of
+> iki/gjezdis/qendroj (*iket*, *gjezdiset*, *qëndrohet* …) moved from
+> matched-as-unsupported to **missing** because they now produce real
+> forms with no ground truth. Total probed cells constant at 32,448.
+> The 168 standing mismatches decompose exactly, all verified verb-by-verb:
+>
+> - **9 cells** — the legacy documented Kaikki anomalies below (engine
+>   correct, Kaikki typo/bug), unchanged.
+> - **60 cells, `mbroj`** — Kaikki's table applies the regular
+>   `-oj → -ova/-uar` pattern, but `mbroj` takes the `-jt-` aorist:
+>   *mbrojta*, *mbrojtur* (FGJSH; the corpus entry deliberately sets
+>   `irregularAorist: true`). Engine correct; every aorist-stem-derived
+>   cell mismatches.
+> - **99 cells, `perfundoj`** — Kaikki's table is machine-garbage
+>   (*përfundojim*, *përfundojja*: a bogus stem parse). Engine's standard
+>   *përfundon / përfundojmë / përfundonte* is correct.
+> (The former third block — 62 `qendroj` cells — was resolved by
+> `impersonal-middle-passive-flags`: `iki`, `gjezdis`, and `qendroj` now
+> carry `middlePassiveThirdPersonOnly` per FGJSH *vetv.* and corpus
+> attestation, and the verifier treats editorial voice-flag refusals as
+> accepted decisions, reported via the flag-suppressed counter.)
+>
+> **Corpus 0.1.8 (`restore-udhetoj-middle-passive`):** udhetoj unflagged on
+> full-corpus evidence (5,596 non-active occurrences incl. generic-2sg
+> *udhëtohesh*). Standing: **19,517 / 168 / 12,763**, flag-suppressed 766
+> — udhetoj's 104 formerly-suppressed cells split 102 → missing (real
+> forms, no ground truth) + 2 → plain both-null; mismatches and probed
+> total (32,448) unchanged.
+>
+> Regression rule: matches must stay ≥ 19,517, mismatches ≤ 168 per the
+> decomposition above, and any NEW mismatch class needs the same
+> verb-by-verb investigation before landing. Category migrations
+> (match↔missing) from newly-unlocked cells are expected and must be
+> explained in the landing change, as done here.
 
 ### Documented anomalies (engine correct, source disagrees)
 
@@ -50,8 +110,8 @@ standard Albanian (Newmark/Hubbard/Prifti 1982 + Husić 2002):
 9. **`laj` MP optative 2pl** — Kaikki: `u lafshit` (mirrors #8). Engine: `u lafshi`.
 | Verified   | v0.1 seed (20) + tier-1 (30 -oj) +    |        |
 |            | tier-2 (50) + tier-3 (104: 100 Class 1 |       |
-|            | -oj continuation + 4 Class 2 hand-fixed) | 204/204 |
-| Husić cache | 99 of 204 verbs with Husić data      |        |
+|            | -oj continuation + 4 Class 2 hand-fixed) | historical 204/204 |
+| Husić cache | 99 former corpus verbs with Husić data |        |
 |            | via paradigm-model + glossary cross-  |        |
 |            | resolution                            |        |
 
@@ -190,8 +250,11 @@ that the engine consults before paradigm dispatch. Specifically:
   `pakam`/etc. in `packages/engine/src/suppletion.ts`.
 
 `scripts/verify-engine.ts` is the canonical regression check. Any
-corpus or engine change must keep the match-rate at 19100/19109 or
-explicitly justify the regression in its OpenSpec change.
+corpus or engine change must keep matches at ≥ 19,639 on the current
+203-verb corpus (historical: 19100/19109 on the former 204-verb corpus)
+or explicitly justify the regression in its OpenSpec change; the 230
+standing mismatches are decomposed and accounted for in the baseline
+callout near the top of this document.
 
 ## Suppletive paradigm references
 

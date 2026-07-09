@@ -75,6 +75,37 @@ export const shoh: VerbEntry = {
   dialect: 'tosk',
 };
 
+export const them: VerbEntry = {
+  id: 'them',
+  lemma: 'them',
+  translationEn: 'to say',
+  class: 2,
+  auxiliary: 'kam',
+  principalParts: { present: 'them', aorist: 'thash', participle: 'thënë' },
+  sources: [{ source: 'husic', reference: 'Irregular — them' }],
+  flags: { isSuppletive: true, irregularAorist: true },
+  dialect: 'tosk',
+  notes: 'Suppletive MP indicative present/imperfect use the thu- stem.',
+  cellOverrides: {
+    'indicative.present.middle-passive': {
+      '1sg': 'thuhem',
+      '2sg': 'thuhesh',
+      '3sg': 'thuhet',
+      '1pl': 'thuhemi',
+      '2pl': 'thuheni',
+      '3pl': 'thuhen',
+    },
+    'indicative.imperfect.middle-passive': {
+      '1sg': 'thuhesha',
+      '2sg': 'thuheshe',
+      '3sg': 'thuhej',
+      '1pl': 'thuheshim',
+      '2pl': 'thuheshit',
+      '3pl': 'thuheshin',
+    },
+  },
+};
+
 export const pjek: VerbEntry = {
   id: 'pjek',
   lemma: 'pjek',
@@ -112,7 +143,9 @@ export const laj: VerbEntry = {
 
 /** flas — three-stem-alternation Class 2C verb. Only the cells used by
  * admirative imperfect/pluperfect tests need correct forms; other tenses
- * still rely on cellOverrides in production but are not exercised here. */
+ * still rely on cellOverrides in production but are not exercised here.
+ * The middle-passive present/imperfect overrides mirror data/verbs/flas.json
+ * (flit- stem). */
 export const flas: VerbEntry = {
   id: 'flas',
   lemma: 'flas',
@@ -123,6 +156,56 @@ export const flas: VerbEntry = {
   sources: [{ source: 'husic', reference: '2C' }],
   flags: { irregularAorist: true },
   dialect: 'tosk',
+  cellOverrides: {
+    'indicative.present.middle-passive': {
+      '1sg': 'flitem',
+      '2sg': 'flitesh',
+      '3sg': 'flitet',
+      '1pl': 'flitemi',
+      '2pl': 'fliteni',
+      '3pl': 'fliten',
+    },
+    'indicative.imperfect.middle-passive': {
+      '1sg': 'flitesha',
+      '2sg': 'fliteshe',
+      '3sg': 'flitej',
+      '1pl': 'fliteshim',
+      '2pl': 'fliteshit',
+      '3pl': 'fliteshin',
+    },
+  },
+};
+
+/** tërheq — heq-class Class 2 verb; middle-passive uses the tërhiq- stem.
+ * Overrides mirror data/verbs/terheq.json. */
+export const terheq: VerbEntry = {
+  id: 'terheq',
+  lemma: 'tërheq',
+  translationEn: 'to pull',
+  class: 2,
+  auxiliary: 'kam',
+  principalParts: { present: 'tërheq', aorist: 'tërhoq', participle: 'tërhequr' },
+  sources: [{ source: 'kaikki', reference: 'https://en.wiktionary.org/wiki/t%C3%ABrheq#Albanian' }],
+  flags: { irregularAorist: true },
+  dialect: 'tosk',
+  cellOverrides: {
+    'indicative.present.middle-passive': {
+      '1sg': 'tërhiqem',
+      '2sg': 'tërhiqesh',
+      '3sg': 'tërhiqet',
+      '1pl': 'tërhiqemi',
+      '2pl': 'tërhiqeni',
+      '3pl': 'tërhiqen',
+    },
+    'indicative.imperfect.middle-passive': {
+      '1sg': 'tërhiqesha',
+      '2sg': 'tërhiqeshe',
+      '3sg': 'tërhiqej',
+      '1pl': 'tërhiqeshim',
+      '2pl': 'tërhiqeshit',
+      '3pl': 'tërhiqeshin',
+    },
+  },
 };
 
 export const fixtures: VerbEntry[] = [
@@ -132,8 +215,10 @@ export const fixtures: VerbEntry[] = [
   jam,
   jap,
   shoh,
+  them,
   pjek,
   djeg,
   laj,
   flas,
+  terheq,
 ];

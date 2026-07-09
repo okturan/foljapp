@@ -7,8 +7,9 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { configure, conjugate } from '../src/conjugate.js';
+import { VERSION } from '../src/version.js';
 
-import { fixtures, punoj, hap, pi, pjek, djeg, jam, jap, shoh, laj } from './fixtures.js';
+import { fixtures, punoj, hap, pi, pjek, djeg, jam, jap, shoh, them, laj } from './fixtures.js';
 
 beforeAll(() => {
   configure(fixtures, '0.1.0');
@@ -171,9 +172,9 @@ describe('punoj — Class 1', () => {
     expect(r.form).toBe('mos puno');
   });
 
-  it('negative subjunctive present 1sg = "mos të punoj"', () => {
+  it('negative subjunctive present 1sg = "të mos punoj"', () => {
     const r = conjugate(punoj.id, { mood: 'subjunctive', tense: 'present', voice: 'active', person: 1, number: 'singular', polarity: 'negative' });
-    expect(r.form).toBe('mos të punoj');
+    expect(r.form).toBe('të mos punoj');
   });
 
   it('interrogative present indicative 2sg = "a punon"', () => {
@@ -342,10 +343,56 @@ describe('auxiliaries directly', () => {
   });
 });
 
+describe('them — middle-passive suppletive stem', () => {
+  it('present middle-passive uses thu- stem across all 6 cells', () => {
+    const cells = [
+      { person: 1 as const, number: 'singular' as const, expected: 'thuhem' },
+      { person: 2 as const, number: 'singular' as const, expected: 'thuhesh' },
+      { person: 3 as const, number: 'singular' as const, expected: 'thuhet' },
+      { person: 1 as const, number: 'plural' as const, expected: 'thuhemi' },
+      { person: 2 as const, number: 'plural' as const, expected: 'thuheni' },
+      { person: 3 as const, number: 'plural' as const, expected: 'thuhen' },
+    ];
+
+    for (const c of cells) {
+      const r = conjugate(them.id, {
+        mood: 'indicative',
+        tense: 'present',
+        voice: 'middle-passive',
+        person: c.person,
+        number: c.number,
+      });
+      expect(r.form).toBe(c.expected);
+    }
+  });
+
+  it('imperfect middle-passive uses thu- stem across all 6 cells', () => {
+    const cells = [
+      { person: 1 as const, number: 'singular' as const, expected: 'thuhesha' },
+      { person: 2 as const, number: 'singular' as const, expected: 'thuheshe' },
+      { person: 3 as const, number: 'singular' as const, expected: 'thuhej' },
+      { person: 1 as const, number: 'plural' as const, expected: 'thuheshim' },
+      { person: 2 as const, number: 'plural' as const, expected: 'thuheshit' },
+      { person: 3 as const, number: 'plural' as const, expected: 'thuheshin' },
+    ];
+
+    for (const c of cells) {
+      const r = conjugate(them.id, {
+        mood: 'indicative',
+        tense: 'imperfect',
+        voice: 'middle-passive',
+        person: c.person,
+        number: c.number,
+      });
+      expect(r.form).toBe(c.expected);
+    }
+  });
+});
+
 describe('engineVersion and corpusVersion', () => {
   it('every result carries engineVersion and corpusVersion', () => {
     const r = conjugate(punoj.id, { mood: 'indicative', tense: 'present', voice: 'active', person: 1, number: 'singular' });
-    expect(r.engineVersion).toBe('0.1.0');
+    expect(r.engineVersion).toBe(VERSION);
     expect(r.corpusVersion).toBe('0.1.0');
   });
 });

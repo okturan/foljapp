@@ -1,0 +1,193 @@
+{
+  "title": "Middle-passive source-cache review: exact Husic-supported groups",
+  "status": "open",
+  "sourceArtifacts": {
+    "corpusMissingAudit": ".cache/corpus-missing-audit.json",
+    "externalMorphologyAudit": ".cache/external-morphology-audit.json",
+    "targetGeneratedAt": "2026-06-20T04:14:28.598Z",
+    "coverageGeneratedAt": "2026-06-20T04:14:35.218Z",
+    "corpusVersion": "0.1.5",
+    "rerun": "npm run audit:corpus-misses:full"
+  },
+  "scope": "Unreviewed middle-passive action-by-lemma groups whose generated missing forms have exact local Husic source-cache support. A keep decision here means formal paradigm/source support, not corpus usage attestation.",
+  "allowedDecisions": [
+    "keep",
+    "noMiddlePassive",
+    "middlePassiveThirdPersonOnly",
+    "needs_source"
+  ],
+  "decisionMeaning": {
+    "keep": "Retain generated middle-passive forms; source-cache paradigm evidence supports them or lack of retained corpus examples is not enough to suppress them.",
+    "noMiddlePassive": "Suppress generated middle-passive forms after source review confirms non-active forms should not be produced.",
+    "middlePassiveThirdPersonOnly": "Restrict finite middle-passive output to third person after source review confirms only impersonal or third-person forms are valid.",
+    "needs_source": "Do not change generation yet; gather stronger source evidence."
+  },
+  "summary": {
+    "groups": 10,
+    "actionTargetMisses": 1593,
+    "exactSourceCacheTargetMisses": 684,
+    "headTokenSourceCacheTargetMisses": 909,
+    "decisionCounts": {
+      "keep": 10,
+      "noMiddlePassive": 0,
+      "middlePassiveThirdPersonOnly": 0,
+      "needs_source": 0
+    }
+  },
+  "rows": [
+    {
+      "verbId": "shpresoj",
+      "lemma": "shpresoj",
+      "action": "review_component_supported_phrase",
+      "decision": "keep",
+      "actionTargetMisses": 208,
+      "exactSourceCacheTargetMisses": 97,
+      "headTokenSourceCacheTargetMisses": 111,
+      "decisionEvidence": [
+        {
+          "source": ".cache/husic/shpresoj.jsonl",
+          "basis": "Husic-derived local cache includes exact middle-passive generated forms such as do të isha shpresuar and do të ishe shpresuar; corpus absence is not enough to suppress the paradigm."
+        }
+      ]
+    },
+    {
+      "verbId": "bisedoj",
+      "lemma": "bisedoj",
+      "action": "review_component_supported_phrase",
+      "decision": "keep",
+      "actionTargetMisses": 178,
+      "exactSourceCacheTargetMisses": 80,
+      "headTokenSourceCacheTargetMisses": 98,
+      "decisionEvidence": [
+        {
+          "source": ".cache/husic/bisedoj.jsonl",
+          "basis": "Husic-derived local cache includes exact personal middle-passive generated forms such as do të bisedohem and do të bisedohemi; this is formal paradigm support, not frequency evidence."
+        }
+      ]
+    },
+    {
+      "verbId": "duroj",
+      "lemma": "duroj",
+      "action": "review_medial_or_reflexive_candidate",
+      "decision": "keep",
+      "actionTargetMisses": 162,
+      "exactSourceCacheTargetMisses": 72,
+      "headTokenSourceCacheTargetMisses": 90,
+      "decisionEvidence": [
+        {
+          "source": ".cache/husic/duroj.jsonl",
+          "basis": "Husic-derived local cache includes exact middle-passive generated forms such as do të durohemi and do të duroheshe; retained corpus rarity is not enough to prune the forms."
+        }
+      ]
+    },
+    {
+      "verbId": "fitoj",
+      "lemma": "fitoj",
+      "action": "review_medial_or_reflexive_candidate",
+      "decision": "keep",
+      "actionTargetMisses": 160,
+      "exactSourceCacheTargetMisses": 69,
+      "headTokenSourceCacheTargetMisses": 91,
+      "decisionEvidence": [
+        {
+          "source": ".cache/husic/fitoj.jsonl",
+          "basis": "Husic-derived local cache includes exact middle-passive generated forms such as do të fitohem and do të fitohemi; semantic narrowing should be handled separately from formal paradigm support."
+        }
+      ]
+    },
+    {
+      "verbId": "mbaroj",
+      "lemma": "mbaroj",
+      "action": "review_medial_or_reflexive_candidate",
+      "decision": "keep",
+      "actionTargetMisses": 158,
+      "exactSourceCacheTargetMisses": 69,
+      "headTokenSourceCacheTargetMisses": 89,
+      "decisionEvidence": [
+        {
+          "source": ".cache/husic/mbaroj.jsonl",
+          "basis": "Husic-derived local cache includes exact middle-passive generated forms such as do të isha mbaruar and do të ishe mbaruar."
+        },
+        {
+          "source": ".cache/kaikki/mbaroj.jsonl",
+          "basis": "Kaikki independently names passive lexical forms mbarohet and mbarohen; that supports the non-active lexical sense but is narrower than the full personal paradigm."
+        }
+      ]
+    },
+    {
+      "verbId": "kendoj",
+      "lemma": "këndoj",
+      "action": "review_component_supported_phrase",
+      "decision": "keep",
+      "actionTargetMisses": 162,
+      "exactSourceCacheTargetMisses": 68,
+      "headTokenSourceCacheTargetMisses": 94,
+      "decisionEvidence": [
+        {
+          "source": ".cache/husic/kendoj.jsonl",
+          "basis": "Husic-derived local cache includes exact middle-passive generated forms such as do të isha kënduar and do të ishe kënduar; corpus absence is likely register or semantics, not enough to suppress."
+        }
+      ]
+    },
+    {
+      "verbId": "shkurtoj",
+      "lemma": "shkurtoj",
+      "action": "review_medial_or_reflexive_candidate",
+      "decision": "keep",
+      "actionTargetMisses": 161,
+      "exactSourceCacheTargetMisses": 65,
+      "headTokenSourceCacheTargetMisses": 96,
+      "decisionEvidence": [
+        {
+          "source": ".cache/husic/shkurtoj.jsonl",
+          "basis": "Husic-derived local cache includes exact middle-passive generated forms such as do të isha shkurtuar and do të ishe shkurtuar; exact source-cache support covers a substantial missed subset."
+        }
+      ]
+    },
+    {
+      "verbId": "respektoj",
+      "lemma": "respektoj",
+      "action": "review_component_supported_phrase",
+      "decision": "keep",
+      "actionTargetMisses": 129,
+      "exactSourceCacheTargetMisses": 56,
+      "headTokenSourceCacheTargetMisses": 73,
+      "decisionEvidence": [
+        {
+          "source": ".cache/husic/respektoj.jsonl",
+          "basis": "Husic-derived local cache includes exact middle-passive generated forms such as do të isha respektuar and do të ishe respektuar; this is a strong semantic passive case."
+        }
+      ]
+    },
+    {
+      "verbId": "botoj",
+      "lemma": "botoj",
+      "action": "review_component_supported_phrase",
+      "decision": "keep",
+      "actionTargetMisses": 140,
+      "exactSourceCacheTargetMisses": 55,
+      "headTokenSourceCacheTargetMisses": 85,
+      "decisionEvidence": [
+        {
+          "source": ".cache/husic/botoj.jsonl",
+          "basis": "Husic-derived local cache includes exact middle-passive generated forms such as do të botohemi and do të botoheni; subject semantics are narrower than arbitrary animate subjects."
+        }
+      ]
+    },
+    {
+      "verbId": "kerkoj",
+      "lemma": "kërkoj",
+      "action": "review_component_supported_phrase",
+      "decision": "keep",
+      "actionTargetMisses": 135,
+      "exactSourceCacheTargetMisses": 53,
+      "headTokenSourceCacheTargetMisses": 82,
+      "decisionEvidence": [
+        {
+          "source": ".cache/husic/kerkoj.jsonl",
+          "basis": "Husic-derived local cache includes exact middle-passive generated forms such as do të isha kërkuar and do të ishe kërkuar; source-cache support is formal paradigm evidence, not common-usage evidence."
+        }
+      ]
+    }
+  ]
+}
