@@ -177,13 +177,18 @@ export function CorpusExamples({ form, options, verbId }: Props) {
         if (fallback) payload = fallback;
       }
 
+      // A stale request whose fetch resolved before its abort fired would
+      // otherwise overwrite a newer request's data; drop it here.
+      if (controller.signal.aborted) return;
       if (!payload) throw apiError ?? new Error('examples unavailable');
       setData(payload);
     }
 
     load()
       .catch((err: Error) => {
-        if (err.name !== 'AbortError') setError(err.message);
+        if (!controller.signal.aborted && err.name !== 'AbortError') {
+          setError(err.message);
+        }
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);

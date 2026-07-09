@@ -281,4 +281,12 @@ export type TraceStep =
       reason: string;
       summary: string;
     }
+  | {
+      kind: 'particle-insert';
+      particle: string;
+      /** The existing particle this one is inserted after (e.g. "të"). */
+      afterParticle: string;
+      reason: string;
+      summary: string;
+    }
   | { kind: 'final'; form: string; summary: string };

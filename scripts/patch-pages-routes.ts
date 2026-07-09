@@ -31,6 +31,8 @@ interface RoutesFile {
 }
 
 const routes = JSON.parse(readFileSync(ROUTES_PATH, 'utf8')) as RoutesFile;
+// Defensive: don't assume next-on-pages always emits an `exclude` array.
+routes.exclude ??= [];
 for (const pattern of STATIC_EXCLUDES) {
   if (!routes.exclude.includes(pattern)) {
     routes.exclude.push(pattern);
