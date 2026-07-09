@@ -5202,9 +5202,6 @@
         "reference": "scaffolded by ingest-kaikki-batch (v1: -oj only)"
       }
     ],
-    "flags": {
-      "noMiddlePassive": true
-    },
     "dialect": "tosk"
   },
   {

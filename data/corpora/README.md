@@ -44,6 +44,17 @@ The chunk-era `.anchor-rows-*` sidecar family (33,261 files, ~54G, built by
 all-target run never matches) was deleted on 2026-07-07. Anchor-row sidecars
 are rebuilt on demand, and only by an explicit `--build-anchor-rows` run.
 
+Voice-flag evidence pass (2026-07-07, full-corpus scan over all 1,907
+partitions): `udhetoj` unflagged entirely — *udhëtohet* ×4,967,
+*udhëtohej* ×296, folded ×225, *udhëtohen* ×38, generic-2sg *udhëtohesh*
+×62 (corpus 0.1.8, `restore-udhetoj-middle-passive`). `iki`/`gjezdis`/
+`qendroj` are `middlePassiveThirdPersonOnly` (corpus 0.1.7). `rri` stays
+`noMiddlePassive` despite a real stay-sense impersonal ("s'rrihet pa
+komentuar") because *rrihet* is homograph-contaminated by `rrah` "beat"
+(12,995 mixed hits — e.g. "rrihet një maturant … me lopata") and unflagging
+would attach beat-sense sentences as rri's example evidence; `vij` likewise
+(*vihet* = `vë`), `jam`/`duhet` on grammatical grounds.
+
 Middle-passive review conclusion (2026-07-07): of the 28,193
 `needs_middle_passive_attestation` misses, 99% are compound MP shapes
 (admirative/optative/negated/perfect combinations) — formally valid,

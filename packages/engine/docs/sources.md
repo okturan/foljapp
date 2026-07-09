@@ -84,7 +84,14 @@ supported mood/tense combination since `verify-engine-voice-coverage`
 > attestation, and the verifier treats editorial voice-flag refusals as
 > accepted decisions, reported via the flag-suppressed counter.)
 >
-> Regression rule: matches must stay ≥ 19,619, mismatches ≤ 168 per the
+> **Corpus 0.1.8 (`restore-udhetoj-middle-passive`):** udhetoj unflagged on
+> full-corpus evidence (5,596 non-active occurrences incl. generic-2sg
+> *udhëtohesh*). Standing: **19,517 / 168 / 12,763**, flag-suppressed 766
+> — udhetoj's 104 formerly-suppressed cells split 102 → missing (real
+> forms, no ground truth) + 2 → plain both-null; mismatches and probed
+> total (32,448) unchanged.
+>
+> Regression rule: matches must stay ≥ 19,517, mismatches ≤ 168 per the
 > decomposition above, and any NEW mismatch class needs the same
 > verb-by-verb investigation before landing. Category migrations
 > (match↔missing) from newly-unlocked cells are expected and must be
