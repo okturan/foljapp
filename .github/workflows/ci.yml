@@ -38,3 +38,23 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  rust:
+    name: corpus-indexer tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tools/corpus-indexer
+
+      - name: Test corpus-indexer
+        run: cargo test --manifest-path tools/corpus-indexer/Cargo.toml
