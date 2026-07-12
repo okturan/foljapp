@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#
+# Pre-push gate: verify-engine can't run in CI (it needs the gitignored
+# Kaikki/Husić caches), so enforce the engine baseline here instead.
+# Enable once per clone:
+#
+#   git config core.hooksPath scripts/hooks
+#
+# Skips cleanly if the caches aren't present (so a fresh clone won't hang on
+# network fetches) — CI still gates typecheck/lint/unit tests/build + Rust.
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+if [ ! -d .cache/kaikki ] || [ -z "$(ls -A .cache/kaikki 2>/dev/null)" ]; then
+  echo "pre-push: no .cache/kaikki — skipping verify-engine gate." >&2
+  exit 0
+fi
+
+echo "pre-push: running verify-engine --check ..." >&2
+if ! npx tsx scripts/verify-engine.ts --check; then
+  echo "pre-push: engine baseline regressed — push blocked (use --no-verify to override)." >&2
+  exit 1
+fi

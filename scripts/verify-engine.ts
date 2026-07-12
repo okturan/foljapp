@@ -39,17 +39,31 @@ const VERBS_DIR = join(REPO_ROOT, 'data', 'verbs');
 const CACHE_DIR = join(REPO_ROOT, '.cache', 'kaikki');
 const HUSIC_CACHE_DIR = join(REPO_ROOT, '.cache', 'husic');
 
+// Regression floor/ceiling for `--check` (corpus 0.1.8). Bump these in the
+// SAME commit that legitimately moves the numbers, and explain the shift in
+// the landing change — see packages/engine/docs/sources.md. Keep in sync
+// with the baseline callout there.
+const BASELINE_MIN_MATCHES = 19517;
+const BASELINE_MAX_MISMATCHES = 168;
+
 interface CliOptions {
   verbose: boolean;
   refresh: boolean;
   onlyVerb: string | null;
+  check: boolean;
 }
 
 function parseArgs(): CliOptions {
-  const opts: CliOptions = { verbose: false, refresh: false, onlyVerb: null };
+  const opts: CliOptions = {
+    verbose: false,
+    refresh: false,
+    onlyVerb: null,
+    check: false,
+  };
   for (const arg of process.argv.slice(2)) {
     if (arg === '--verbose' || arg === '-v') opts.verbose = true;
     else if (arg === '--refresh') opts.refresh = true;
+    else if (arg === '--check') opts.check = true;
     else if (arg.startsWith('--verb=')) opts.onlyVerb = arg.split('=')[1] ?? null;
   }
   return opts;
@@ -618,6 +632,36 @@ async function main() {
   if (totalMismatches > 0 && !opts.verbose) {
     const verbsWithMismatch = Array.from(mismatchesByVerb.keys());
     console.log(`Run with --verbose to see mismatches for: ${verbsWithMismatch.join(', ')}`);
+  }
+
+  // --check gates a full-corpus run against the recorded baseline so a
+  // pre-push hook (or a human) can fail on regression. Only meaningful for
+  // the whole corpus, not a single --verb run.
+  if (opts.check && !opts.onlyVerb) {
+    const regressions: string[] = [];
+    if (totalMatches < BASELINE_MIN_MATCHES) {
+      regressions.push(
+        `matches ${totalMatches} < baseline ${BASELINE_MIN_MATCHES}`,
+      );
+    }
+    if (totalMismatches > BASELINE_MAX_MISMATCHES) {
+      regressions.push(
+        `mismatches ${totalMismatches} > baseline ${BASELINE_MAX_MISMATCHES}`,
+      );
+    }
+    if (regressions.length > 0) {
+      console.error(`\n✗ verify-engine --check FAILED: ${regressions.join('; ')}`);
+      console.error(
+        '  If this is an intended baseline change, update BASELINE_* in this ' +
+          'script and packages/engine/docs/sources.md in the same commit.',
+      );
+      process.exitCode = 1;
+    } else {
+      console.log(
+        `✓ verify-engine --check OK (matches ≥ ${BASELINE_MIN_MATCHES}, ` +
+          `mismatches ≤ ${BASELINE_MAX_MISMATCHES}).`,
+      );
+    }
   }
 }
 
