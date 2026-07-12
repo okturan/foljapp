@@ -19,6 +19,7 @@
     "build:parallel-examples": "tsx scripts/build-parallel-examples.ts",
     "build:parallel-examples:local": "tsx scripts/build-parallel-examples.ts --from-local-cache",
     "build:static-examples": "tsx scripts/build-static-examples.ts",
+    "rescan": "bash scripts/rescan.sh",
     "build:corpus-targets": "tsx scripts/build-corpus-targets.ts",
     "build:local-corpus-index": "npm run build:corpus-targets && npm run scan:local-corpus",
     "scan:local-corpus": "CARGO_TARGET_DIR=.cache/cargo-target cargo run --release --manifest-path tools/corpus-indexer/Cargo.toml -- match --out=.cache/corpus-local-full.sqlite --sources=all --max-per-target=3 --jobs=12",

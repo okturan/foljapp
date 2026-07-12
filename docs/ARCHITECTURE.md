@@ -80,7 +80,8 @@ data/verbs ─►[build:corpus-targets]─► .cache/corpus-targets.json ─┐
 ### Full-rescan runbook (order matters)
 
 After any change that alters generated targets (engine/verb-data change) or
-adds a corpus source, run in this exact order:
+adds a corpus source, run `npm run rescan` (wrapper: `scripts/rescan.sh`;
+`scripts/rescan.sh --plan` prints the steps). It runs, in this exact order:
 
 1. `npm run build:corpus-targets` — regenerate targets from the engine.
 2. `npm run build:corpus-candidate-cache` — build/refresh candidate-cache
@@ -138,9 +139,16 @@ npm test            # Vitest (engine + unit)
 npm run build       # Next.js production build
 npm run test:e2e    # Playwright (needs browsers)
 CARGO_TARGET_DIR=.cache/cargo-target cargo test --manifest-path tools/corpus-indexer/Cargo.toml
-npx tsx scripts/verify-engine.ts     # engine baseline must hold
+npx tsx scripts/verify-engine.ts --check   # engine baseline gate (exits 1 on regression)
 openspec validate <change> --strict
 ```
+
+`verify-engine` can't run in CI (it needs the gitignored Kaikki/Husić
+caches), so a pre-push hook enforces it locally. Enable once per clone:
+`git config core.hooksPath scripts/hooks`. It runs `--check` and blocks a
+push that drops below the baseline (skips cleanly if the caches are absent).
+CI gates the rest: typecheck, lint, unit tests, build, and the Rust
+corpus-indexer tests.
 
 Every non-trivial change opens an OpenSpec change first
 (`openspec/changes/`), lands green, then archives (`openspec/changes/archive/`).
