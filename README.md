@@ -100,7 +100,6 @@ immutable action revisions.
 
 ## License
 
-This repository currently has no license file. GitHub's platform terms permit
-viewing and forking on GitHub, but no broader permission is granted to copy,
-modify, or redistribute the source, corpus, or generated linguistic data.
-Third-party sources and dependencies remain subject to their own terms.
+The original project README declares this repository MIT. A standalone license
+file is not currently included. Third-party dependencies and cited linguistic
+sources remain subject to their own terms.
