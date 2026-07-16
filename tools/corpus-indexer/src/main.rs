@@ -586,8 +586,10 @@ fn search_index(args: SearchIndexArgs) -> Result<()> {
     let searcher = reader.searcher();
 
     let started = Instant::now();
-    let (top_docs, total_hits) =
-        searcher.search(&*query, &(TopDocs::with_limit(args.limit), Count))?;
+    let (top_docs, total_hits) = searcher.search(
+        &*query,
+        &(TopDocs::with_limit(args.limit).order_by_score(), Count),
+    )?;
     let mut hits = Vec::new();
     for (score, doc_address) in top_docs {
         let doc = searcher.doc::<TantivyDocument>(doc_address)?;
@@ -2077,7 +2079,7 @@ fn bench_tantivy(
     let mut total_hits = 0usize;
     for query in queries {
         let boxed_query = tantivy_phrase_query(normalized, &query.target_key);
-        total_hits += searcher.search(&boxed_query, &Count)? as usize;
+        total_hits += searcher.search(&boxed_query, &Count)?;
     }
 
     Ok(BenchResult {
