@@ -2,10 +2,18 @@
 
 Albanian verbal system reference. Educational, reference-quality, academically rich.
 
+[![CI](https://github.com/okturan/foljapp/actions/workflows/ci.yml/badge.svg)](https://github.com/okturan/foljapp/actions/workflows/ci.yml)
+[![Live app](https://img.shields.io/badge/live-foljapp.pages.dev-2563eb)](https://foljapp.pages.dev/)
+
+| Search and browse | Full conjugation reference |
+| --- | --- |
+| [![Foljapp home](docs/screenshots/home-desktop.png)](https://foljapp.pages.dev/) | [![Foljapp verb detail](docs/screenshots/verb-punoj-desktop.png)](https://foljapp.pages.dev/verb/punoj) |
+
 ## Status
 
 Pre-alpha. The web app, conjugation engine, verb corpus, reference pages,
-playground, and local corpus tooling are active.
+playground, and local corpus tooling are active. The current public build is at
+[foljapp.pages.dev](https://foljapp.pages.dev/).
 
 ## Layout
 
@@ -50,7 +58,7 @@ openspec list
 
 ```sh
 nvm use         # activates Node version pinned in .nvmrc
-npm install
+npm ci
 npm run dev     # boots the webapp at http://localhost:3000
 ```
 
@@ -83,8 +91,15 @@ npm run lint        # ESLint (Next.js + import-sort)
 npm test            # Vitest across all workspaces
 npm run build       # Next.js production build
 npm run test:e2e    # Playwright E2E (requires browsers installed)
+npm audit --audit-level=high
 ```
+
+GitHub Actions runs the TypeScript checks, lint, unit suite, production build,
+dependency audit, and Rust corpus-indexer tests with read-only permissions and
+immutable action revisions.
 
 ## License
 
-MIT.
+The original project README declares this repository MIT. A standalone license
+file is not currently included. Third-party dependencies and cited linguistic
+sources remain subject to their own terms.
