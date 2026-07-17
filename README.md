@@ -138,6 +138,13 @@ verifies the shipped product flows in Chromium, builds the production app, audit
 dependencies, and enforces Rust formatting, Clippy, and corpus-index integrity—with
 read-only permissions and immutable action revisions.
 
+## Security and maintenance
+
+Report vulnerabilities through GitHub's private reporting form and review the
+[security policy](./SECURITY.md) for the deployed-app and local-corpus boundary.
+Dependabot monitors the npm workspace, Rust corpus indexer, and GitHub Actions;
+security fixes are grouped separately from routine minor and patch maintenance.
+
 ## License
 
 The original project README declares this repository MIT. A standalone license
