@@ -8,7 +8,9 @@ updates:
       day: monday
       time: '06:00'
       timezone: Europe/Tirane
-    open-pull-requests-limit: 5
+    # Keep routine version churn to one review at a time. Security updates use
+    # GitHub's separate security-update limit and the group below.
+    open-pull-requests-limit: 1
     groups:
       npm-security:
         applies-to: security-updates
@@ -29,7 +31,9 @@ updates:
       day: tuesday
       time: '06:00'
       timezone: Europe/Tirane
-    open-pull-requests-limit: 5
+    # Keep routine version churn to one review at a time. Security updates use
+    # GitHub's separate security-update limit and the group below.
+    open-pull-requests-limit: 1
     groups:
       cargo-security:
         applies-to: security-updates
@@ -50,7 +54,9 @@ updates:
       day: wednesday
       time: '06:00'
       timezone: Europe/Tirane
-    open-pull-requests-limit: 3
+    # Keep routine version churn to one review at a time. Security updates use
+    # GitHub's separate security-update limit and the group below.
+    open-pull-requests-limit: 1
     groups:
       actions-security:
         applies-to: security-updates
