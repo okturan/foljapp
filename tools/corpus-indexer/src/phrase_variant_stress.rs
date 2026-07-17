@@ -296,20 +296,20 @@ pub(crate) fn phrase_variant_stress(args: PhraseVariantStressArgs) -> Result<()>
             &args.candidate_cache_dir,
             &matcher.anchor_tokens,
         )?;
-        let report = build_phrase_variant_stress_report(
-            &args,
-            &audit,
-            &selected,
-            &matcher.pattern_rows,
-            &vec![0usize; matcher.pattern_rows.len()],
-            plan.existing_resource_stats,
-            Vec::new(),
-            &chunk,
+        let report = build_phrase_variant_stress_report(PhraseVariantStressReportInput {
+            args: &args,
+            audit: &audit,
+            targets: &selected,
+            patterns: &matcher.pattern_rows,
+            matches_by_pattern: &vec![0usize; matcher.pattern_rows.len()],
+            resource_stats: plan.existing_resource_stats,
+            samples: Vec::new(),
+            chunk: &chunk,
             source_partitions,
             skipped_partitions,
-            plan.missing_anchor_row_partitions,
-            started.elapsed().as_millis(),
-        )?;
+            missing_anchor_row_partitions: plan.missing_anchor_row_partitions,
+            duration_ms: started.elapsed().as_millis(),
+        })?;
         write_phrase_variant_stress_report(&report, &args.out_json, &args.out_md)?;
         println!(
             "Wrote {} and {}: plan for {} target(s), {} stress pattern(s), {} missing anchor-row partition(s)",
@@ -380,20 +380,20 @@ pub(crate) fn phrase_variant_stress(args: PhraseVariantStressArgs) -> Result<()>
         bail!("{}", errors.join("\n"));
     }
 
-    let report = build_phrase_variant_stress_report(
-        &args,
-        &audit,
-        &selected,
-        &matcher.pattern_rows,
-        &matches_by_pattern,
+    let report = build_phrase_variant_stress_report(PhraseVariantStressReportInput {
+        args: &args,
+        audit: &audit,
+        targets: &selected,
+        patterns: &matcher.pattern_rows,
+        matches_by_pattern: &matches_by_pattern,
         resource_stats,
         samples,
-        &chunk,
+        chunk: &chunk,
         source_partitions,
         skipped_partitions,
-        0,
-        started.elapsed().as_millis(),
-    )?;
+        missing_anchor_row_partitions: 0,
+        duration_ms: started.elapsed().as_millis(),
+    })?;
     write_phrase_variant_stress_report(&report, &args.out_json, &args.out_md)?;
     println!(
         "Wrote {} and {}: {} target(s), {} stress pattern(s), {} raw match(es)",
@@ -420,7 +420,7 @@ fn phrase_stress_target_chunk(
             end: total,
         });
     };
-    let chunk_count = (total + size - 1) / size;
+    let chunk_count = total.div_ceil(size);
     let start = args.chunk_index * size;
     if start >= total {
         bail!(
@@ -1123,20 +1123,38 @@ fn diacritic_fold_pattern(pattern: &str) -> Option<String> {
     changed.then_some(folded)
 }
 
-fn build_phrase_variant_stress_report(
-    args: &PhraseVariantStressArgs,
-    audit: &MissingAuditFile,
-    targets: &[StressTarget],
-    patterns: &[StressPattern],
-    matches_by_pattern: &[usize],
-    mut resource_stats: Vec<PhraseStressResourceStats>,
-    mut samples: Vec<PhraseStressSample>,
-    chunk: &PhraseStressTargetChunk,
+struct PhraseVariantStressReportInput<'a> {
+    args: &'a PhraseVariantStressArgs,
+    audit: &'a MissingAuditFile,
+    targets: &'a [StressTarget],
+    patterns: &'a [StressPattern],
+    matches_by_pattern: &'a [usize],
+    resource_stats: Vec<PhraseStressResourceStats>,
+    samples: Vec<PhraseStressSample>,
+    chunk: &'a PhraseStressTargetChunk,
     source_partitions: usize,
     skipped_partitions: usize,
     missing_anchor_row_partitions: usize,
     duration_ms: u128,
+}
+
+fn build_phrase_variant_stress_report(
+    input: PhraseVariantStressReportInput<'_>,
 ) -> Result<PhraseVariantStressReport> {
+    let PhraseVariantStressReportInput {
+        args,
+        audit,
+        targets,
+        patterns,
+        matches_by_pattern,
+        mut resource_stats,
+        mut samples,
+        chunk,
+        source_partitions,
+        skipped_partitions,
+        missing_anchor_row_partitions,
+        duration_ms,
+    } = input;
     resource_stats.sort_by(|a, b| a.resource_id.cmp(&b.resource_id));
     samples.sort_by(|a, b| {
         a.target_id
@@ -1666,11 +1684,7 @@ mod tests {
             rows.push(pattern_row(4 + index, &format!("të {anchor}"), &anchor));
         }
         let matcher = PhraseStressMatcher::new(rows).expect("matcher");
-        let oracle: HashSet<&str> = matcher
-            .anchor_tokens
-            .iter()
-            .map(String::as_str)
-            .collect();
+        let oracle: HashSet<&str> = matcher.anchor_tokens.iter().map(String::as_str).collect();
 
         let long_token = "b".repeat(70);
         let rows = [
@@ -1693,9 +1707,7 @@ mod tests {
             "krejt tjetër fjali".to_owned(),
         ];
         for row in &rows {
-            let expected = row
-                .split_whitespace()
-                .any(|token| oracle.contains(token));
+            let expected = row.split_whitespace().any(|token| oracle.contains(token));
             assert_eq!(
                 matcher.has_anchor_token(row),
                 expected,

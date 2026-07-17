@@ -14,7 +14,7 @@ use candidate_cache::{
     CacheBuildStats,
 };
 use clap::{Args, Parser, Subcommand};
-use db::ExampleDb;
+use db::{ExampleDb, OccurrenceRecord, ResourceStatsRecord};
 use phrase_variant_stress::{phrase_variant_stress, PhraseVariantStressArgs};
 use quality::{keep_sentence, quality_flags};
 use rusqlite::{params, Connection, OpenFlags};
@@ -226,7 +226,7 @@ struct ResourceStats {
 }
 
 enum MatchEvent {
-    Hit(Hit),
+    Hit(Box<Hit>),
     Done(ResourceStats),
     Error(String),
 }
@@ -441,6 +441,17 @@ enum TraceEvent {
     Error(String),
 }
 
+#[derive(Clone)]
+struct TraceScanContext {
+    target_matcher: Arc<TargetMatcher>,
+    selected_ids: Arc<HashSet<String>>,
+    max_per_target: usize,
+    sample_limit: usize,
+    candidate_cache_dir: Option<PathBuf>,
+    require_candidate_cache: bool,
+    tx: mpsc::Sender<TraceEvent>,
+}
+
 #[derive(Debug, Serialize)]
 struct BenchReport {
     generated_at: String,
@@ -478,11 +489,12 @@ fn bench(args: BenchArgs) -> Result<()> {
         );
     }
 
-    let mut results = Vec::new();
-    results.push(bench_aho_batch(&sentences, &queries)?);
-    results.push(bench_sqlite_fts(&args.out_dir, &sentences, &queries)?);
-    results.push(bench_tantivy(&args.out_dir, &sentences, &queries)?);
-    results.push(bench_ripgrep(&args.out_dir, &sentences, &queries)?);
+    let results = vec![
+        bench_aho_batch(&sentences, &queries)?,
+        bench_sqlite_fts(&args.out_dir, &sentences, &queries)?,
+        bench_tantivy(&args.out_dir, &sentences, &queries)?,
+        bench_ripgrep(&args.out_dir, &sentences, &queries)?,
+    ];
 
     let report = BenchReport {
         generated_at: current_timestamp()?,
@@ -683,28 +695,21 @@ fn trace_targets(args: TraceTargetsArgs) -> Result<()> {
     let selected_ids = Arc::new(selected_ids);
     let mut handles = Vec::new();
     for _ in 0..jobs {
-        let worker_tx = tx.clone();
-        let worker_matcher = Arc::clone(&target_matcher);
         let worker_work = Arc::clone(&work);
-        let worker_selected_ids = Arc::clone(&selected_ids);
-        let max_per_target = args.max_per_target;
-        let sample_limit = args.sample_limit;
-        let candidate_cache_dir = args.candidate_cache_dir.clone();
-        let require_candidate_cache = args.require_candidate_cache;
+        let worker_context = TraceScanContext {
+            target_matcher: Arc::clone(&target_matcher),
+            selected_ids: Arc::clone(&selected_ids),
+            max_per_target: args.max_per_target,
+            sample_limit: args.sample_limit,
+            candidate_cache_dir: args.candidate_cache_dir.clone(),
+            require_candidate_cache: args.require_candidate_cache,
+            tx: tx.clone(),
+        };
         handles.push(thread::spawn(move || loop {
             let Some(resource) = worker_work.lock().expect("work queue").pop_front() else {
                 break;
             };
-            trace_resource(
-                resource,
-                Arc::clone(&worker_matcher),
-                Arc::clone(&worker_selected_ids),
-                max_per_target,
-                sample_limit,
-                candidate_cache_dir.clone(),
-                require_candidate_cache,
-                worker_tx.clone(),
-            );
+            trace_resource(resource, worker_context.clone());
         }));
     }
     drop(tx);
@@ -1347,7 +1352,7 @@ fn select_trace_targets(targets: &[Target], args: &TraceTargetsArgs) -> Result<V
     let requested_ids = requested_id_values.iter().cloned().collect::<HashSet<_>>();
     let requested_forms = requested_form_values
         .iter()
-        .map(|form| normalized_text(&form))
+        .map(|form| normalized_text(form))
         .collect::<HashSet<_>>();
     if requested_ids.is_empty() && requested_forms.is_empty() {
         bail!("provide --target-ids, --target-ids-file, --forms, or --forms-file");
@@ -1450,41 +1455,16 @@ fn read_selection_file(path: &Path) -> Result<Vec<String>> {
     Ok(values)
 }
 
-fn trace_resource(
-    resource: ResourceSpec,
-    target_matcher: Arc<TargetMatcher>,
-    selected_ids: Arc<HashSet<String>>,
-    max_per_target: usize,
-    sample_limit: usize,
-    candidate_cache_dir: Option<PathBuf>,
-    require_candidate_cache: bool,
-    tx: mpsc::Sender<TraceEvent>,
-) {
+fn trace_resource(resource: ResourceSpec, context: TraceScanContext) {
     let resource_id = resource.id.clone();
-    if let Err(err) = trace_resource_inner(
-        resource,
-        target_matcher,
-        selected_ids,
-        max_per_target,
-        sample_limit,
-        candidate_cache_dir,
-        require_candidate_cache,
-        &tx,
-    ) {
-        let _ = tx.send(TraceEvent::Error(format!("{resource_id}: {err:#}")));
+    if let Err(err) = trace_resource_inner(resource, &context) {
+        let _ = context
+            .tx
+            .send(TraceEvent::Error(format!("{resource_id}: {err:#}")));
     }
 }
 
-fn trace_resource_inner(
-    resource: ResourceSpec,
-    target_matcher: Arc<TargetMatcher>,
-    selected_ids: Arc<HashSet<String>>,
-    max_per_target: usize,
-    sample_limit: usize,
-    candidate_cache_dir: Option<PathBuf>,
-    require_candidate_cache: bool,
-    tx: &mpsc::Sender<TraceEvent>,
-) -> Result<()> {
+fn trace_resource_inner(resource: ResourceSpec, context: &TraceScanContext) -> Result<()> {
     let started = Instant::now();
     let mut candidates_seen = 0usize;
     let mut empty_candidates = 0usize;
@@ -1494,8 +1474,8 @@ fn trace_resource_inner(
     let mut sample_counts = HashMap::<String, usize>::new();
     let mut stream = open_candidate_stream(
         &resource,
-        candidate_cache_dir.as_deref(),
-        require_candidate_cache,
+        context.candidate_cache_dir.as_deref(),
+        context.require_candidate_cache,
     )
     .with_context(|| format!("open candidates for {}", resource.id))?;
 
@@ -1512,10 +1492,11 @@ fn trace_resource_inner(
             continue;
         }
 
-        let raw_matches = target_matcher
+        let raw_matches = context
+            .target_matcher
             .matches_normalized(&normalized)
             .into_iter()
-            .filter(|matched| selected_ids.contains(matched.id))
+            .filter(|matched| context.selected_ids.contains(matched.id))
             .collect::<Vec<_>>();
         if raw_matches.is_empty() {
             continue;
@@ -1532,7 +1513,7 @@ fn trace_resource_inner(
                 push_trace_sample(
                     &mut samples,
                     &mut sample_counts,
-                    sample_limit,
+                    context.sample_limit,
                     &candidate,
                     &matched,
                     "variant_rejected",
@@ -1542,12 +1523,12 @@ fn trace_resource_inner(
             }
             counts.variant_supported_matches += 1;
 
-            if local_counts.get(matched.id).copied().unwrap_or(0) >= max_per_target {
+            if local_counts.get(matched.id).copied().unwrap_or(0) >= context.max_per_target {
                 counts.local_cap_dropped_matches += 1;
                 push_trace_sample(
                     &mut samples,
                     &mut sample_counts,
-                    sample_limit,
+                    context.sample_limit,
                     &candidate,
                     &matched,
                     "local_cap_dropped",
@@ -1575,7 +1556,7 @@ fn trace_resource_inner(
                 push_trace_sample(
                     &mut samples,
                     &mut sample_counts,
-                    sample_limit,
+                    context.sample_limit,
                     &candidate,
                     &matched,
                     "quality_rejected",
@@ -1594,7 +1575,7 @@ fn trace_resource_inner(
             push_trace_sample(
                 &mut samples,
                 &mut sample_counts,
-                sample_limit,
+                context.sample_limit,
                 &candidate,
                 &matched,
                 "emitted",
@@ -1603,15 +1584,17 @@ fn trace_resource_inner(
         }
     }
 
-    tx.send(TraceEvent::Done(TraceResourceStats {
-        resource_id: resource.id,
-        candidates_seen,
-        empty_candidates,
-        duration_ms: started.elapsed().as_millis(),
-        counts_by_target,
-        samples,
-    }))
-    .context("send trace resource stats")?;
+    context
+        .tx
+        .send(TraceEvent::Done(TraceResourceStats {
+            resource_id: resource.id,
+            candidates_seen,
+            empty_candidates,
+            duration_ms: started.elapsed().as_millis(),
+            counts_by_target,
+            samples,
+        }))
+        .context("send trace resource stats")?;
     Ok(())
 }
 
@@ -2358,16 +2341,16 @@ fn match_targets(args: MatchArgs) -> Result<()> {
                     }
                     let score =
                         score_sentence(&hit.candidate, matched.kind, &hit.flags, &hit.normalized);
-                    if db.insert_occurrence(
-                        &matched.id,
-                        &matched.target_key,
-                        &matched.signature,
+                    if db.insert_occurrence(&OccurrenceRecord {
+                        target_id: &matched.id,
+                        target_key: &matched.target_key,
+                        signature: &matched.signature,
                         sentence_id,
-                        matched.kind.as_str(),
-                        matched.variant_kind.as_str(),
-                        &matched.matched_pattern,
+                        match_kind: matched.kind.as_str(),
+                        variant_kind: matched.variant_kind.as_str(),
+                        matched_pattern: &matched.matched_pattern,
                         score,
-                    )? {
+                    })? {
                         *counts.entry(matched.id.clone()).or_insert(0) += 1;
                         if counts.get(&matched.id).copied().unwrap_or(0) >= args.max_per_target {
                             saturated_targets
@@ -2384,19 +2367,19 @@ fn match_targets(args: MatchArgs) -> Result<()> {
                 }
             }
             MatchEvent::Done(stats) => {
-                db.write_resource_stats(
-                    &stats.resource_id,
-                    stats.candidates_seen,
-                    stats.sentences_inserted,
-                    0,
-                    occurrences_by_resource
+                db.write_resource_stats(&ResourceStatsRecord {
+                    resource_id: &stats.resource_id,
+                    candidates_seen: stats.candidates_seen,
+                    sentences_inserted: stats.sentences_inserted,
+                    duplicate_sentences: 0,
+                    occurrences_inserted: occurrences_by_resource
                         .remove(&stats.resource_id)
                         .unwrap_or(0),
-                    stats.empty_candidates,
-                    stats.quality_rejected,
-                    stats.unmatched_rejected,
-                    stats.duration_ms,
-                )?;
+                    empty_candidates: stats.empty_candidates,
+                    quality_rejected: stats.quality_rejected,
+                    unmatched_rejected: stats.unmatched_rejected,
+                    duration_ms: stats.duration_ms,
+                })?;
                 println!(
                     "  {}: {} candidates, {} hit sentence(s) in {:.1}s",
                     stats.resource_id,
@@ -2642,13 +2625,13 @@ fn scan_resource_for_matches_inner(
             *local_counts.entry(matched.id.clone()).or_insert(0) += 1;
         }
         let flags_json = serde_json::to_string(&flags)?;
-        tx.send(MatchEvent::Hit(Hit {
+        tx.send(MatchEvent::Hit(Box::new(Hit {
             candidate,
             normalized,
             flags,
             flags_json,
             matches,
-        }))
+        })))
         .context("send matched sentence")?;
         hit_sentences += 1;
     }
@@ -2700,18 +2683,6 @@ fn select_resources(repo_root: &Path, raw_sources: &str) -> Result<Vec<ResourceS
         }
     }
     Ok(selected)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::has_apostrophe_negation;
-
-    #[test]
-    fn apostrophe_negation_does_not_treat_suffix_s_as_negation() {
-        assert!(has_apostrophe_negation("Unë s'punoj sot."));
-        assert!(has_apostrophe_negation("Ai S’punon sot."));
-        assert!(!has_apostrophe_negation("NATO-s dhe UNESCO-s."));
-    }
 }
 
 fn source_ids(raw_sources: &str) -> Vec<String> {
@@ -2814,5 +2785,17 @@ fn source_bonus(resource_id: &str) -> i64 {
         "tatoeba-full" => 4,
         "cc100-sq" => 0,
         _ => 0,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::has_apostrophe_negation;
+
+    #[test]
+    fn apostrophe_negation_does_not_treat_suffix_s_as_negation() {
+        assert!(has_apostrophe_negation("Unë s'punoj sot."));
+        assert!(has_apostrophe_negation("Ai S’punon sot."));
+        assert!(!has_apostrophe_negation("NATO-s dhe UNESCO-s."));
     }
 }

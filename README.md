@@ -1,6 +1,7 @@
 # foljapp
 
-Albanian verbal system reference. Educational, reference-quality, academically rich.
+A working Albanian verb reference built around a reusable TypeScript morphology
+engine and a Rust corpus-evidence pipeline.
 
 [![CI](https://github.com/okturan/foljapp/actions/workflows/ci.yml/badge.svg)](https://github.com/okturan/foljapp/actions/workflows/ci.yml)
 [![Live app](https://img.shields.io/badge/live-foljapp.pages.dev-2563eb)](https://foljapp.pages.dev/)
@@ -14,6 +15,22 @@ Albanian verbal system reference. Educational, reference-quality, academically r
 Pre-alpha. The web app, conjugation engine, verb corpus, reference pages,
 playground, and local corpus tooling are active. The current public build is at
 [foljapp.pages.dev](https://foljapp.pages.dev/).
+
+## Product surface
+
+- [Search and browse](https://foljapp.pages.dev/browse) the checked-in verb corpus.
+- Open a [citation-aware verb page](https://foljapp.pages.dev/verb/punoj) with
+  principal parts, full paradigms, IPA, English glosses, and decomposition traces.
+- Explore forms in the [playground](https://foljapp.pages.dev/playground), run
+  [practice sessions](https://foljapp.pages.dev/practice), and read the
+  [grammar articles](https://foljapp.pages.dev/articles) and
+  [source register](https://foljapp.pages.dev/references).
+- Consume the same engine through the read-only
+  [verb index](https://foljapp.pages.dev/api/verbs),
+  [verb-detail JSON](https://foljapp.pages.dev/api/verbs/punoj),
+  [IGT](https://foljapp.pages.dev/api/verbs/punoj?format=igt),
+  [CoNLL-U](https://foljapp.pages.dev/api/verbs/punoj?format=conllu), and
+  [OpenAPI document](https://foljapp.pages.dev/api/openapi.json).
 
 ## Layout
 
@@ -41,6 +58,28 @@ website/runtime surface. They should stay small enough to build and deploy.
 corpus lab. They download, scan, audit, and explain large corpora from `.cache/`;
 their outputs are evidence for development and future backend services, not
 Cloudflare Pages assets.
+
+## Evidence flow
+
+```mermaid
+flowchart LR
+  V["Checked-in verb JSON"] --> D["Data schemas and validation"]
+  D --> E["TypeScript morphology engine"]
+  E --> W["Next.js reference pages and read-only API"]
+  E --> T["Generated search targets"]
+
+  subgraph L["Local corpus lab — not deployed"]
+    C["Raw corpora in .cache"] --> R["Rust corpus indexer"]
+    T --> R
+    R --> S["Retained examples, indexes, and audit reports"]
+  end
+
+  S -. "local evidence" .-> W
+```
+
+The deployment boundary is deliberate: the public app ships the reviewed verb
+data and deterministic engine, while raw corpora, local SQLite/Tantivy indexes,
+and large generated reports remain outside the Cloudflare Pages artifact.
 
 ## Roadmap
 
@@ -94,9 +133,10 @@ npm run test:e2e    # Playwright E2E (requires browsers installed)
 npm audit --audit-level=high
 ```
 
-GitHub Actions runs the TypeScript checks, lint, unit suite, production build,
-dependency audit, and Rust corpus-indexer tests with read-only permissions and
-immutable action revisions.
+GitHub Actions protects the morphology engine with TypeScript regression checks,
+verifies the shipped product flows in Chromium, builds the production app, audits
+dependencies, and enforces Rust formatting, Clippy, and corpus-index integrity—with
+read-only permissions and immutable action revisions.
 
 ## License
 
