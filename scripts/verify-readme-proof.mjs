@@ -20,7 +20,10 @@ assert.ok(assetStat.size > 0 && assetStat.size < 100_000, 'motion proof must sta
 const linkedProof = '[![Searching for pun and opening the complete punoj reference](docs/motion/search-to-reference.gif)](https://foljapp.pages.dev/)';
 assert.ok(readme.includes(linkedProof), 'README must link the motion proof to the live app');
 assert.ok(readme.includes('not a staged mockup'), 'README must state the evidence boundary');
-assert.ok(provenance.includes('https://foljapp.pages.dev/verb/punoj'));
+const destinationMatch = provenance.match(/^- \*\*Destination:\*\* <([^>]+)>$/m);
+assert.ok(destinationMatch, 'provenance must declare one destination URL');
+const destination = new URL(destinationMatch[1]);
+assert.equal(destination.href, new URL('/verb/punoj', 'https://foljapp.pages.dev/').href);
 assert.ok(provenance.includes('60 real page screenshots'));
 assert.ok(provenance.includes('no account, browser-profile, microphone, camera, or production-user information'));
 
