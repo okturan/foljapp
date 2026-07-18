@@ -158,6 +158,6 @@ security fixes are grouped separately from routine minor and patch maintenance.
 
 ## License
 
-The original project README declares this repository MIT. A standalone license
-file is not currently included. Third-party dependencies and cited linguistic
-sources remain subject to their own terms.
+Original source code and documentation in this repository are available under
+the [MIT License](./LICENSE). Third-party dependencies and cited linguistic
+sources remain subject to their own terms and attribution requirements.
