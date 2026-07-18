@@ -15,6 +15,7 @@
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "test:e2e": "npm run test:e2e --workspace=apps/web",
+    "verify:proof": "node scripts/verify-readme-proof.mjs",
     "build:corpus": "tsx scripts/build-corpus.ts",
     "build:parallel-examples": "tsx scripts/build-parallel-examples.ts",
     "build:parallel-examples:local": "tsx scripts/build-parallel-examples.ts --from-local-cache",

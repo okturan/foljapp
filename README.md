@@ -10,6 +10,16 @@ engine and a Rust corpus-evidence pipeline.
 | --- | --- |
 | [![Foljapp home](docs/screenshots/home-desktop.png)](https://foljapp.pages.dev/) | [![Foljapp verb detail](docs/screenshots/verb-punoj-desktop.png)](https://foljapp.pages.dev/verb/punoj) |
 
+## Actual search-to-reference proof
+
+[![Searching for pun and opening the complete punoj reference](docs/motion/search-to-reference.gif)](https://foljapp.pages.dev/)
+
+This six-second capture comes from the public deployment. It shows the real
+search suggestions for `pun`, stable navigation to `/verb/punoj`, and the
+conjugation reference loading—not a staged mockup. The exact frame, browser,
+encoding, and privacy boundary is recorded in
+[`docs/motion/README.md`](docs/motion/README.md).
+
 ## Status
 
 Pre-alpha. The web app, conjugation engine, verb corpus, reference pages,
@@ -128,6 +138,7 @@ Rust scanner commands.
 npm run typecheck   # TypeScript strict mode across all workspaces
 npm run lint        # ESLint (Next.js + import-sort)
 npm test            # Vitest across all workspaces
+npm run verify:proof # README motion asset, link, and provenance contract
 npm run build       # Next.js production build
 npm run test:e2e    # Playwright E2E (requires browsers installed)
 npm audit --audit-level=high
