@@ -102,7 +102,7 @@ jobs:
         run: npm ci
 
       - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+        run: npm exec --workspace=apps/web -- playwright install --with-deps chromium
 
       - name: Test browser product flows
         run: npm run test:e2e
