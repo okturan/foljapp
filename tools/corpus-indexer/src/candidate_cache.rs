@@ -294,10 +294,7 @@ pub fn cached_resource_may_contain_any_target_id(
     Ok(Some(false))
 }
 
-pub fn cached_candidates_seen(
-    resource: &ResourceSpec,
-    cache_dir: &Path,
-) -> Result<Option<usize>> {
+pub fn cached_candidates_seen(resource: &ResourceSpec, cache_dir: &Path) -> Result<Option<usize>> {
     Ok(fresh_v2_meta(resource, cache_dir)?.map(|meta| meta.candidates_seen))
 }
 

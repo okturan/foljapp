@@ -52,6 +52,11 @@ const MOOD_TENSES: Record<
   optative: ['present', 'perfect'],
 };
 
+// The Tense control renders this union on every mood so the group never
+// changes size or shape; values outside the selected mood render disabled.
+// Every other mood's tenses are a subset of indicative's ten.
+const ALL_TENSES: Tense[] = MOOD_TENSES.indicative;
+
 const NON_FINITE_FORMS: NonFiniteForm[] = [
   'participle',
   'infinitive',
@@ -172,23 +177,46 @@ export function Playground() {
     [config, router],
   );
 
-  const tenseOptions =
-    config.mood === 'non-finite' || config.mood === 'imperative'
-      ? null
-      : MOOD_TENSES[config.mood];
+  const isNonFinite = config.mood === 'non-finite';
+  const finiteMood = isNonFinite
+    ? null
+    : (config.mood as Exclude<Mood, 'non-finite'>);
+  // Tenses the selected mood actually has. Imperative is absent from
+  // MOOD_TENSES because it carries a single implicit present.
+  const moodTenses: Tense[] =
+    finiteMood === null
+      ? []
+      : finiteMood === 'imperative'
+        ? ['present']
+        : MOOD_TENSES[finiteMood];
+  const activeTense = (config.tense ?? 'present') as Tense;
 
-  const opts: ConjugateOptions = {
-    mood: config.mood,
-    voice: config.voice,
-    polarity: config.polarity,
-    modality: config.modality,
-  };
-  if (config.tense) opts.tense = config.tense;
-  if (config.mood !== 'non-finite') {
-    opts.person = config.person;
-    opts.number = config.number;
-  }
-  if (config.form) opts.form = config.form;
+  // Memoised so a re-render of the parent does not hand CorpusExamples a
+  // fresh object identity and retrigger its fetch effect.
+  const opts = useMemo<ConjugateOptions>(() => {
+    const next: ConjugateOptions = {
+      mood: config.mood,
+      voice: config.voice,
+      polarity: config.polarity,
+      modality: config.modality,
+    };
+    if (config.tense) next.tense = config.tense;
+    if (config.mood !== 'non-finite') {
+      next.person = config.person;
+      next.number = config.number;
+    }
+    if (config.form) next.form = config.form;
+    return next;
+  }, [
+    config.mood,
+    config.tense,
+    config.voice,
+    config.polarity,
+    config.modality,
+    config.person,
+    config.number,
+    config.form,
+  ]);
 
   // The engine indexes entries by `id`, while the picker and query string may
   // carry either the display lemma or the id slug. Resolve before calling it.
@@ -301,10 +329,17 @@ export function Playground() {
       : null;
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-6 lg:grid lg:grid-cols-[3fr_2fr] lg:items-start lg:gap-12 lg:py-10">
+    // 45/55 — the result pane is the wider of the two. `minmax(0, …)`
+    // rather than bare `fr` units: grid items default to
+    // `min-width: auto`, so without the zero floor a long form, source name
+    // or example sentence in the result pane widens its own column and
+    // steals the difference from the controls, re-wrapping every pill. The
+    // zero floor pins the 3:2 ratio to the container, making the two panes
+    // structurally independent whatever either one renders.
+    <main className="mx-auto max-w-6xl px-6 py-6 lg:grid lg:grid-cols-[minmax(0,45fr)_minmax(0,55fr)] lg:items-start lg:gap-12 lg:py-10">
       <aside
         aria-label="Conjugated form"
-        className="sticky top-0 z-10 -mx-6 mb-6 border-b border-stone-200 bg-stone-50/95 px-6 py-4 backdrop-blur lg:top-8 lg:z-0 lg:order-2 lg:mx-0 lg:mb-0 lg:self-start lg:rounded-lg lg:border lg:border-stone-200 lg:bg-white lg:px-6 lg:py-6 lg:backdrop-blur-none"
+        className="sticky top-0 z-10 -mx-6 mb-6 min-w-0 border-b border-stone-200 bg-stone-50/95 px-6 py-4 backdrop-blur lg:top-8 lg:z-0 lg:order-2 lg:mx-0 lg:mb-0 lg:self-start lg:rounded-lg lg:border lg:border-stone-200 lg:bg-white lg:px-6 lg:py-6 lg:backdrop-blur-none"
       >
         <PlaygroundResult
           result={result}
@@ -317,7 +352,7 @@ export function Playground() {
         />
       </aside>
 
-      <div className="lg:order-1">
+      <div className="min-w-0 lg:order-1">
         <h1 className="text-3xl font-bold tracking-tight">Playground</h1>
         <p className="mt-2 text-stone-600">
           Pick a verb and any combination of grammatical parameters. The engine
@@ -332,12 +367,16 @@ export function Playground() {
               onSelect={(lemma) => update({ verb: lemma })}
             />
           </div>
-          {indexEntry ? (
-            <p className="mt-2 text-xs text-stone-400">
-              {indexEntry.translationEn} · Zgjedhimi {indexEntry.class} ·
-              auxiliary {indexEntry.auxiliary}
-            </p>
-          ) : null}
+          {/* Fixed height so a mid-edit verb with no match keeps the
+              controls below it exactly where they were. */}
+          <p className="mt-2 min-h-4 text-xs text-stone-400">
+            {indexEntry ? (
+              <>
+                {indexEntry.translationEn} · Zgjedhimi {indexEntry.class} ·
+                auxiliary {indexEntry.auxiliary}
+              </>
+            ) : null}
+          </p>
         </div>
 
         <RadioGroup
@@ -352,118 +391,130 @@ export function Playground() {
           onChange={(v) => update({ mood: v as Mood })}
         />
 
-        {tenseOptions ? (
-          <RadioGroup
-            label="Tense"
-            name="tense"
-            options={tenseOptions.map((t) => ({
+        {/* Tense, Form and the compact grid render for every mood. Options
+            that the mood does not have are greyed, never unmounted — the
+            controls panel keeps one shape across the whole state space. */}
+        <RadioGroup
+          label="Tense"
+          name="tense"
+          options={ALL_TENSES.map((t) => {
+            const inMood = moodTenses.includes(t);
+            const feasible =
+              inMood &&
+              finiteMood !== null &&
+              (feasibility.byMood.get(finiteMood)?.tenses.has(t) ?? false);
+            return {
               value: t,
               label: t.replace(/-/g, ' '),
-              disabled:
-                config.mood !== 'non-finite' &&
-                !feasibility.byMood.get(config.mood)?.tenses.has(t),
-            }))}
-            value={config.tense ?? tenseOptions[0]!}
-            onChange={(v) => update({ tense: v as Tense })}
-          />
-        ) : null}
+              disabled: !feasible,
+              outOfScope: !inMood,
+            };
+          })}
+          value={activeTense}
+          onChange={(v) => update({ tense: v as Tense })}
+        />
 
-        {config.mood === 'non-finite' ? (
+        <RadioGroup
+          label="Form"
+          name="form"
+          options={NON_FINITE_FORMS.map((f) => ({
+            value: f,
+            label: f,
+            disabled: !isNonFinite || !feasibility.nonFinite.has(f),
+            outOfScope: !isNonFinite,
+          }))}
+          value={config.form ?? 'participle'}
+          onChange={(v) => update({ form: v as NonFiniteForm })}
+        />
+
+        <div
+          data-testid="compact-group-grid"
+          className="grid grid-cols-1 gap-x-6 sm:grid-cols-2 lg:grid-cols-3"
+        >
           <RadioGroup
-            label="Form"
-            name="form"
-            options={NON_FINITE_FORMS.map((f) => ({
-              value: f,
-              label: f,
-              disabled: !feasibility.nonFinite.has(f),
+            label="Voice"
+            name="voice"
+            options={(['active', 'middle-passive'] as const).map((v) => ({
+              value: v,
+              label: v,
+              disabled:
+                finiteMood === null || !voiceHasAny(finiteMood, activeTense, v),
+              outOfScope: isNonFinite,
             }))}
-            value={config.form ?? 'participle'}
-            onChange={(v) => update({ form: v as NonFiniteForm })}
+            value={config.voice}
+            onChange={(v) =>
+              update({ voice: v as 'active' | 'middle-passive' })
+            }
           />
-        ) : null}
-
-        {config.mood !== 'non-finite' ? (
-          <div
-            data-testid="compact-group-grid"
-            className="grid grid-cols-1 gap-x-6 sm:grid-cols-2 lg:grid-cols-3"
-          >
-            <RadioGroup
-              label="Voice"
-              name="voice"
-              options={(['active', 'middle-passive'] as const).map((v) => ({
-                value: v,
-                label: v,
-                disabled: !voiceHasAny(
-                  config.mood as Exclude<Mood, 'non-finite'>,
-                  (config.tense ?? 'present') as Tense,
-                  v,
-                ),
-              }))}
-              value={config.voice}
-              onChange={(v) =>
-                update({ voice: v as 'active' | 'middle-passive' })
-              }
-            />
-            <RadioGroup
-              label="Polarity"
-              name="polarity"
-              options={[
-                { value: 'affirmative', label: 'affirmative' },
-                { value: 'negative', label: 'negative' },
-              ]}
-              value={config.polarity}
-              onChange={(v) =>
-                update({ polarity: v as 'affirmative' | 'negative' })
-              }
-            />
-            <RadioGroup
-              label="Modality"
-              name="modality"
-              options={[
-                { value: 'declarative', label: 'declarative' },
-                { value: 'interrogative', label: 'interrogative' },
-              ]}
-              value={config.modality}
-              onChange={(v) =>
-                update({ modality: v as 'declarative' | 'interrogative' })
-              }
-            />
-            <RadioGroup
-              label="Person"
-              name="person"
-              options={PERSONS.map((p) => ({
-                value: String(p),
-                label: String(p),
-                disabled: !cellExists(
-                  config.mood as Exclude<Mood, 'non-finite'>,
-                  (config.tense ?? 'present') as Tense,
+          <RadioGroup
+            label="Polarity"
+            name="polarity"
+            options={(['affirmative', 'negative'] as const).map((p) => ({
+              value: p,
+              label: p,
+              disabled: isNonFinite,
+              outOfScope: isNonFinite,
+            }))}
+            value={config.polarity}
+            onChange={(v) =>
+              update({ polarity: v as 'affirmative' | 'negative' })
+            }
+          />
+          <RadioGroup
+            label="Modality"
+            name="modality"
+            options={(['declarative', 'interrogative'] as const).map((m) => ({
+              value: m,
+              label: m,
+              disabled: isNonFinite,
+              outOfScope: isNonFinite,
+            }))}
+            value={config.modality}
+            onChange={(v) =>
+              update({ modality: v as 'declarative' | 'interrogative' })
+            }
+          />
+          <RadioGroup
+            label="Person"
+            name="person"
+            options={PERSONS.map((p) => ({
+              value: String(p),
+              label: String(p),
+              disabled:
+                finiteMood === null ||
+                !cellExists(
+                  finiteMood,
+                  activeTense,
                   config.voice,
                   p,
                   config.number,
                 ),
-              }))}
-              value={String(config.person)}
-              onChange={(v) => update({ person: Number(v) as 1 | 2 | 3 })}
-            />
-            <RadioGroup
-              label="Number"
-              name="number"
-              options={NUMBERS.map((n) => ({
-                value: n,
-                label: n === 'singular' ? 'sg' : 'pl',
-                disabled: !cellExists(
-                  config.mood as Exclude<Mood, 'non-finite'>,
-                  (config.tense ?? 'present') as Tense,
+              outOfScope: isNonFinite,
+            }))}
+            value={String(config.person)}
+            onChange={(v) => update({ person: Number(v) as 1 | 2 | 3 })}
+          />
+          <RadioGroup
+            label="Number"
+            name="number"
+            options={NUMBERS.map((n) => ({
+              value: n,
+              label: n === 'singular' ? 'sg' : 'pl',
+              disabled:
+                finiteMood === null ||
+                !cellExists(
+                  finiteMood,
+                  activeTense,
                   config.voice,
                   config.person,
                   n,
                 ),
-              }))}
-              value={config.number}
-              onChange={(v) => update({ number: v as 'singular' | 'plural' })}
-            />
-          </div>
-        ) : null}
+              outOfScope: isNonFinite,
+            }))}
+            value={config.number}
+            onChange={(v) => update({ number: v as 'singular' | 'plural' })}
+          />
+        </div>
       </div>
     </main>
   );
@@ -472,7 +523,14 @@ export function Playground() {
 interface RadioGroupProps {
   label: string;
   name: string;
-  options: Array<{ value: string; label: string; disabled?: boolean }>;
+  options: Array<{
+    value: string;
+    label: string;
+    disabled?: boolean;
+    /** Disabled because the selected mood has no such parameter at all,
+     *  rather than because this verb lacks the cell. */
+    outOfScope?: boolean;
+  }>;
   value: string;
   onChange: (value: string) => void;
 }
@@ -512,7 +570,13 @@ function RadioGroup({
           return (
             <label
               key={opt.value}
-              title={disabled ? 'not a standard form for this verb' : undefined}
+              title={
+                disabled
+                  ? opt.outOfScope === true
+                    ? 'not available for this mood'
+                    : 'not a standard form for this verb'
+                  : undefined
+              }
               className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
                 isGrid ? 'text-center' : ''
               } ${stateClasses}`}

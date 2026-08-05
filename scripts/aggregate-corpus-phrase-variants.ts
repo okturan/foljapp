@@ -21,8 +21,8 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
 const DEFAULT_INPUT_DIR = join(REPO_ROOT, '.cache');
-const DEFAULT_FILE_REGEX =
-  '^corpus-phrase-variant-stress\\.chunk-(\\d{3})\\.json$';
+const CHUNK_REPORT_PATTERN =
+  /^corpus-phrase-variant-stress\.chunk-(\d{3})\.json$/;
 const DEFAULT_JSON_OUT = join(
   REPO_ROOT,
   '.cache',
@@ -137,20 +137,21 @@ function mdEscape(value: string): string {
 }
 
 const inputDir = resolve(valueAfter('--input-dir=') ?? DEFAULT_INPUT_DIR);
-const fileRegex = new RegExp(valueAfter('--file-regex=') ?? DEFAULT_FILE_REGEX);
 const expectedChunksArg = numberAfter('--expected-chunks=');
 const outJson = resolve(valueAfter('--out-json=') ?? DEFAULT_JSON_OUT);
 const outMd = resolve(valueAfter('--out-md=') ?? DEFAULT_MD_OUT);
 
 const files = readdirSync(inputDir)
-  .map((file) => ({ file, match: file.match(fileRegex) }))
+  .map((file) => ({ file, match: file.match(CHUNK_REPORT_PATTERN) }))
   .filter((row): row is { file: string; match: RegExpMatchArray } =>
     Boolean(row.match),
   )
   .sort((a, b) => a.file.localeCompare(b.file));
 
 if (files.length === 0) {
-  throw new Error(`no chunk reports matched ${fileRegex} in ${inputDir}`);
+  throw new Error(
+    `no corpus-phrase-variant-stress.chunk-NNN.json reports found in ${inputDir}`,
+  );
 }
 
 const chunks = new Map<number, ChunkReport & { file: string }>();

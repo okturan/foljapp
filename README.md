@@ -1,11 +1,46 @@
 # foljapp
 
-Albanian verbal system reference. Educational, reference-quality, academically rich.
+A working Albanian verb reference built around a reusable TypeScript morphology
+engine and a Rust corpus-evidence pipeline.
+
+[![CI](https://github.com/okturan/foljapp/actions/workflows/ci.yml/badge.svg)](https://github.com/okturan/foljapp/actions/workflows/ci.yml)
+[![Live app](https://img.shields.io/badge/live-foljapp.pages.dev-2563eb)](https://foljapp.pages.dev/)
+
+| Search and browse | Full conjugation reference |
+| --- | --- |
+| [![Foljapp home](docs/screenshots/home-desktop.png)](https://foljapp.pages.dev/) | [![Foljapp verb detail](docs/screenshots/verb-punoj-desktop.png)](https://foljapp.pages.dev/verb/punoj) |
+
+## Actual search-to-reference proof
+
+[![Searching for pun and opening the complete punoj reference](docs/motion/search-to-reference.gif)](https://foljapp.pages.dev/)
+
+This six-second capture comes from the public deployment. It shows the real
+search suggestions for `pun`, stable navigation to `/verb/punoj`, and the
+conjugation reference loading—not a staged mockup. The exact frame, browser,
+encoding, and privacy boundary is recorded in
+[`docs/motion/README.md`](docs/motion/README.md).
 
 ## Status
 
 Pre-alpha. The web app, conjugation engine, verb corpus, reference pages,
-playground, and local corpus tooling are active.
+playground, and local corpus tooling are active. The current public build is at
+[foljapp.pages.dev](https://foljapp.pages.dev/).
+
+## Product surface
+
+- [Search and browse](https://foljapp.pages.dev/browse) the checked-in verb corpus.
+- Open a [citation-aware verb page](https://foljapp.pages.dev/verb/punoj) with
+  principal parts, full paradigms, IPA, English glosses, and decomposition traces.
+- Explore forms in the [playground](https://foljapp.pages.dev/playground), run
+  [practice sessions](https://foljapp.pages.dev/practice), and read the
+  [grammar articles](https://foljapp.pages.dev/articles) and
+  [source register](https://foljapp.pages.dev/references).
+- Consume the same engine through the read-only
+  [verb index](https://foljapp.pages.dev/api/verbs),
+  [verb-detail JSON](https://foljapp.pages.dev/api/verbs/punoj),
+  [IGT](https://foljapp.pages.dev/api/verbs/punoj?format=igt),
+  [CoNLL-U](https://foljapp.pages.dev/api/verbs/punoj?format=conllu), and
+  [OpenAPI document](https://foljapp.pages.dev/api/openapi.json).
 
 ## Layout
 
@@ -34,6 +69,28 @@ corpus lab. They download, scan, audit, and explain large corpora from `.cache/`
 their outputs are evidence for development and future backend services, not
 Cloudflare Pages assets.
 
+## Evidence flow
+
+```mermaid
+flowchart LR
+  V["Checked-in verb JSON"] --> D["Data schemas and validation"]
+  D --> E["TypeScript morphology engine"]
+  E --> W["Next.js reference pages and read-only API"]
+  E --> T["Generated search targets"]
+
+  subgraph L["Local corpus lab — not deployed"]
+    C["Raw corpora in .cache"] --> R["Rust corpus indexer"]
+    T --> R
+    R --> S["Retained examples, indexes, and audit reports"]
+  end
+
+  S -. "local evidence" .-> W
+```
+
+The deployment boundary is deliberate: the public app ships the reviewed verb
+data and deterministic engine, while raw corpora, local SQLite/Tantivy indexes,
+and large generated reports remain outside the Cloudflare Pages artifact.
+
 ## Roadmap
 
 The full roadmap and per-capability specs live in [`openspec/`](./openspec/).
@@ -50,7 +107,7 @@ openspec list
 
 ```sh
 nvm use         # activates Node version pinned in .nvmrc
-npm install
+npm ci
 npm run dev     # boots the webapp at http://localhost:3000
 ```
 
@@ -81,10 +138,26 @@ Rust scanner commands.
 npm run typecheck   # TypeScript strict mode across all workspaces
 npm run lint        # ESLint (Next.js + import-sort)
 npm test            # Vitest across all workspaces
+npm run verify:proof # README motion asset, link, and provenance contract
 npm run build       # Next.js production build
 npm run test:e2e    # Playwright E2E (requires browsers installed)
+npm audit --audit-level=high
 ```
+
+GitHub Actions protects the morphology engine with TypeScript regression checks,
+verifies the shipped product flows in Chromium, builds the production app, audits
+dependencies, and enforces Rust formatting, Clippy, and corpus-index integrity—with
+read-only permissions and immutable action revisions.
+
+## Security and maintenance
+
+Report vulnerabilities through GitHub's private reporting form and review the
+[security policy](./SECURITY.md) for the deployed-app and local-corpus boundary.
+Dependabot monitors the npm workspace, Rust corpus indexer, and GitHub Actions;
+security fixes are grouped separately from routine minor and patch maintenance.
 
 ## License
 
-MIT.
+Original source code and documentation in this repository are available under
+the [MIT License](./LICENSE). Third-party dependencies and cited linguistic
+sources remain subject to their own terms and attribution requirements.

@@ -9,6 +9,29 @@ pub struct ExampleDb {
     con: Connection,
 }
 
+pub struct OccurrenceRecord<'a> {
+    pub target_id: &'a str,
+    pub target_key: &'a str,
+    pub signature: &'a str,
+    pub sentence_id: i64,
+    pub match_kind: &'a str,
+    pub variant_kind: &'a str,
+    pub matched_pattern: &'a str,
+    pub score: i64,
+}
+
+pub struct ResourceStatsRecord<'a> {
+    pub resource_id: &'a str,
+    pub candidates_seen: usize,
+    pub sentences_inserted: usize,
+    pub duplicate_sentences: usize,
+    pub occurrences_inserted: usize,
+    pub empty_candidates: usize,
+    pub quality_rejected: usize,
+    pub unmatched_rejected: usize,
+    pub duration_ms: u128,
+}
+
 impl ExampleDb {
     pub fn open(path: &Path, append: bool) -> Result<Self> {
         if path.exists() && !append {
@@ -122,17 +145,7 @@ impl ExampleDb {
         Ok(self.con.last_insert_rowid())
     }
 
-    pub fn insert_occurrence(
-        &self,
-        target_id: &str,
-        target_key: &str,
-        signature: &str,
-        sentence_id: i64,
-        match_kind: &str,
-        variant_kind: &str,
-        matched_pattern: &str,
-        score: i64,
-    ) -> Result<bool> {
+    pub fn insert_occurrence(&self, record: &OccurrenceRecord<'_>) -> Result<bool> {
         let mut insert = self.con.prepare_cached(
             r#"
             INSERT OR IGNORE INTO occurrences(
@@ -143,14 +156,14 @@ impl ExampleDb {
             "#,
         )?;
         let inserted = insert.execute(params![
-            target_id,
-            target_key,
-            signature,
-            sentence_id,
-            match_kind,
-            variant_kind,
-            matched_pattern,
-            score
+            record.target_id,
+            record.target_key,
+            record.signature,
+            record.sentence_id,
+            record.match_kind,
+            record.variant_kind,
+            record.matched_pattern,
+            record.score
         ])?;
         Ok(inserted == 1)
     }
@@ -182,18 +195,7 @@ impl ExampleDb {
         Ok(())
     }
 
-    pub fn write_resource_stats(
-        &self,
-        resource_id: &str,
-        candidates_seen: usize,
-        sentences_inserted: usize,
-        duplicate_sentences: usize,
-        occurrences_inserted: usize,
-        empty_candidates: usize,
-        quality_rejected: usize,
-        unmatched_rejected: usize,
-        duration_ms: u128,
-    ) -> Result<()> {
+    pub fn write_resource_stats(&self, stats: &ResourceStatsRecord<'_>) -> Result<()> {
         self.con.execute(
             r#"
             INSERT OR REPLACE INTO resource_stats(
@@ -204,15 +206,15 @@ impl ExampleDb {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
             "#,
             params![
-                resource_id,
-                candidates_seen.to_string(),
-                sentences_inserted.to_string(),
-                duplicate_sentences.to_string(),
-                occurrences_inserted.to_string(),
-                empty_candidates.to_string(),
-                quality_rejected.to_string(),
-                unmatched_rejected.to_string(),
-                duration_ms.to_string()
+                stats.resource_id,
+                stats.candidates_seen.to_string(),
+                stats.sentences_inserted.to_string(),
+                stats.duplicate_sentences.to_string(),
+                stats.occurrences_inserted.to_string(),
+                stats.empty_candidates.to_string(),
+                stats.quality_rejected.to_string(),
+                stats.unmatched_rejected.to_string(),
+                stats.duration_ms.to_string()
             ],
         )?;
         Ok(())
