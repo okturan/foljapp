@@ -18,6 +18,13 @@
   --color-morph-voice: oklch(0.50 0.22 330);
 }
 
+/* Hold the scrollbar's width whether or not the page currently overflows.
+ * Without this, content arriving late (playground examples) introduces a
+ * scrollbar that narrows the viewport and re-wraps control labels. */
+html {
+  scrollbar-gutter: stable;
+}
+
 :root {
   --color-morph-particle: oklch(0.45 0.18 280);
   --color-morph-auxiliary: oklch(0.50 0.13 200);

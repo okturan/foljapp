@@ -57,37 +57,41 @@ export function PlaygroundResult({
   return (
     <>
       <p className="text-xs tracking-wider text-stone-400 uppercase">Form</p>
-      {result ? (
-        <>
-          <div className="mt-2 text-3xl">
-            <DecomposedForm segments={result.decomposition} />
-          </div>
-          <p className="mt-1 font-mono text-sm text-stone-500">
-            {toIpaBracketed(result.form)}
-          </p>
-          {gloss ? (
+      {/* The headline block keeps its height whether or not a gloss exists,
+          whether the form wraps to a second line, and whether the engine
+          produced a form at all — everything below it stays put. */}
+      <div className="mt-2 min-h-28">
+        {result ? (
+          <>
+            <div className="text-3xl">
+              <DecomposedForm segments={result.decomposition} />
+            </div>
+            <p className="mt-1 font-mono text-sm text-stone-500">
+              {toIpaBracketed(result.form)}
+            </p>
             <p
               data-testid="english-gloss"
-              className="mt-1 text-sm text-stone-500 italic"
+              className="mt-1 min-h-5 text-sm text-stone-500 italic"
             >
-              &ldquo;{gloss}&rdquo;
+              {gloss ? <>&ldquo;{gloss}&rdquo;</> : null}
             </p>
-          ) : null}
-          <DerivationPanel steps={traceSteps} />
-          <CorpusExamples
-            form={result.form}
-            options={options}
-            verbId={verbSlug}
-          />
-        </>
-      ) : unsupported ? (
-        <p className="mt-2 text-stone-400 italic">
-          unsupported cell — engine reports this combination is not part of
-          standard Albanian
-        </p>
-      ) : errorMsg ? (
-        <p className="mt-2 text-red-600">{errorMsg}</p>
-      ) : null}
+          </>
+        ) : unsupported ? (
+          <p className="text-stone-400 italic">
+            unsupported cell — engine reports this combination is not part of
+            standard Albanian
+          </p>
+        ) : errorMsg ? (
+          <p className="text-red-600">{errorMsg}</p>
+        ) : null}
+      </div>
+
+      <DerivationPanel steps={traceSteps} />
+      <CorpusExamples
+        form={result ? result.form : null}
+        options={options}
+        verbId={verbSlug}
+      />
 
       <div className="mt-6 flex items-center gap-4 text-sm">
         <button
