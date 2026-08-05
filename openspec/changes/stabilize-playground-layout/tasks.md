@@ -45,3 +45,18 @@
       source filters.
 - [x] 4.3 `npm run typecheck`, `npm run lint`, unit tests, playground E2E.
 - [x] 4.4 `openspec validate stabilize-playground-layout --strict`.
+
+## 5. Two-pane isolation (follow-up)
+
+- [x] 5.1 Pin the two-pane grid tracks with `minmax(0, …)` and add
+      `min-w-0` to both panes, in `playground.tsx` and in the matching
+      Suspense fallback in `app/playground/page.tsx`.
+- [x] 5.2 Lower the examples table's minimum width below the result pane's
+      inner width at `lg` so all three columns stay visible and the scroll
+      container engages only on mobile.
+- [x] 5.3 Add `playground-pane-isolation.spec.ts` asserting full geometry
+      (`x`, `width`, `height`) of every control group across voice
+      toggles, the longest form, and all seven moods — the existing
+      stability spec asserted `y` only, which is why horizontal coupling
+      went unnoticed.
+- [x] 5.4 Re-run typecheck, lint, unit tests and the full E2E suite.

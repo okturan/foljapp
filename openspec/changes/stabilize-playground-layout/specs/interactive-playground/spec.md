@@ -299,3 +299,50 @@ The following controls SHALL apply feasibility-based disabling: **Mood**, **Tens
 - **WHEN** the page renders
 - **THEN** both Polarity pills (`affirmative`, `negative`) SHALL be enabled
 - **AND** both Modality pills (`declarative`, `interrogative`) SHALL be enabled
+
+### Requirement: The two panes are structurally independent
+
+The controls pane and the result pane SHALL NOT resize each other. The
+two-pane grid tracks SHALL be declared with a zero minimum
+(`minmax(0, 3fr) minmax(0, 2fr)`) rather than bare `fr` units, and both
+panes SHALL carry `min-w-0`.
+
+CSS Grid items default to `min-width: auto`, so a bare `3fr_2fr` track
+still expands to fit its item's min-content. Any wide, hard-to-break
+content in the result pane — a long conjugated form, a long corpus source
+name, the examples table's own declared minimum width — therefore widened
+the result column and took the difference out of the controls column,
+re-wrapping every pill. The zero floor pins the ratio to the container so
+neither pane can reach across the gap, whatever either one renders. This
+is a structural guard: it holds even for content that no per-case rule
+anticipated.
+
+Any horizontally-scrollable region inside a pane SHALL declare a minimum
+width smaller than that pane's inner width at `lg`, so the scroll
+container engages only on genuinely narrow viewports rather than at the
+default desktop width.
+
+#### Scenario: Toggling voice does not resize the controls pane
+
+- **GIVEN** `/playground?verb=punoj&mood=optative&tense=perfect` at a 1280px viewport
+- **WHEN** the user switches voice between `active` and `middle-passive`, changing the rendered form and the example rows
+- **THEN** every control group's `x`, `width` and `height` SHALL be unchanged within 1px
+
+#### Scenario: A long rendered form does not steal width from the controls
+
+- **GIVEN** `/playground?verb=punoj&mood=indicative&tense=present` at a 1280px viewport
+- **WHEN** the tense becomes `future-perfect-in-past`, producing the engine's longest form and its longest source names
+- **THEN** every control group's `x`, `width` and `height` SHALL be unchanged within 1px
+
+#### Scenario: The controls pane holds its width across every mood
+
+- **GIVEN** `/playground` at a 1280px viewport
+- **WHEN** the user selects each of the seven moods in turn
+- **THEN** every control group's `x` and `width` SHALL be unchanged within 1px
+
+#### Scenario: The examples table shows all three columns at desktop width
+
+- **GIVEN** `/playground` at a 1280px viewport with examples loaded
+- **WHEN** the examples table renders inside the result pane
+- **THEN** the `SOURCE`, `ALBANIAN` and `CONTEXT` columns SHALL all be visible without horizontal scrolling
+- **AND** the table SHALL NOT widen the result pane beyond its `2fr` share

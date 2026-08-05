@@ -331,7 +331,13 @@ export function CorpusExamples({ form, options, verbId }: Props) {
                 {/* Fixed layout: declared column widths, so a long corpus
                     name can never squeeze the Albanian column down to one
                     word per line. */}
-                <table className="w-full min-w-[34rem] table-fixed text-left text-xs">
+                {/* The floor must stay under the result pane's own inner
+                    width (~23rem at lg), or the table's min-content pushes
+                    the pane wider and — before the grid tracks were pinned
+                    with minmax(0, …) — stole that width from the controls.
+                    Keep it below that so all three columns stay visible at
+                    lg and the scroll container only engages on mobile. */}
+                <table className="w-full min-w-[21rem] table-fixed text-left text-xs">
                   <colgroup>
                     <col className="w-[26%]" />
                     <col className="w-[44%]" />

@@ -329,10 +329,16 @@ export function Playground() {
       : null;
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-6 lg:grid lg:grid-cols-[3fr_2fr] lg:items-start lg:gap-12 lg:py-10">
+    // `minmax(0, …)` rather than a bare `3fr_2fr`: grid items default to
+    // `min-width: auto`, so without the zero floor a long form, source name
+    // or example sentence in the result pane widens its own column and
+    // steals the difference from the controls, re-wrapping every pill. The
+    // zero floor pins the 3:2 ratio to the container, making the two panes
+    // structurally independent whatever either one renders.
+    <main className="mx-auto max-w-6xl px-6 py-6 lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start lg:gap-12 lg:py-10">
       <aside
         aria-label="Conjugated form"
-        className="sticky top-0 z-10 -mx-6 mb-6 border-b border-stone-200 bg-stone-50/95 px-6 py-4 backdrop-blur lg:top-8 lg:z-0 lg:order-2 lg:mx-0 lg:mb-0 lg:self-start lg:rounded-lg lg:border lg:border-stone-200 lg:bg-white lg:px-6 lg:py-6 lg:backdrop-blur-none"
+        className="sticky top-0 z-10 -mx-6 mb-6 min-w-0 border-b border-stone-200 bg-stone-50/95 px-6 py-4 backdrop-blur lg:top-8 lg:z-0 lg:order-2 lg:mx-0 lg:mb-0 lg:self-start lg:rounded-lg lg:border lg:border-stone-200 lg:bg-white lg:px-6 lg:py-6 lg:backdrop-blur-none"
       >
         <PlaygroundResult
           result={result}
@@ -345,7 +351,7 @@ export function Playground() {
         />
       </aside>
 
-      <div className="lg:order-1">
+      <div className="min-w-0 lg:order-1">
         <h1 className="text-3xl font-bold tracking-tight">Playground</h1>
         <p className="mt-2 text-stone-600">
           Pick a verb and any combination of grammatical parameters. The engine
