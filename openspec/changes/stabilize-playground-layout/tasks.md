@@ -60,3 +60,5 @@
       stability spec asserted `y` only, which is why horizontal coupling
       went unnoticed.
 - [x] 5.4 Re-run typecheck, lint, unit tests and the full E2E suite.
+- [x] 5.5 Rebalance the two panes from 60/40 to 45/55 so the result pane —
+      which carries the examples table — is the wider of the two.
