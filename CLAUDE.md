@@ -63,6 +63,20 @@ hard-won gotchas) is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 - Deploy with `npm run deploy:pages` (never a bare `npx next-on-pages` — the
   script patches `_routes.json` to serve `/examples/*` statically and pins
   `legacy-peer-deps` against wrangler/workers-types drift).
+- **Never run `deploy:pages` while `next dev` is live.** The production
+  build writes into the same `.next`, clobbering the dev server's chunks;
+  `main-app.js` then 404s, the page never hydrates, and the playground
+  presents as "local DB not built" with zero examples. It looks exactly
+  like a corpus/data regression. Stop the dev server first; if you hit it,
+  restarting dev is the whole fix.
+- `deploy:pages` also re-flips a few `devOptional` → `dev` lines in
+  `package-lock.json` every run. It is metadata churn, not a dependency
+  change — discard it rather than committing it.
+- E2E: `playwright.config.ts` hardcodes port 3000, and `reuseExistingServer`
+  silently attaches to whatever already holds it (including another
+  project's dev server, which then 500s every request). For an ad-hoc run
+  on another port, extend the config and start the server from
+  `apps/web` — the root `dev` script mangles a forwarded `-p`.
 - Long corpus chains: run detached with a background monitor grepping
   **anchored** patterns (`^STAGE`, not bare `error` — crate names like
   `thiserror` false-match).

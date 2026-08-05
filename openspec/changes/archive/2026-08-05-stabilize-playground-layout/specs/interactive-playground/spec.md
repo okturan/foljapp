@@ -100,9 +100,54 @@ The filter counts SHALL render with tabular figures and a reserved width so that
 - **THEN** every row SHALL have the same height
 - **AND** the Albanian column SHALL render at its declared width rather than being squeezed by the Source column's content
 
-## MODIFIED Requirements
+### Requirement: The two panes are structurally independent
 
-### Requirement: Playground exposes a derivation panel
+The controls pane and the result pane SHALL NOT resize each other. The
+two-pane grid tracks SHALL be declared with a zero minimum
+(`minmax(0, 45fr) minmax(0, 55fr)`) rather than bare `fr` units, and both
+panes SHALL carry `min-w-0`.
+
+CSS Grid items default to `min-width: auto`, so a bare `3fr_2fr` track
+still expands to fit its item's min-content. Any wide, hard-to-break
+content in the result pane — a long conjugated form, a long corpus source
+name, the examples table's own declared minimum width — therefore widened
+the result column and took the difference out of the controls column,
+re-wrapping every pill. The zero floor pins the ratio to the container so
+neither pane can reach across the gap, whatever either one renders. This
+is a structural guard: it holds even for content that no per-case rule
+anticipated.
+
+Any horizontally-scrollable region inside a pane SHALL declare a minimum
+width smaller than that pane's inner width at `lg`, so the scroll
+container engages only on genuinely narrow viewports rather than at the
+default desktop width.
+
+#### Scenario: Toggling voice does not resize the controls pane
+
+- **GIVEN** `/playground?verb=punoj&mood=optative&tense=perfect` at a 1280px viewport
+- **WHEN** the user switches voice between `active` and `middle-passive`, changing the rendered form and the example rows
+- **THEN** every control group's `x`, `width` and `height` SHALL be unchanged within 1px
+
+#### Scenario: A long rendered form does not steal width from the controls
+
+- **GIVEN** `/playground?verb=punoj&mood=indicative&tense=present` at a 1280px viewport
+- **WHEN** the tense becomes `future-perfect-in-past`, producing the engine's longest form and its longest source names
+- **THEN** every control group's `x`, `width` and `height` SHALL be unchanged within 1px
+
+#### Scenario: The controls pane holds its width across every mood
+
+- **GIVEN** `/playground` at a 1280px viewport
+- **WHEN** the user selects each of the seven moods in turn
+- **THEN** every control group's `x` and `width` SHALL be unchanged within 1px
+
+#### Scenario: The examples table shows all three columns at desktop width
+
+- **GIVEN** `/playground` at a 1280px viewport with examples loaded
+- **WHEN** the examples table renders inside the result pane
+- **THEN** the `SOURCE`, `ALBANIAN` and `CONTEXT` columns SHALL all be visible without horizontal scrolling
+- **AND** the table SHALL NOT widen the result pane beyond its `55fr` share
+
+### Requirement: Playground exposes a persistent derivation panel
 
 The playground page (`/playground`) SHALL render a collapsible "How is this built?" panel beneath the conjugated form. When expanded, the panel SHALL render the steps returned by `engine.trace(...)` as a numbered list. The panel SHALL be collapsed by default.
 
@@ -125,7 +170,7 @@ The panel SHALL be present for every selection, including one with no trace step
 - **THEN** the panel SHALL still render
 - **AND** expanding it SHALL show an explanatory line rather than a numbered list
 
-### Requirement: Tense options track the selected mood
+### Requirement: Tense options always render and track the selected mood
 
 The tense control SHALL always render the full set of tense values (the 10 indicative tenses, which are a superset of every other mood's tenses) and SHALL disable those that are not valid for the selected mood. Switching to `imperative` SHALL leave only `present` enabled; switching to `non-finite` SHALL disable every tense pill. The control SHALL NOT be hidden.
 
@@ -147,7 +192,7 @@ Selecting a mood whose tense set excludes the current tense SHALL move the selec
 - **AND** `present` and `perfect` SHALL be enabled and the other eight disabled
 - **AND** the selected tense SHALL become `present`
 
-### Requirement: Option groups use a density-aware responsive grid layout
+### Requirement: Option groups use a stable density-aware grid layout
 
 The `/playground` page SHALL render each radio-button option group with a layout chosen by the group's option count:
 
@@ -204,6 +249,8 @@ The decision SHALL be derived from `options.length` inside the component; caller
 - **WHEN** the user clicks the `conditional` mood pill
 - **THEN** the Tense control SHALL still render 10 pills in a 3-column grid
 - **AND** its `display` SHALL remain `grid`
+
+## MODIFIED Requirements
 
 ### Requirement: Compact option groups pack into a responsive parent grid
 
@@ -293,56 +340,89 @@ The following controls SHALL apply feasibility-based disabling: **Mood**, **Tens
 - **THEN** the Voice control's `middle-passive` pill SHALL switch to disabled state
 - **AND** the result panel SHALL show the "unsupported cell" message (until the user picks a feasible voice)
 
-#### Scenario: Polarity and Modality are never disabled under a finite mood
+#### Scenario: Polarity and Modality are never disabled
 
 - **GIVEN** `/playground?verb=punoj` with any finite mood and any combination of tense / voice / person / number
 - **WHEN** the page renders
 - **THEN** both Polarity pills (`affirmative`, `negative`) SHALL be enabled
 - **AND** both Modality pills (`declarative`, `interrogative`) SHALL be enabled
 
-### Requirement: The two panes are structurally independent
+## REMOVED Requirements
 
-The controls pane and the result pane SHALL NOT resize each other. The
-two-pane grid tracks SHALL be declared with a zero minimum
-(`minmax(0, 45fr) minmax(0, 55fr)`) rather than bare `fr` units, and both
-panes SHALL carry `min-w-0`.
+### Requirement: Playground exposes a derivation panel
 
-CSS Grid items default to `min-width: auto`, so a bare `3fr_2fr` track
-still expands to fit its item's min-content. Any wide, hard-to-break
-content in the result pane — a long conjugated form, a long corpus source
-name, the examples table's own declared minimum width — therefore widened
-the result column and took the difference out of the controls column,
-re-wrapping every pill. The zero floor pins the ratio to the container so
-neither pane can reach across the gap, whatever either one renders. This
-is a structural guard: it holds even for content that no per-case rule
-anticipated.
+The playground page (`/playground`) SHALL render a collapsible "How is this built?" panel beneath the conjugated form. When expanded, the panel SHALL render the steps returned by `engine.trace(...)` as a numbered list. The panel SHALL be collapsed by default.
 
-Any horizontally-scrollable region inside a pane SHALL declare a minimum
-width smaller than that pane's inner width at `lg`, so the scroll
-container engages only on genuinely narrow viewports rather than at the
-default desktop width.
+#### Scenario: Unsupported cell hides the panel
 
-#### Scenario: Toggling voice does not resize the controls pane
+- **WHEN** the user navigates to a configuration that produces an unsupported cell (e.g., imperative + 1sg)
+- **THEN** the panel SHALL NOT render (since there is no trace to show)
 
-- **GIVEN** `/playground?verb=punoj&mood=optative&tense=perfect` at a 1280px viewport
-- **WHEN** the user switches voice between `active` and `middle-passive`, changing the rendered form and the example rows
-- **THEN** every control group's `x`, `width` and `height` SHALL be unchanged within 1px
+### Requirement: Tense options track the selected mood
 
-#### Scenario: A long rendered form does not steal width from the controls
+The tense control SHALL display only the tense values valid for the selected mood. For example, switching to `imperative` SHALL hide the tense control entirely (or disable it with a single `present` value).
 
-- **GIVEN** `/playground?verb=punoj&mood=indicative&tense=present` at a 1280px viewport
-- **WHEN** the tense becomes `future-perfect-in-past`, producing the engine's longest form and its longest source names
-- **THEN** every control group's `x`, `width` and `height` SHALL be unchanged within 1px
+#### Scenario: Imperative mood hides tense
 
-#### Scenario: The controls pane holds its width across every mood
+- **WHEN** the user selects `mood=imperative`
+- **THEN** the tense control SHALL either be hidden OR render only `present` as a fixed value
+- **AND** the person control SHALL restrict to `2`
+- **AND** changing person to 1 or 3 SHALL produce an "unsupported cell" message rather than a form
 
-- **GIVEN** `/playground` at a 1280px viewport
-- **WHEN** the user selects each of the seven moods in turn
-- **THEN** every control group's `x` and `width` SHALL be unchanged within 1px
+### Requirement: Option groups use a density-aware responsive grid layout
 
-#### Scenario: The examples table shows all three columns at desktop width
+The `/playground` page SHALL render each radio-button option group with a layout chosen by the group's option count:
 
-- **GIVEN** `/playground` at a 1280px viewport with examples loaded
-- **WHEN** the examples table renders inside the result pane
-- **THEN** the `SOURCE`, `ALBANIAN` and `CONTEXT` columns SHALL all be visible without horizontal scrolling
-- **AND** the table SHALL NOT widen the result pane beyond its `55fr` share
+| Option count | Layout                                                |
+|--------------|-------------------------------------------------------|
+| 1–3          | `flex flex-wrap` single-row natural-width pills       |
+| 4 or more    | CSS Grid: 2 columns at viewport widths < 1024px; 3 columns at widths ≥ 1024px (Tailwind `lg`). |
+
+In grid mode, cells SHALL be equal-width (`1fr`) and the option label SHALL be horizontally centered within its cell. The pill styling (rounded border, padding, `text-sm`, active = `bg-stone-900 text-stone-50`, hover = `bg-stone-50`) SHALL be unchanged.
+
+In flex mode, the layout SHALL behave as today: pills sized to their content, wrapping to a new line when a row is full.
+
+The decision SHALL be derived from `options.length` inside the component; callers (Mood, Tense, Voice, Polarity, Modality, Person, Number, Form) SHALL NOT need to pass a density flag.
+
+#### Scenario: Mood (7 options) renders as a 2-column grid on a narrow viewport
+
+- **GIVEN** a viewport width of 768px
+- **WHEN** the user opens `/playground`
+- **THEN** the Mood option group SHALL render in a CSS grid with 2 columns
+- **AND** the 7 mood pills SHALL appear in 4 rows (2 + 2 + 2 + 1)
+- **AND** every pill in a non-final row SHALL have the same width as its row neighbor
+
+#### Scenario: Mood (7 options) renders as a 3-column grid on a wide viewport
+
+- **GIVEN** a viewport width ≥ 1024px (Tailwind `lg`)
+- **WHEN** the user opens `/playground`
+- **THEN** the Mood option group SHALL render in a CSS grid with 3 columns
+- **AND** the 7 mood pills SHALL appear in 3 rows (3 + 3 + 1)
+
+#### Scenario: Tense (indicative — 10 options) renders as a grid
+
+- **GIVEN** Mood = `indicative` (10 tense values)
+- **WHEN** the page renders at viewport width ≥ 1024px
+- **THEN** the Tense option group SHALL render as a 3-column grid
+- **AND** all 10 tense pills SHALL have visually equal width
+
+#### Scenario: Voice (2 options) keeps the flex single-row layout
+
+- **GIVEN** any viewport width ≥ 320px
+- **WHEN** the page renders the Voice control
+- **THEN** the Voice option group SHALL render as a flex single row (NOT a grid)
+- **AND** the pill widths SHALL be sized to their labels (`active`, `middle-passive`)
+
+#### Scenario: Person (3 options) keeps the flex single-row layout
+
+- **GIVEN** any viewport width ≥ 320px
+- **WHEN** the page renders the Person control
+- **THEN** the Person option group SHALL render as a flex single row
+- **AND** the three pills (`1`, `2`, `3`) SHALL appear next to each other with natural width
+
+#### Scenario: Tense layout adapts when Mood changes
+
+- **GIVEN** the user has Mood = `indicative` (10 tenses, grid mode active)
+- **WHEN** the user clicks the `conditional` mood pill
+- **THEN** the Tense control SHALL re-render with 2 options (`present`, `perfect`)
+- **AND** the Tense control SHALL switch to flex single-row layout (since 2 ≤ 3)
