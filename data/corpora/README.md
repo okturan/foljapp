@@ -132,9 +132,34 @@ verification date, and unverified terms are marked as such.
 
 ## Integrity and backup
 
-Per-file sha256 digests for all 1,944 cached raw files (78.1 GiB) are
-tracked in [`checksums.sha256`](./checksums.sha256), with paths relative to
-the cache root. Verify a local cache or a restored backup:
+> **The raw corpora are offline-archived as of 2026-08-05.**
+> `.cache/datasets` was deleted locally to reclaim 78 GiB. The only copy now
+> lives on the external SSD `2TBT7` at `/Volumes/2TBT7/foljapp-datasets`,
+> verified byte-for-byte (all 1,948 files re-hashed, no corruption). Every
+> `localPath` in `resources.json` describes where a source lives *once
+> restored*, not where it is now — see `cacheState` in that file.
+>
+> **Restore before any raw-data operation:**
+>
+> ```sh
+> rsync -rt --modify-window=2 --no-perms --no-owner --no-group \
+>   /Volumes/2TBT7/foljapp-datasets/ .cache/datasets/
+> npm run verify:corpus-checksums
+> ```
+>
+> Still works offline: everything reading the derived split candidate cache,
+> the retained-examples SQLite, or `.cache/kaikki` / `.cache/husic` — so
+> `verify-engine`, the app build, and the static examples are unaffected.
+> Needs a restore: `build:corpus-candidate-cache` and the full
+> `npm run rescan` chain, which parse raw corpora from `localPath`.
+>
+> This is a single copy. If the corpora matter beyond convenience, a second
+> archive is cheap insurance — one SSD is one failure away from re-downloading
+> everything, and `wikimedia-sq-latest` cannot be re-downloaded at all.
+
+Per-file sha256 digests for all 1,948 raw files (78.1 GiB) are tracked in
+[`checksums.sha256`](./checksums.sha256), with paths relative to the cache
+root. Verify a local cache or a restored backup:
 
 ```sh
 npm run verify:corpus-checksums                      # .cache/datasets
@@ -144,8 +169,8 @@ npm run verify:corpus-checksums -- /Volumes/SSD/foljapp-datasets
 It exits 0 when clean, 1 on missing files (an incomplete copy) or digest
 mismatches (corruption), and reports the two cases separately.
 
-**What to back up:** `.cache/datasets` only (78 GiB). Two of its sources are
-not simply re-downloadable:
+**What is backed up:** `.cache/datasets` only (78 GiB) — done 2026-08-05.
+Two of its sources are not simply re-downloadable:
 
 - `wikimedia-sq-latest` tracks the *latest* dumps, and Wikimedia purges
   older ones — this exact snapshot cannot be re-fetched, and the coverage

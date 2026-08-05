@@ -2,7 +2,7 @@
   "updatedAt": "2026-08-05T00:00:00Z",
   "cacheRoot": ".cache/datasets",
   "notes": [
-    "Raw corpora live under .cache/datasets and are intentionally not committed.",
+    "RAW CORPORA ARE OFFLINE-ARCHIVED as of 2026-08-05 — see cacheState. localPath values describe where each source lives once restored, not where it is now.",
     "Downloaded sizes are compressed/on-disk sizes from the local cache.",
     "Use this file as the tracked inventory for corpus experiments and rebuilds.",
     "Per-file sha256 digests for every cached raw file are tracked in data/corpora/checksums.sha256; verify a cache or a restored backup with `npm run verify:corpus-checksums`.",
@@ -673,5 +673,16 @@
       ]
     }
   ],
-  "checksumManifest": "data/corpora/checksums.sha256"
+  "checksumManifest": "data/corpora/checksums.sha256",
+  "cacheState": {
+    "state": "offline-archived",
+    "archivedAt": "2026-08-05",
+    "archiveLocation": "/Volumes/2TBT7/foljapp-datasets (external SSD, ExFAT, label 2TBT7)",
+    "verifiedAt": "2026-08-05",
+    "verification": "All 1948 files re-read and re-hashed off the SSD against checksums.sha256 — no corruption.",
+    "note": "The local .cache/datasets copy was deleted 2026-08-05 to reclaim 78 GiB. Every resources.json localPath therefore points at a path that does not currently exist. Restore before any raw-data operation.",
+    "restore": "rsync -rt --modify-window=2 --no-perms --no-owner --no-group /Volumes/2TBT7/foljapp-datasets/ .cache/datasets/ && npm run verify:corpus-checksums",
+    "stillWorksOffline": "Anything reading the derived split candidate cache, the retained-examples SQLite, .cache/kaikki or .cache/husic — including verify-engine, the app build, and the static examples — is unaffected.",
+    "needsRestore": "build:corpus-candidate-cache and the full `npm run rescan` chain, which parse raw corpora from localPath."
+  }
 }

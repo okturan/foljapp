@@ -56,8 +56,12 @@ hard-won gotchas) is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
   unverifiable terms as such. Three HF sources publish no license at all —
   local analysis only, never redistribute.
 - Raw corpora (`.cache/datasets`, 78G) are the only archival data; everything
-  else under `.cache/` is regenerable via `npm run rescan`. Verify a cache or
-  a restored backup with `npm run verify:corpus-checksums`.
+  else under `.cache/` is regenerable via `npm run rescan`. **They are
+  offline-archived** (2026-08-05) on the external SSD `2TBT7` and no longer
+  exist locally — `npm run rescan` and `build:corpus-candidate-cache` need a
+  restore first (procedure in `data/corpora/README.md`). `verify-engine`, the
+  app build, and static examples are unaffected. Verify any cache or restored
+  backup with `npm run verify:corpus-checksums`.
 - Phrase-variant report changes must preserve output parity — verify with
   `npm run report:corpus-phrase-variants:diff <baseline.json> <candidate.json>`.
 
