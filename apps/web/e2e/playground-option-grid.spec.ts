@@ -38,7 +38,7 @@ test.describe('option-grid layout', () => {
     expect(await getColumnCount(mood)).toBe(3);
   });
 
-  test('Tense (10 options for indicative) is grid; collapses to flex when Mood→conditional', async ({
+  test('Tense stays a 10-option 3-col grid when Mood→conditional', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
@@ -46,12 +46,20 @@ test.describe('option-grid layout', () => {
     const tense = page.getByTestId('option-group-tense');
     expect(await getDisplay(tense)).toBe('grid');
     expect(await getColumnCount(tense)).toBe(3);
+    await expect(tense.locator('label')).toHaveCount(10);
 
-    // Switch mood to conditional (2 tenses) — should flip to flex
-    await page.getByText('conditional', { exact: true }).click();
-    // Wait for re-render
-    await expect(tense).toHaveClass(/flex/);
-    expect(await getDisplay(tense)).toBe('flex');
+    // Switching to conditional (2 valid tenses) must NOT reshape the group:
+    // the other eight are greyed in place. See stabilize-playground-layout.
+    await page
+      .getByRole('main')
+      .getByText('conditional', { exact: true })
+      .click();
+    await expect(
+      tense.locator('input[type="radio"][value="aorist"]'),
+    ).toBeDisabled();
+    await expect(tense.locator('label')).toHaveCount(10);
+    expect(await getDisplay(tense)).toBe('grid');
+    expect(await getColumnCount(tense)).toBe(3);
   });
 
   test('Voice (2 options) keeps flex single-row at every viewport', async ({

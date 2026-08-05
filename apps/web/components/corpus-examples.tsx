@@ -39,6 +39,14 @@ interface ApiResponse {
 
 const EXAMPLE_LIMIT = 8;
 
+// Every cell is boxed to the same height, so the table's height is a plain
+// function of its row count — which is what lets the source filters swap
+// rows for spacers without the pane around them changing size.
+// A hard box rather than a max: rows must be equal, not merely bounded.
+const CELL_BOX = 'h-[4.88rem] overflow-hidden';
+// Pure inline content can additionally take the ellipsis affordance.
+const CELL_BOX_CLAMPED = `${CELL_BOX} line-clamp-4`;
+
 async function staticFallbackResponse(
   verbId: string,
   form: string,
@@ -197,9 +205,9 @@ export function CorpusExamples({ form, options, verbId }: Props) {
     return () => controller.abort();
   }, [form, lookupForm, options, verbId]);
 
-  if (!lookupForm) return null;
-
-  const examples = data?.examples ?? [];
+  // Rendered even without a lookup form (unsupported cell): an examples
+  // section that unmounts drags the whole pane up and down.
+  const examples = lookupForm ? (data?.examples ?? []) : [];
   const visibleExamples = examples.filter((example) => {
     if (sourceFilter === 'local') return example.sourceType === 'local';
     if (sourceFilter === 'translated') {
@@ -212,9 +220,19 @@ export function CorpusExamples({ form, options, verbId }: Props) {
     (e) => e.sourceType === 'parallel',
   ).length;
 
+  // The filters remove rows from view without removing their height: the
+  // shortfall against the unfiltered set is made up with hidden spacer rows,
+  // so the table is exactly as tall under Local as under All.
+  const spacerCount = Math.max(
+    examples.length - Math.max(visibleExamples.length, 1),
+    0,
+  );
+  const showLoadingLine = loading && !data;
+
   return (
     <section
       data-testid="examples"
+      aria-busy={loading}
       className="mt-6 border-t border-stone-200 pt-5"
     >
       <details className="group" open>
@@ -232,21 +250,23 @@ export function CorpusExamples({ form, options, verbId }: Props) {
         </summary>
 
         <div className="mt-3">
-          <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex min-h-4 flex-wrap items-start justify-between gap-3">
             <p className="text-xs text-stone-500">
               Indexed form:{' '}
               <span className="font-mono text-stone-700">
-                {data?.lookupForm ?? lookupForm}
+                {data?.lookupForm ?? lookupForm ?? '—'}
               </span>
             </p>
-            {data?.target ? (
-              <p className="text-xs text-stone-500">
-                Tags:{' '}
-                <span className="font-mono text-stone-700">
-                  {data.target.ancQuery}
-                </span>
-              </p>
-            ) : null}
+            <p className="text-xs text-stone-500">
+              {data?.target ? (
+                <>
+                  Tags:{' '}
+                  <span className="font-mono text-stone-700">
+                    {data.target.ancQuery}
+                  </span>
+                </>
+              ) : null}
+            </p>
           </div>
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -275,7 +295,9 @@ export function CorpusExamples({ form, options, verbId }: Props) {
                       ? 'Local'
                       : 'Translated'}{' '}
                   <span
-                    className={active ? 'text-stone-300' : 'text-stone-400'}
+                    className={`inline-block min-w-3 text-right tabular-nums ${
+                      active ? 'text-stone-300' : 'text-stone-400'
+                    }`}
                   >
                     {count}
                   </span>
@@ -293,99 +315,158 @@ export function CorpusExamples({ form, options, verbId }: Props) {
             )}
           </div>
 
-          {loading ? (
-            <p className="mt-3 text-sm text-stone-500">Loading examples…</p>
-          ) : error ? (
-            <p className="mt-3 text-sm text-red-600">{error}</p>
-          ) : data?.local.error ? (
-            <p className="mt-3 text-sm text-red-600">{data.local.error}</p>
-          ) : visibleExamples.length > 0 ? (
-            <div className="mt-3 overflow-x-auto">
-              <table className="min-w-full text-left text-xs">
-                <thead className="border-b border-stone-200 text-[0.68rem] tracking-wide text-stone-400 uppercase">
-                  <tr>
-                    <th scope="col" className="py-2 pr-4 font-semibold">
-                      Source
-                    </th>
-                    <th scope="col" className="py-2 pr-4 font-semibold">
-                      Albanian
-                    </th>
-                    <th scope="col" className="py-2 font-semibold">
-                      Context
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-stone-100 text-stone-700">
-                  {visibleExamples.map((example) => (
-                    <tr key={example.id}>
-                      <td className="py-3 pr-4 align-top whitespace-nowrap">
-                        {example.url ? (
-                          <a
-                            href={example.url}
-                            className="font-medium text-stone-700 underline underline-offset-2 hover:text-stone-950"
-                          >
-                            {example.corpus}
-                          </a>
-                        ) : (
-                          <span className="font-medium text-stone-700">
-                            {example.corpus}
-                          </span>
-                        )}
-                        <div className="mt-0.5 text-[0.68rem] text-stone-400">
-                          {example.sourceType === 'local'
-                            ? example.matchKind.replace(/_/g, ' ')
-                            : 'translated pair'}
-                        </div>
-                        {example.domain ? (
-                          <div className="mt-0.5 max-w-36 truncate text-[0.68rem] text-stone-400">
-                            {example.domain}
-                          </div>
-                        ) : null}
-                      </td>
-                      <td className="max-w-[18rem] py-3 pr-4 align-top leading-relaxed">
-                        {highlightMatch(
-                          example.sentence,
-                          data?.lookupForm ?? lookupForm,
-                        )}
-                      </td>
-                      <td className="max-w-[18rem] py-3 align-top leading-relaxed text-stone-500">
-                        {example.translation ? (
-                          example.translation
-                        ) : (
-                          <div className="space-y-1">
-                            {example.title ? (
-                              <p className="line-clamp-2">{example.title}</p>
-                            ) : null}
-                            <p>
-                              {example.genre ??
-                                example.quality ??
-                                'local corpus'}
-                            </p>
-                            {example.flags.length > 0 ? (
-                              <p className="font-mono text-[0.68rem] text-stone-400">
-                                {example.flags.join(', ')}
-                              </p>
-                            ) : null}
-                          </div>
-                        )}
-                      </td>
+          <div data-testid="examples-body" className="mt-3">
+            {showLoadingLine ? (
+              <p className="text-sm text-stone-500">Loading examples…</p>
+            ) : error ? (
+              <p className="text-sm text-red-600">{error}</p>
+            ) : data?.local.error ? (
+              <p className="text-sm text-red-600">{data.local.error}</p>
+            ) : examples.length > 0 ? (
+              <div
+                className={`overflow-x-auto transition-opacity ${
+                  loading ? 'opacity-60' : 'opacity-100'
+                }`}
+              >
+                {/* Fixed layout: declared column widths, so a long corpus
+                    name can never squeeze the Albanian column down to one
+                    word per line. */}
+                <table className="w-full min-w-[34rem] table-fixed text-left text-xs">
+                  <colgroup>
+                    <col className="w-[26%]" />
+                    <col className="w-[44%]" />
+                    <col className="w-[30%]" />
+                  </colgroup>
+                  <thead className="border-b border-stone-200 text-[0.68rem] tracking-wide text-stone-400 uppercase">
+                    <tr>
+                      <th scope="col" className="py-2 pr-4 font-semibold">
+                        Source
+                      </th>
+                      <th scope="col" className="py-2 pr-4 font-semibold">
+                        Albanian
+                      </th>
+                      <th scope="col" className="py-2 font-semibold">
+                        Context
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p
-              data-testid="examples-empty-state"
-              className="mt-3 text-sm text-stone-500"
-            >
-              No sentence examples indexed for{' '}
-              <span className="font-mono text-stone-700">
-                {data?.lookupForm ?? lookupForm}
-              </span>{' '}
-              yet.
-            </p>
-          )}
+                  </thead>
+                  <tbody className="divide-y divide-stone-100 text-stone-700">
+                    {visibleExamples.map((example) => (
+                      <tr key={example.id}>
+                        <td className="py-3 pr-4 align-top">
+                          <div className={CELL_BOX}>
+                            {example.url ? (
+                              <a
+                                href={example.url}
+                                className="line-clamp-2 font-medium text-stone-700 underline underline-offset-2 hover:text-stone-950"
+                              >
+                                {example.corpus}
+                              </a>
+                            ) : (
+                              <span className="line-clamp-2 font-medium text-stone-700">
+                                {example.corpus}
+                              </span>
+                            )}
+                            <div className="mt-0.5 truncate text-[0.68rem] text-stone-400">
+                              {example.sourceType === 'local'
+                                ? example.matchKind.replace(/_/g, ' ')
+                                : 'translated pair'}
+                            </div>
+                            <div className="mt-0.5 truncate text-[0.68rem] text-stone-400">
+                              {example.domain ?? ' '}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3 pr-4 align-top leading-relaxed">
+                          <div className={CELL_BOX_CLAMPED}>
+                            {highlightMatch(
+                              example.sentence,
+                              data?.lookupForm ?? lookupForm,
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-3 align-top leading-relaxed text-stone-500">
+                          <div
+                            className={
+                              example.translation ? CELL_BOX_CLAMPED : CELL_BOX
+                            }
+                          >
+                            {example.translation ? (
+                              example.translation
+                            ) : (
+                              <>
+                                {example.title ? (
+                                  <p className="line-clamp-2">
+                                    {example.title}
+                                  </p>
+                                ) : null}
+                                <p>
+                                  {example.genre ??
+                                    example.quality ??
+                                    'local corpus'}
+                                </p>
+                                {example.flags.length > 0 ? (
+                                  <p className="truncate font-mono text-[0.68rem] text-stone-400">
+                                    {example.flags.join(', ')}
+                                  </p>
+                                ) : null}
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {visibleExamples.length === 0 ? (
+                      <tr data-testid="examples-filter-empty">
+                        <td colSpan={3} className="py-3">
+                          <div className={CELL_BOX}>
+                            <p className="text-stone-500">
+                              No {sourceFilter} examples for this form.
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : null}
+                    {Array.from({ length: spacerCount }).map((_, i) => (
+                      // Chrome paints a table row's border even under
+                      // visibility:hidden, so the divider is made transparent
+                      // rather than removed — dropping it would cost the row
+                      // its 1px and shrink the table after all.
+                      <tr
+                        aria-hidden="true"
+                        className="invisible"
+                        style={{ borderTopColor: 'transparent' }}
+                        key={i}
+                      >
+                        <td className="py-3">
+                          <div className={CELL_BOX} />
+                        </td>
+                        <td />
+                        <td />
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p
+                data-testid="examples-empty-state"
+                className="text-sm text-stone-500"
+              >
+                {lookupForm ? (
+                  <>
+                    No sentence examples indexed for{' '}
+                    <span className="font-mono text-stone-700">
+                      {data?.lookupForm ?? lookupForm}
+                    </span>{' '}
+                    yet.
+                  </>
+                ) : (
+                  'No form to look up for this selection.'
+                )}
+              </p>
+            )}
+          </div>
         </div>
       </details>
     </section>
