@@ -304,7 +304,7 @@ The following controls SHALL apply feasibility-based disabling: **Mood**, **Tens
 
 The controls pane and the result pane SHALL NOT resize each other. The
 two-pane grid tracks SHALL be declared with a zero minimum
-(`minmax(0, 3fr) minmax(0, 2fr)`) rather than bare `fr` units, and both
+(`minmax(0, 45fr) minmax(0, 55fr)`) rather than bare `fr` units, and both
 panes SHALL carry `min-w-0`.
 
 CSS Grid items default to `min-width: auto`, so a bare `3fr_2fr` track
@@ -345,4 +345,4 @@ default desktop width.
 - **GIVEN** `/playground` at a 1280px viewport with examples loaded
 - **WHEN** the examples table renders inside the result pane
 - **THEN** the `SOURCE`, `ALBANIAN` and `CONTEXT` columns SHALL all be visible without horizontal scrolling
-- **AND** the table SHALL NOT widen the result pane beyond its `2fr` share
+- **AND** the table SHALL NOT widen the result pane beyond its `55fr` share
