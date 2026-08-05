@@ -23,7 +23,10 @@ RUNTIME (deploys)                          CORPUS LAB (local only)
 
 Rule of thumb: `apps/`, `packages/`, `data/verbs/`, `data/opus/examples.json`,
 and `apps/web/public/examples/` must stay small enough to build and deploy.
-Everything under `.cache/` (currently ~231G) is evidence, not assets.
+Everything under `.cache/` (currently ~185G) is evidence, not assets. Of
+that, only the 78G raw-dataset cache is worth archiving — see the integrity
+and backup section in [`data/corpora/README.md`](../data/corpora/README.md);
+the rest is regenerable via `npm run rescan`.
 
 ## The engine (`packages/engine`)
 
@@ -114,6 +117,12 @@ skipped. Adding one requires **all three**:
    `alias_source`. `--sources=all` expands the curated ID list, not the
    ledger; a missing entry shows up as a suspiciously fast (~2s) no-op in
    `build-candidate-cache`. Watch stage timing.
+
+Then regenerate `data/corpora/checksums.sha256` so the new files are covered
+by `npm run verify:corpus-checksums`, and give the entry the full metadata
+set (`license` — with its verification date, recording a confirmed *absence*
+explicitly rather than omitting the field — plus `provenanceGranularity`,
+`redistributionPolicy`, `checksumScope`, and an on-disk size).
 
 ## App runtime & deploy
 

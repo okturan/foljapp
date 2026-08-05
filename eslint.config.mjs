@@ -14,6 +14,8 @@ const config = [
     ignores: [
       'node_modules/**',
       '**/.next/**',
+      '**/.cf-pages-output/**',
+      '**/.vercel/**',
       '**/dist/**',
       '**/build/**',
       'coverage/**',

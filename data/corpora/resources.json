@@ -1,10 +1,12 @@
 {
-  "updatedAt": "2026-06-17T11:13:54Z",
+  "updatedAt": "2026-08-05T00:00:00Z",
   "cacheRoot": ".cache/datasets",
   "notes": [
     "Raw corpora live under .cache/datasets and are intentionally not committed.",
     "Downloaded sizes are compressed/on-disk sizes from the local cache.",
-    "Use this file as the tracked inventory for corpus experiments and rebuilds."
+    "Use this file as the tracked inventory for corpus experiments and rebuilds.",
+    "Per-file sha256 digests for every cached raw file are tracked in data/corpora/checksums.sha256; verify a cache or a restored backup with `npm run verify:corpus-checksums`.",
+    "license: an absent field is never used to mean \"unlicensed\" — sources whose publisher states no license say so explicitly, with the verification date."
   ],
   "resources": [
     {
@@ -234,7 +236,8 @@
       "cautions": [
         "Documents can be very large; sentence segmentation and dedupe are required.",
         "JSON lines contain full documents, so direct grep output can be unwieldy."
-      ]
+      ],
+      "checksumScope": "Per-file sha256 in data/corpora/checksums.sha256."
     },
     {
       "id": "macocu-sq-1.0-xml",
@@ -263,7 +266,8 @@
       "cautions": [
         "XML parsing is needed; do not use ad hoc string slicing for ingestion.",
         "Some paragraphs are headings or non-Albanian despite being inside the Albanian corpus."
-      ]
+      ],
+      "checksumScope": "Per-file sha256 in data/corpora/checksums.sha256."
     },
     {
       "id": "cc100-sq",
@@ -293,7 +297,8 @@
         "Very noisy raw web data; sampled lines included junk/adult/spam text.",
         "No URL or document metadata in the local text file.",
         "Needs aggressive filtering before any public UI use."
-      ]
+      ],
+      "checksumScope": "Per-file sha256 in data/corpora/checksums.sha256."
     },
     {
       "id": "mc4-sq",
@@ -325,7 +330,8 @@
         "Very large web documents need sentence segmentation, dedupe, and filtering before UI use.",
         "No upstream quality score is present in each record.",
         "License and redistribution terms must be checked upstream before publishing derived examples."
-      ]
+      ],
+      "checksumScope": "Per-file sha256 in data/corpora/checksums.sha256."
     },
     {
       "id": "hf-albanian-wiki-clean-lm",
@@ -340,12 +346,15 @@
       "shardCount": 3,
       "indexerSupport": "tokenized-only-no-raw-text",
       "provenanceGranularity": "Parquet row metadata after schema inspection; no sentence text fields present.",
-      "redistributionPolicy": "Keep raw parquet local until license and schema are reviewed.",
+      "redistributionPolicy": "Unlicensed upstream — do not redistribute in any form; local analysis cache only.",
       "contents": "Tokenized Albanian Wikipedia language-model rows with input_ids, attention_mask, and labels only.",
       "cautions": [
         "The downloaded shards do not contain raw text, so exact sentence search needs the original tokenizer or source text.",
         "Included in source accounting, but it currently emits zero searchable examples."
-      ]
+      ],
+      "license": "No license published by the dataset publisher (Hugging Face dataset card specifies none; verified 2026-08-05). Treat as all-rights-reserved.",
+      "licenseVerifiedAt": "2026-08-05",
+      "checksumScope": "Per-file sha256 in data/corpora/checksums.sha256."
     },
     {
       "id": "hf-albanian-english-bundled",
@@ -366,7 +375,8 @@
       "cautions": [
         "Wired into the Rust example index through generic parquet text-field extraction.",
         "Task-format rows may not be natural standalone sentence examples."
-      ]
+      ],
+      "checksumScope": "Per-file sha256 in data/corpora/checksums.sha256."
     },
     {
       "id": "hf-bigmind-albanian",
@@ -381,12 +391,15 @@
       "shardCount": 3,
       "indexerSupport": "rust-generic-parquet-text-reader",
       "provenanceGranularity": "Parquet row metadata after schema inspection.",
-      "redistributionPolicy": "Keep raw parquet local until license and generation provenance are reviewed.",
+      "redistributionPolicy": "Unlicensed upstream — do not redistribute in any form; local analysis cache only.",
       "contents": "Large public Albanian instruction-style dataset.",
       "cautions": [
         "Likely synthetic or instruction-tuned content; do not treat as corpus evidence without review.",
         "Wired into the Rust example index through generic parquet text-field extraction."
-      ]
+      ],
+      "license": "No license published by the dataset publisher (Hugging Face dataset card specifies none; verified 2026-08-05). Treat as all-rights-reserved.",
+      "licenseVerifiedAt": "2026-08-05",
+      "checksumScope": "Per-file sha256 in data/corpora/checksums.sha256."
     },
     {
       "id": "hf-albanian-wikiorca",
@@ -401,12 +414,15 @@
       "shardCount": 3,
       "indexerSupport": "rust-generic-parquet-text-reader",
       "provenanceGranularity": "Parquet row metadata after schema inspection.",
-      "redistributionPolicy": "Keep raw parquet local until license and generation provenance are reviewed.",
+      "redistributionPolicy": "Unlicensed upstream — do not redistribute in any form; local analysis cache only.",
       "contents": "Public Albanian WikiOrca question/response data.",
       "cautions": [
         "Question-answer rows are not direct corpus attestations.",
         "Wired into the Rust example index through generic parquet text-field extraction."
-      ]
+      ],
+      "license": "No license published by the dataset publisher (Hugging Face dataset card specifies none; verified 2026-08-05). Treat as all-rights-reserved.",
+      "licenseVerifiedAt": "2026-08-05",
+      "checksumScope": "Per-file sha256 in data/corpora/checksums.sha256."
     },
     {
       "id": "fineweb2-albanian-varieties",
@@ -431,7 +447,8 @@
       "cautions": [
         "Wired into the Rust example index through generic parquet text-field extraction.",
         "Likely overlaps with other Common Crawl-derived corpora."
-      ]
+      ],
+      "checksumScope": "Per-file sha256 in data/corpora/checksums.sha256."
     },
     {
       "id": "hplt-v3-als-latn",
@@ -463,7 +480,8 @@
       "cautions": [
         "Common Crawl-derived web data overlaps with MaCoCu, CC100, mC4, FineWeb2, CulturaX, and OSCAR.",
         "Still requires filtering and dedupe before UI display."
-      ]
+      ],
+      "checksumScope": "Per-file sha256 in data/corpora/checksums.sha256."
     },
     {
       "id": "leipzig-sqi",
@@ -483,7 +501,10 @@
       "cautions": [
         "Sample-size archives overlap heavily.",
         "No original document URL is present in the sentence files."
-      ]
+      ],
+      "license": "Unverified — wortschatz.uni-leipzig.de blocks automated retrieval and the archives ship no LICENSE file. Confirm terms at https://wortschatz.uni-leipzig.de/en/download before any redistribution.",
+      "licenseVerifiedAt": "2026-08-05 (retrieval blocked)",
+      "checksumScope": "Per-file sha256 in data/corpora/checksums.sha256."
     },
     {
       "id": "tatoeba-full",
@@ -509,7 +530,8 @@
       "cautions": [
         "Small compared with web corpora.",
         "Sentence quality and naturalness vary by contributor."
-      ]
+      ],
+      "checksumScope": "Per-file sha256 in data/corpora/checksums.sha256."
     },
     {
       "id": "wikimedia-sq-latest",
@@ -530,7 +552,8 @@
       "cautions": [
         "Wired into the Rust example index with lightweight namespace-0 MediaWiki extraction.",
         "Markup extraction is intentionally simple and should not be treated as publication-quality wiki rendering."
-      ]
+      ],
+      "checksumScope": "Per-file sha256 in data/corpora/checksums.sha256."
     },
     {
       "id": "seeuniversity-albanian-corpora-bert",
@@ -560,7 +583,8 @@
       "cautions": [
         "Many hits for rare forms are grammar/reference prose rather than natural sentences.",
         "No URL or document metadata in the local text file."
-      ]
+      ],
+      "checksumScope": "Per-file sha256 in data/corpora/checksums.sha256."
     },
     {
       "id": "ud-albanian-staf",
@@ -580,7 +604,9 @@
       "cautions": [
         "Too small for broad example coverage.",
         "Better for morphology/syntax checks than for rare-form search."
-      ]
+      ],
+      "redistributionPolicy": "Keep the raw archive local; treebank text and annotations are redistributable only under the LICENSE.txt inside the archive.",
+      "checksumScope": "Per-file sha256 in data/corpora/checksums.sha256."
     },
     {
       "id": "ud-albanian-tsa",
@@ -600,7 +626,9 @@
       "cautions": [
         "Too small for broad example coverage.",
         "Better for morphology/syntax checks than for rare-form search."
-      ]
+      ],
+      "redistributionPolicy": "Keep the raw archive local; treebank text and annotations are redistributable only under the LICENSE.txt inside the archive.",
+      "checksumScope": "Per-file sha256 in data/corpora/checksums.sha256."
     },
     {
       "id": "culturax-sq",
@@ -620,7 +648,16 @@
       "contents": "Large multilingual cleaned web corpus with Albanian shards. Good candidate for broader monolingual coverage after access is granted.",
       "localPath": ".cache/datasets/monolingual-albanian/culturax-sq",
       "downloadedAt": "2026-07-09",
-      "notes": "Albanian (sq) shards downloaded 2026-07-09; CC-derived, overlaps MaCoCu/CC100/mC4/FineWeb2 so expect modest net-new attestation."
+      "notes": "Albanian (sq) shards downloaded 2026-07-09; CC-derived, overlaps MaCoCu/CC100/mC4/FineWeb2 so expect modest net-new attestation.",
+      "license": "Inherits mC4 and OSCAR terms: \"The licence terms for CulturaX strictly follows those of mC4 and OSCAR\" (verified 2026-08-05). See https://huggingface.co/datasets/allenai/c4#license and https://huggingface.co/datasets/oscar-corpus/OSCAR-2301#licensing-information",
+      "licenseVerifiedAt": "2026-08-05",
+      "provenanceGranularity": "Parquet row with source URL and timestamp columns from the CulturaX record; no document-level offset.",
+      "redistributionPolicy": "Do not redistribute raw shards; derived examples must satisfy both mC4 and OSCAR terms.",
+      "checksumScope": "Per-file sha256 in data/corpora/checksums.sha256.",
+      "indexerSupport": "rust",
+      "downloadedBytes": 9069299569,
+      "onDiskSize": "8.4G",
+      "apiRowCount": 130624980
     },
     {
       "id": "oscar-sq",
@@ -635,5 +672,6 @@
         "Manual approval is required before we can inspect exact Albanian files or sizes."
       ]
     }
-  ]
+  ],
+  "checksumManifest": "data/corpora/checksums.sha256"
 }
