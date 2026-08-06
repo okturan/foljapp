@@ -119,10 +119,11 @@ published. All three are low-yield anyway (the whole `huggingface` family
 returns 1,132 occurrences, 0.7% of the total), so dropping them would cost
 little if the licensing risk is ever judged unacceptable.
 
-`leipzig-sqi` terms could **not** be verified — the Leipzig site blocks
-automated retrieval and the archives ship no LICENSE file. Confirm at
-<https://wortschatz.uni-leipzig.de/en/download> before redistributing
-anything derived from it. This matters more than the three above, because
+`leipzig-sqi` is **CC BY** — Leipzig's Terms of Usage
+(<https://wortschatz-leipzig.de/en/usage>, verified 2026-08-07) put
+downloadable text corpora under Creative Commons Attribution; broader
+Wortschatz data/applications stay CC BY-NC. Cite Goldhahn, Eckart &
+Quasthoff when using it. This matters more than the three above, because
 Leipzig is by far the highest-yield source (3,021 occurrences per 1M
 candidates, ~16% of all retained occurrences from 2% of the disk).
 

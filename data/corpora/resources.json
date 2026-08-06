@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-05T00:00:00Z",
+  "updatedAt": "2026-08-07T00:00:00Z",
   "cacheRoot": ".cache/datasets",
   "notes": [
     "RAW CORPORA ARE OFFLINE-ARCHIVED as of 2026-08-05 — see cacheState. localPath values describe where each source lives once restored, not where it is now.",
@@ -496,14 +496,14 @@
       "archiveCount": 23,
       "indexerSupport": "rust",
       "provenanceGranularity": "Leipzig archive name plus sentence id.",
-      "redistributionPolicy": "Keep raw archives local; derived examples need Leipzig/source attribution review.",
+      "redistributionPolicy": "Keep raw archives local; derived sentence examples may be published with attribution under CC BY (cite Goldhahn et al.).",
       "contents": "Albanian community, news, and Wikipedia sentence corpora in multiple Leipzig sample-size archives.",
       "cautions": [
         "Sample-size archives overlap heavily.",
         "No original document URL is present in the sentence files."
       ],
-      "license": "Unverified — wortschatz.uni-leipzig.de blocks automated retrieval and the archives ship no LICENSE file. Confirm terms at https://wortschatz.uni-leipzig.de/en/download before any redistribution.",
-      "licenseVerifiedAt": "2026-08-05 (retrieval blocked)",
+      "license": "CC BY — downloadable text corpora under Creative Commons Attribution (verified 2026-08-07 from https://wortschatz-leipzig.de/en/usage). Broader Wortschatz data/applications remain CC BY-NC; commercial use of those requires written consent.",
+      "licenseVerifiedAt": "2026-08-07",
       "checksumScope": "Per-file sha256 in data/corpora/checksums.sha256."
     },
     {
