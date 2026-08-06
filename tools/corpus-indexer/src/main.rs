@@ -58,6 +58,10 @@ const ALL_SOURCE_IDS: &[&str] = &[
     "opus-all-to-sq-moses-latest",
     "tatoeba-full",
 ];
+/// The live split candidate cache. Every subcommand that reads or writes a
+/// candidate cache defaults here, so an ad-hoc run without `--cache-dir` /
+/// `--candidate-cache-dir` cannot operate on a superseded cache.
+pub const DEFAULT_CANDIDATE_CACHE_DIR: &str = ".cache/corpus-candidate-shards/split-20260620";
 const COMMIT_EVERY_WRITES: usize = 100_000;
 
 #[derive(Parser)]
@@ -103,7 +107,7 @@ struct MatchArgs {
 struct BuildCandidateCacheArgs {
     #[arg(long, default_value = ".cache/corpus-targets.json")]
     targets: PathBuf,
-    #[arg(long, default_value = ".cache/corpus-candidate-shards/v1")]
+    #[arg(long, default_value = DEFAULT_CANDIDATE_CACHE_DIR)]
     cache_dir: PathBuf,
     #[arg(long, default_value = "all")]
     sources: String,
@@ -151,7 +155,7 @@ struct TraceTargetsArgs {
 struct ReportRawCoverageArgs {
     #[arg(long, default_value = ".cache/corpus-targets.json")]
     targets: PathBuf,
-    #[arg(long, default_value = ".cache/corpus-candidate-shards/split-20260620")]
+    #[arg(long, default_value = DEFAULT_CANDIDATE_CACHE_DIR)]
     candidate_cache_dir: PathBuf,
     #[arg(long, default_value = ".cache/corpus-local-full.sqlite")]
     source_db: PathBuf,
@@ -2790,12 +2794,72 @@ fn source_bonus(resource_id: &str) -> i64 {
 
 #[cfg(test)]
 mod tests {
-    use super::has_apostrophe_negation;
+    use super::{has_apostrophe_negation, Cli, DEFAULT_CANDIDATE_CACHE_DIR};
+    use clap::{CommandFactory, FromArgMatches};
 
     #[test]
     fn apostrophe_negation_does_not_treat_suffix_s_as_negation() {
         assert!(has_apostrophe_negation("Unë s'punoj sot."));
         assert!(has_apostrophe_negation("Ai S’punon sot."));
         assert!(!has_apostrophe_negation("NATO-s dhe UNESCO-s."));
+    }
+
+    /// Every candidate-cache default must name the live split cache. A
+    /// subcommand defaulting to a superseded directory would let an ad-hoc
+    /// run rebuild into a dead cache, or scan stale candidates and report
+    /// plausible but wrong coverage.
+    #[test]
+    fn candidate_cache_defaults_all_point_at_the_live_cache() {
+        fn defaults_of(cmd: &clap::Command) -> Vec<(String, String)> {
+            cmd.get_arguments()
+                .filter(|a| matches!(a.get_id().as_str(), "cache_dir" | "candidate_cache_dir"))
+                .map(|a| {
+                    let value = a
+                        .get_default_values()
+                        .first()
+                        .map(|v| v.to_string_lossy().into_owned())
+                        .unwrap_or_default();
+                    (a.get_id().to_string(), value)
+                })
+                .collect()
+        }
+
+        let cli = Cli::command();
+        let mut checked = 0;
+        for sub in cli.get_subcommands() {
+            for (arg, value) in defaults_of(sub) {
+                // `match` takes an Option with no default; skip those.
+                if value.is_empty() {
+                    continue;
+                }
+                assert_eq!(
+                    value,
+                    DEFAULT_CANDIDATE_CACHE_DIR,
+                    "subcommand `{}` arg `{}` defaults to `{}`, not the live cache",
+                    sub.get_name(),
+                    arg,
+                    value
+                );
+                checked += 1;
+            }
+        }
+        assert!(
+            checked >= 3,
+            "expected at least 3 defaulted candidate-cache args, found {checked}"
+        );
+
+        // The parsed default must survive clap, not just the declaration.
+        let matches =
+            Cli::command().get_matches_from(vec!["corpus-indexer", "build-candidate-cache"]);
+        let cli = Cli::from_arg_matches(&matches).expect("parses with no flags");
+        match cli.command {
+            super::Command::BuildCandidateCache(args) => {
+                assert_eq!(
+                    args.cache_dir.to_string_lossy(),
+                    DEFAULT_CANDIDATE_CACHE_DIR
+                );
+            }
+            _ => panic!("expected build-candidate-cache"),
+        }
     }
 }

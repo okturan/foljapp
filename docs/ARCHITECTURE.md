@@ -23,7 +23,16 @@ RUNTIME (deploys)                          CORPUS LAB (local only)
 
 Rule of thumb: `apps/`, `packages/`, `data/verbs/`, `data/opus/examples.json`,
 and `apps/web/public/examples/` must stay small enough to build and deploy.
-Everything under `.cache/` (currently ~231G) is evidence, not assets.
+Everything under `.cache/` (currently ~107G) is evidence, not assets, and is
+regenerable via `npm run rescan`.
+
+**The 78G raw-dataset cache is offline-archived** (2026-08-05) on the
+external SSD `2TBT7` at `/Volumes/2TBT7/foljapp-datasets`, verified
+byte-for-byte; `.cache/datasets` no longer exists locally. `verify-engine`,
+the app build, and the static examples are unaffected, but
+`build:corpus-candidate-cache` and the full rescan chain need a restore
+first — procedure in
+[`data/corpora/README.md`](../data/corpora/README.md#integrity-and-backup).
 
 ## The engine (`packages/engine`)
 
@@ -83,6 +92,9 @@ After any change that alters generated targets (engine/verb-data change) or
 adds a corpus source, run `npm run rescan` (wrapper: `scripts/rescan.sh`;
 `scripts/rescan.sh --plan` prints the steps). It runs, in this exact order:
 
+0. **Restore the raw corpora first** — they are offline-archived, so step 2
+   parses from paths that do not currently exist. See the restore procedure
+   in [`data/corpora/README.md`](../data/corpora/README.md#integrity-and-backup).
 1. `npm run build:corpus-targets` — regenerate targets from the engine.
 2. `npm run build:corpus-candidate-cache` — build/refresh candidate-cache
    partitions **and target-hit sidecars**. New corpus partitions get parsed
@@ -114,6 +126,12 @@ skipped. Adding one requires **all three**:
    `alias_source`. `--sources=all` expands the curated ID list, not the
    ledger; a missing entry shows up as a suspiciously fast (~2s) no-op in
    `build-candidate-cache`. Watch stage timing.
+
+Then regenerate `data/corpora/checksums.sha256` so the new files are covered
+by `npm run verify:corpus-checksums`, and give the entry the full metadata
+set (`license` — with its verification date, recording a confirmed *absence*
+explicitly rather than omitting the field — plus `provenanceGranularity`,
+`redistributionPolicy`, `checksumScope`, and an on-disk size).
 
 ## App runtime & deploy
 

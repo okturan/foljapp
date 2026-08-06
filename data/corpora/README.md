@@ -17,7 +17,7 @@ This directory tracks the local and candidate corpora used for foljapp example s
 | BigMind Albanian                        | `.cache/datasets/huggingface/bigmind-albanian`                                                           | 991M | Public instruction-style parquet shards                                                       | Rust generic parquet text reader; not direct corpus evidence       |
 | Albanian WikiOrca                       | `.cache/datasets/huggingface/albanian-wikiorca`                                                          | 220M | Public question/response parquet shards                                                       | Rust generic parquet text reader; not direct attestation evidence  |
 | FineWeb2 Albanian varieties             | `.cache/datasets/monolingual-albanian/fineweb2`                                                          | 8.5G | Public FineWeb2 `als_Latn` and `aln_Latn` parquet shards                                      | Rust generic parquet text reader                                   |
-| CulturaX Albanian                       | `.cache/datasets/monolingual-albanian/culturax-sq`                                                       | 8.5G | 4 `sq` parquet shards of cleaned Common-Crawl Albanian web text (130.6M candidates)           | Rust generic parquet text reader; CC-derived, overlaps existing web sets |
+| CulturaX Albanian                       | `.cache/datasets/monolingual-albanian/culturax-sq`                                                       | 8.4G | 4 `sq` parquet shards of cleaned Common-Crawl Albanian web text (130.6M candidates)           | Rust generic parquet text reader; CC-derived, overlaps existing web sets |
 | HPLT v3 Albanian `als_Latn`             | `.cache/datasets/monolingual-albanian/hplt-v3/als_Latn`                                                  |  12G | Six JSONL.ZST shards of Albanian web documents with URL/crawl metadata                        | Broad web examples with provenance after filtering                 |
 | Leipzig Albanian corpora                | `.cache/datasets/monolingual-albanian/leipzig`                                                           | 1.9G | 23 Albanian community/news/Wikipedia sentence archives                                        | Sentence examples after dedupe                                     |
 | Tatoeba full exports                    | `.cache/datasets/tatoeba`                                                                                | 433M | Full sentence, link, and tag exports                                                          | Small attributed sentence examples                                 |
@@ -28,17 +28,29 @@ This directory tracks the local and candidate corpora used for foljapp example s
 
 Current raw dataset cache total: about 78G (CulturaX Albanian sq shards added 2026-07-09, +8.5G).
 
-Derived local artifacts snapshot (verified 2026-07-07):
+Derived local artifacts snapshot (verified 2026-08-05):
 
-| Artifact               | Local cache                                     | Size | Purpose                                                  |
-| ---------------------- | ----------------------------------------------- | ---: | -------------------------------------------------------- |
-| Legacy candidate cache | `.cache/corpus-candidate-shards/v1`             |  65G | Full-row v1 candidate shards retained as fallback        |
-| Split candidate cache  | `.cache/corpus-candidate-shards/split-20260620` |  98G | Current normalized/metadata/token shards for fast traces |
-| Retained examples DB   | `.cache/corpus-local-full.sqlite`               | 192M | Compact app-facing examples and occurrence rows          |
-| Tantivy search index   | `.cache/corpus-search-tantivy`                  |  36M | Interactive local phrase lookup over retained examples   |
+| Artifact              | Local cache                                     | Size | Purpose                                                  |
+| --------------------- | ----------------------------------------------- | ---: | -------------------------------------------------------- |
+| Split candidate cache | `.cache/corpus-candidate-shards/split-20260620` |  98G | Current normalized/metadata/token shards for fast traces |
+| Retained examples DB  | `.cache/corpus-local-full.sqlite`               | 192M | Compact app-facing examples and occurrence rows          |
+| Tantivy search index  | `.cache/corpus-search-tantivy`                  |  36M | Interactive local phrase lookup over retained examples   |
+| Rust build artifacts  | `.cache/cargo-target`                           | 5.6G | `CARGO_TARGET_DIR` for the corpus indexer                |
 
-Current `.cache` footprint is about 231G, including raw datasets, candidate
-caches, retained DBs, search indexes, benchmarks, and build artifacts.
+Current `.cache` footprint is about 185G (verified 2026-08-05), including raw
+datasets, the candidate cache, retained DBs, search indexes, reports, and
+build artifacts.
+
+The legacy `v1` candidate cache (65G of full-row shards, superseded by
+`split-20260620`) and the spent bench/smoke shard directories (~1.9G) were
+deleted on 2026-08-05. Both were derived and regenerable via
+`npm run rescan`; the benchmark conclusions they supported are preserved in
+[`cache-benchmark.md`](./cache-benchmark.md) and
+[`search-benchmark.md`](./search-benchmark.md). The `build-candidate-cache`
+`--cache-dir` default still pointed at `v1` and was repointed to
+`split-20260620` in the same change — an ad-hoc run without the flag would
+otherwise have spent hours rebuilding into the dead cache while leaving the
+live one stale.
 
 The chunk-era `.anchor-rows-*` sidecar family (33,261 files, ~54G, built by
 2026-06-20 chunked phrase-variant runs and keyed to anchor sets the canonical
@@ -86,7 +98,6 @@ no longer run against a stale coverage snapshot.
 
 | Resource                      | Status                       | What it appears to have                                             | Blocker                                                          |
 | ----------------------------- | ---------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| CulturaX Albanian             | Gated on Hugging Face        | `sq/checksum.sha256` plus four `sq/sq_part_*.parquet` shards        | Accept terms and use an authenticated token                      |
 | OSCAR Albanian                | Manual-gated on Hugging Face | Albanian is listed as supported, but anonymous API exposes no files | Manual approval required                                         |
 | Albanian news instructions    | Gated on Hugging Face        | Two parquet shards listed by the dataset API                        | Anonymous file download returns 401                              |
 | Albanian National Corpus      | Public search UI only        | Main corpus has 232 million words plus early Albanian corpus        | No anonymous bulk download found                                 |
@@ -96,6 +107,89 @@ no longer run against a stale coverage snapshot.
 ## Quality notes
 
 MaCoCu is the strongest source for public examples because it carries provenance and quality metadata. OPUS is useful when the UI needs a parallel sentence, but rare forms in OPUS skew toward mined/noisy corpora. CC100 and mC4 expand recall for forms like `punuakam`, but both include obvious web junk, so they should never feed the UI without filtering, sentence segmentation, and dedupe. SEEUniversity also finds rare forms, but some hits are grammar/reference prose rather than natural usage.
+
+### Licensing status (verified 2026-08-05)
+
+Three sources publish **no license at all** — their Hugging Face dataset
+cards specify none, so they are all-rights-reserved by default:
+`hf-bigmind-albanian`, `hf-albanian-wikiorca`, and
+`hf-albanian-wiki-clean-lm`. They are usable as a local analysis cache but
+must never be redistributed, and derived examples from them should not be
+published. All three are low-yield anyway (the whole `huggingface` family
+returns 1,132 occurrences, 0.7% of the total), so dropping them would cost
+little if the licensing risk is ever judged unacceptable.
+
+`leipzig-sqi` terms could **not** be verified — the Leipzig site blocks
+automated retrieval and the archives ship no LICENSE file. Confirm at
+<https://wortschatz.uni-leipzig.de/en/download> before redistributing
+anything derived from it. This matters more than the three above, because
+Leipzig is by far the highest-yield source (3,021 occurrences per 1M
+candidates, ~16% of all retained occurrences from 2% of the disk).
+
+In `resources.json`, an absent `license` field is never used to mean
+"unlicensed" — a confirmed absence is recorded explicitly with its
+verification date, and unverified terms are marked as such.
+
+## Integrity and backup
+
+> **The raw corpora are offline-archived as of 2026-08-05.**
+> `.cache/datasets` was deleted locally to reclaim 78 GiB. The only copy now
+> lives on the external SSD `2TBT7` at `/Volumes/2TBT7/foljapp-datasets`,
+> verified byte-for-byte (all 1,948 files re-hashed, no corruption). Every
+> `localPath` in `resources.json` describes where a source lives *once
+> restored*, not where it is now — see `cacheState` in that file.
+>
+> **Restore before any raw-data operation:**
+>
+> ```sh
+> rsync -rt --modify-window=2 --no-perms --no-owner --no-group \
+>   /Volumes/2TBT7/foljapp-datasets/ .cache/datasets/
+> npm run verify:corpus-checksums
+> ```
+>
+> Still works offline: everything reading the derived split candidate cache,
+> the retained-examples SQLite, or `.cache/kaikki` / `.cache/husic` — so
+> `verify-engine`, the app build, and the static examples are unaffected.
+> Needs a restore: `build:corpus-candidate-cache` and the full
+> `npm run rescan` chain, which parse raw corpora from `localPath`.
+>
+> This is a single copy. If the corpora matter beyond convenience, a second
+> archive is cheap insurance — one SSD is one failure away from re-downloading
+> everything, and `wikimedia-sq-latest` cannot be re-downloaded at all.
+
+Per-file sha256 digests for all 1,948 raw files (78.1 GiB) are tracked in
+[`checksums.sha256`](./checksums.sha256), with paths relative to the cache
+root. Verify a local cache or a restored backup:
+
+```sh
+npm run verify:corpus-checksums                      # .cache/datasets
+npm run verify:corpus-checksums -- /Volumes/SSD/foljapp-datasets
+```
+
+It exits 0 when clean, 1 on missing files (an incomplete copy) or digest
+mismatches (corruption), and reports the two cases separately.
+
+**What is backed up:** `.cache/datasets` only (78 GiB) — done 2026-08-05.
+Two of its sources are not simply re-downloadable:
+
+- `wikimedia-sq-latest` tracks the *latest* dumps, and Wikimedia purges
+  older ones — this exact snapshot cannot be re-fetched, and the coverage
+  numbers cite it.
+- `culturax-sq` is Hugging Face auto-gated; access requires accepting terms
+  with a token and can change.
+
+Beyond those, re-acquiring 78 GiB costs many hours, and HF datasets get
+renamed or withdrawn by their owners without notice.
+
+**What not to back up:** the derived caches — `corpus-candidate-shards`
+(98G), the SQLite DBs, the search index, and the reports. All are
+regenerable with `npm run rescan`, and backing them up would nearly triple
+the archive for no recovery value.
+
+**Where:** keep backups personal and offline. Most entries carry
+`redistributionPolicy: keep local cache only`, and three sources are
+unlicensed upstream — an encrypted external disk is consistent with that; a
+shared or cloud-synced drive is not.
 
 The machine-readable inventory is in `resources.json`.
 Candidate-cache performance notes are in

@@ -24,7 +24,7 @@ use std::time::Instant;
 pub(crate) struct PhraseVariantStressArgs {
     #[arg(long, default_value = ".cache/corpus-missing-audit.json")]
     audit: PathBuf,
-    #[arg(long, default_value = ".cache/corpus-candidate-shards/split-20260620")]
+    #[arg(long, default_value = crate::DEFAULT_CANDIDATE_CACHE_DIR)]
     candidate_cache_dir: PathBuf,
     #[arg(long, default_value = ".cache/corpus-phrase-variant-stress.json")]
     out_json: PathBuf,
